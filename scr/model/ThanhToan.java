@@ -36,4 +36,4 @@ public class ThanhToan {
     public LocalDate getNgayThanhToan() { return ngayThanhToan; }
     public TrangThaiThanhToan getTrangThai() { return trangThai; }
     public void setTrangThai(TrangThaiThanhToan trangThai) { this.trangThai = trangThai; }
-}
+} //hello
