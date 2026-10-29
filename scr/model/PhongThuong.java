@@ -3,8 +3,8 @@ import java.math.BigDecimal;
 class PhongThuong extends Phong {
     private String dichVuThuong;
     private BigDecimal giaPhong;
-    public PhongThuong(String maPhong, String loaiPhong, BigDecimal giaPhong, TinhTrangPhong tinhTrang, String dichVuThuong) {
-        super(maPhong, loaiPhong, giaPhong, tinhTrang);
+    public PhongThuong(String maPhong, String tenPhong, String loaiPhong, BigDecimal giaPhong, TinhTrangPhong tinhTrang, String dichVuThuong) {
+        super(maPhong, tenPhong, loaiPhong, giaPhong, tinhTrang);
         this.dichVuThuong = dichVuThuong;
         this.giaPhong = giaPhong;
     }
@@ -13,5 +13,20 @@ class PhongThuong extends Phong {
     }
     public String getDichVuThuong() {
         return dichVuThuong;
+    }
+    public void setDichVuThuong(String dichVuThuong) {
+        this.dichVuThuong = dichVuThuong;
+    }
+    public void setGiaPhong(BigDecimal giaPhong) {
+        this.giaPhong = giaPhong;
+    }
+    public void nhap(){
+        super.nhap();
+        System.out.println("nhap dich vu thuong: ");
+        dichVuThuong = sc.nextLine();
+    }
+    public void xuat(){
+        super.xuat();
+        System.out.println("|%-20s|".formatted(dichVuThuong));
     }
 }
