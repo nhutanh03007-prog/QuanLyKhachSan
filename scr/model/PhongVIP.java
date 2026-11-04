@@ -20,13 +20,11 @@ class PhongVIP extends Phong {
     public void setGiaPhong(BigDecimal giaPhong) {
         this.giaPhong = giaPhong;
     }
-    public void nhap(){
-        super.nhap();
-        System.out.println("nhap dich vu VIP: ");
-        dichVuVIP = sc.nextLine();
-    }
-    public void xuat(){
-        super.xuat();
-        System.out.println("|%-20s|".formatted(dichVuVIP));
+    @Override 
+    public String toString() {
+        return "PhongVIP{" +
+                "dichVuVIP='" + dichVuVIP + 
+                ", giaPhong=" + giaPhong +
+                '}';
     }
 }

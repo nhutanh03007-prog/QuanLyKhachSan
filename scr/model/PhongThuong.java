@@ -20,13 +20,11 @@ class PhongThuong extends Phong {
     public void setGiaPhong(BigDecimal giaPhong) {
         this.giaPhong = giaPhong;
     }
-    public void nhap(){
-        super.nhap();
-        System.out.println("nhap dich vu thuong: ");
-        dichVuThuong = sc.nextLine();
-    }
-    public void xuat(){
-        super.xuat();
-        System.out.println("|%-20s|".formatted(dichVuThuong));
+    @Override
+    public String toString() {
+        return "PhongThuong{" +
+                "dichVuThuong='" + dichVuThuong +
+                ", giaPhong=" + giaPhong +
+                '}';
     }
 }
