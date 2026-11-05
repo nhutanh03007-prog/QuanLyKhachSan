@@ -1,3 +1,4 @@
+package model;
 public class DichVu {
     private String maDichVu;
     private String tenDichVu;
