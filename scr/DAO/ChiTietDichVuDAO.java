@@ -2,7 +2,6 @@ package DAO;
 
 import model.ChiTietDichVu;
 
-/** DAO lưu chi tiết dịch vụ bằng mảng. */
 public class ChiTietDichVuDAO {
     public static ChiTietDichVu[] danhSachChiTiet = new ChiTietDichVu[100];
     public static int soLuongChiTiet = 0;

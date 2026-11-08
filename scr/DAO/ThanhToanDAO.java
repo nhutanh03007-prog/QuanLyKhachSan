@@ -2,7 +2,6 @@ package DAO;
 
 import model.ThanhToan;
 
-/** DAO quản lý giao dịch thanh toán bằng mảng. */
 public class ThanhToanDAO {
     public static ThanhToan[] danhSachThanhToan = new ThanhToan[100];
     public static int soLuongThanhToan = 0;

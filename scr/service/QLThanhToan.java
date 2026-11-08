@@ -9,7 +9,6 @@ import model.ThanhToan;
 import model.TrangThaiThanhToan;
 import java.time.LocalDate;
 
-/** Xử lý nghiệp vụ lập hóa đơn và thanh toán. */
 public class QLThanhToanService {
     private HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
@@ -34,7 +33,6 @@ public class QLThanhToanService {
         return null;
     }
 
-    /** Chỉ đánh dấu đã thanh toán khi giao dịch lưu thành công. */
     public boolean thanhToan(String maHD, String maThanhToan, String phuongThuc) {
         HoaDon hoaDon = hoaDonDAO.timTheoMa(maHD);
         if (hoaDon == null || hoaDon.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) return false;
