@@ -30,9 +30,8 @@ public class DichVuDAO {
     public boolean xoa(String maDichVu) {
         for (int i = 0; i < soLuongDichVu; i++) {
             if (danhSachDichVu[i].getMaDichVu().equals(maDichVu)) {
-                for (int j = i; j < soLuongDichVu - 1; j++) {
-                    danhSachDichVu[j] = danhSachDichVu[j + 1];
-                }
+               System.arraycopy(danhSachDichVu, i + 1, danhSachDichVu, i,
+                        soLuongDichVu - i - 1);
                 danhSachDichVu[--soLuongDichVu] = null;
                 return true;
             }
@@ -50,7 +49,7 @@ public class DichVuDAO {
     /** Trả về mảng chỉ có các phần tử đang được sử dụng. */
     public DichVu[] layDanhSach() {
         DichVu[] ketQua = new DichVu[soLuongDichVu];
-        for (int i = 0; i < soLuongDichVu; i++) ketQua[i] = danhSachDichVu[i];
+       System.arraycopy(danhSachDichVu, 0, ketQua, 0, soLuongDichVu);
         return ketQua;
     }
 }

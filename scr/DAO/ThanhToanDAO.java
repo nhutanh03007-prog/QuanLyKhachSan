@@ -28,7 +28,8 @@ public class ThanhToanDAO {
     public boolean xoa(String maThanhToan) {
         for (int i = 0; i < soLuongThanhToan; i++) {
             if (danhSachThanhToan[i].getMaThanhToan().equals(maThanhToan)) {
-                for (int j = i; j < soLuongThanhToan - 1; j++) danhSachThanhToan[j] = danhSachThanhToan[j + 1];
+                System.arraycopy(danhSachThanhToan, i + 1, danhSachThanhToan, i,
+                        soLuongThanhToan - i - 1);
                 danhSachThanhToan[--soLuongThanhToan] = null;
                 return true;
             }
@@ -45,7 +46,7 @@ public class ThanhToanDAO {
 
     public ThanhToan[] layDanhSach() {
         ThanhToan[] ketQua = new ThanhToan[soLuongThanhToan];
-        for (int i = 0; i < soLuongThanhToan; i++) ketQua[i] = danhSachThanhToan[i];
+          System.arraycopy(danhSachThanhToan, 0, ketQua, 0, soLuongThanhToan);
         return ketQua;
     }
 }

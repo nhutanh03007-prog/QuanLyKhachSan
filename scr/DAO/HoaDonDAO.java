@@ -29,14 +29,14 @@ public class HoaDonDAO {
     public boolean xoa(String maHD) {
         for (int i = 0; i < soLuongHoaDon; i++) {
             if (danhSachHoaDon[i].getMaHD().equals(maHD)) {
-                for (int j = i; j < soLuongHoaDon - 1; j++) danhSachHoaDon[j] = danhSachHoaDon[j + 1];
+                 System.arraycopy(danhSachHoaDon, i + 1, danhSachHoaDon, i,
+                        soLuongHoaDon - i - 1);
                 danhSachHoaDon[--soLuongHoaDon] = null;
                 return true;
             }
         }
         return false;
     }
-
     public HoaDon timTheoMa(String maHD) {
         for (int i = 0; i < soLuongHoaDon; i++) {
             if (danhSachHoaDon[i].getMaHD().equals(maHD)) return danhSachHoaDon[i];
@@ -46,7 +46,7 @@ public class HoaDonDAO {
 
     public HoaDon[] layDanhSach() {
         HoaDon[] ketQua = new HoaDon[soLuongHoaDon];
-        for (int i = 0; i < soLuongHoaDon; i++) ketQua[i] = danhSachHoaDon[i];
+        System.arraycopy(danhSachHoaDon, 0, ketQua, 0, soLuongHoaDon);
         return ketQua;
     }
 }
