@@ -30,7 +30,6 @@ public class ChiTietDichVuDAO {
     public boolean xoa(String maDatPhong, String maDichVu) {
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) {
-                for (int j = i; j < soLuongChiTiet - 1; j++) {
                  System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i,
                         soLuongChiTiet - i - 1);
                 danhSachChiTiet[--soLuongChiTiet] = null;
