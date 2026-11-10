@@ -1,114 +1,110 @@
+
 import java.time.LocalDate;
-import java.util.Scanner;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+
 public class DatPhong {
     private String maDatPhong;
-    private String maKH;
+    private String maKhachHang;
     private String maPhong;
     private LocalDate ngayDat;
-    private LocalDate ngayNhan;
-    private LocalDate ngayTra;
-    private int soNguoi;
+    private LocalDate ngayNhanPhong;
+    private LocalDate ngayTraPhong;
     private TrangThaiDatPhong trangThai;
-    private double tongTien;
+    private double giaPhongNgay;
 
-
-    public DatPhong(String maDatPhong, String maKH, String maPhong,
-                    LocalDate ngayDat, LocalDate ngayNhan,
-                    LocalDate ngayTra, int soNguoi,
-                    TrangThaiDatPhong trangThai, double tongTien) {
-        this.maDatPhong = maDatPhong;
-        this.maKH = maKH;
-        this.maPhong = maPhong;
-        this.ngayDat = ngayDat;
-        this.ngayNhan = ngayNhan;
-        this.ngayTra = ngayTra;
-        this.soNguoi = soNguoi;
-        this.trangThai = trangThai;
-        this.tongTien = tongTien;
-    }
-
-    public String getMaDatPhong() {
-        return maDatPhong;
-    }
-
-    public void setMaDatPhong(String maDatPhong) {
-        this.maDatPhong = maDatPhong;
-    }
-
-    public String getMaKH() {
-        return maKH;
-    }
-
-    public void setMaKH(String maKH) {
-        this.maKH = maKH;
-    }
-
-    public String getMaPhong() {
-        return maPhong;
-    }
-
-    public void setMaPhong(String maPhong) {
-        this.maPhong = maPhong;
-    }
-
-    public LocalDate getNgayDat() {
-        return ngayDat;
-    }
-
-    public void setNgayDat(LocalDate ngayDat) {
-        this.ngayDat = ngayDat;
-    }
-
-    public LocalDate getNgayNhan() {
-        return ngayNhan;
-    }
-
-    public void setNgayNhan(LocalDate ngayNhan) {
-        this.ngayNhan = ngayNhan;
-    }
-
-    public LocalDate getNgayTra() {
-        return ngayTra;
-    }
-
-    public void setNgayTra(LocalDate ngayTra) {
-        this.ngayTra = ngayTra;
-    }
-
-    public int getSoNguoi() {
-        return soNguoi;
-    }
-
-    public void setSoNguoi(int soNguoi) {
-        this.soNguoi = soNguoi;
-    }
     public DatPhong() {
-        this.trangThai = TrangThaiDatPhong.CHO_XAC_NHAN;
-    }
-    public TrangThaiDatPhong getTrangThai() {
-        return trangThai;
+        this.ngayDat = LocalDate.now();
+        this.trangThai = TrangThaiDatPhong.DA_DAT;
     }
 
-    public void setTrangThai(TrangThaiDatPhong trangThai) {
-        this.trangThai = trangThai;
-    }
-
-    public double getTongTien() {
-        return tongTien;
-    }
-
-    public void setTongTien(double tongTien) {
-        this.tongTien = tongTien;
+    public DatPhong(String maDatPhong, String maKhachHang, String maPhong, 
+                    LocalDate ngayNhanPhong, LocalDate ngayTraPhong, double giaPhongNgay) {
+        this.maDatPhong = maDatPhong;
+        this.maKhachHang = maKhachHang;
+        this.maPhong = maPhong;
+        this.ngayDat = LocalDate.now();
+        this.ngayNhanPhong = ngayNhanPhong;
+        this.ngayTraPhong = ngayTraPhong;
+        this.giaPhongNgay = giaPhongNgay;
+        this.trangThai = TrangThaiDatPhong.DA_DAT;
     }
 
 
-    public double tinhTien(double giaPhong) {
-    long soNgay = ngayTra.toEpochDay()
-                 - ngayNhan.toEpochDay();
+    public String getMaDatPhong() { return maDatPhong; }
+    public void setMaDatPhong(String maDatPhong) { this.maDatPhong = maDatPhong; }
 
-    tongTien = soNgay * giaPhong;
+    public String getMaKhachHang() { return maKhachHang; }
+    public void setMaKhachHang(String maKhachHang) { this.maKhachHang = maKhachHang; }
 
-    return tongTien;
+    public String getMaPhong() { return maPhong; }
+    public void setMaPhong(String maPhong) { this.maPhong = maPhong; }
+
+    public LocalDate getNgayDat() { return ngayDat; }
+    public void setNgayDat(LocalDate ngayDat) { this.ngayDat = ngayDat; }
+
+    public LocalDate getNgayNhanPhong() { return ngayNhanPhong; }
+    public void setNgayNhanPhong(LocalDate ngayNhanPhong) { this.ngayNhanPhong = ngayNhanPhong; }
+
+    public LocalDate getNgayTraPhong() { return ngayTraPhong; }
+    public void setNgayTraPhong(LocalDate ngayTraPhong) { this.ngayTraPhong = ngayTraPhong; }
+
+    public TrangThaiDatPhong getTrangThai() { return trangThai; }
+    public void setTrangThai(TrangThaiDatPhong trangThai) { this.trangThai = trangThai; }
+
+    public double getGiaPhongNgay() { return giaPhongNgay; }
+    public void setGiaPhongNgay(double giaPhongNgay) { this.giaPhongNgay = giaPhongNgay; }
+
+
+
+    public long getSoNgayO() {
+        if (ngayNhanPhong == null || ngayTraPhong == null) return 0;
+        long soNgay = ChronoUnit.DAYS.between(ngayNhanPhong, ngayTraPhong);
+        return soNgay > 0 ? soNgay : 1; 
     }
 
-   
+    public double tinhTienPhong() {
+        return getSoNgayO() * giaPhongNgay;
+    }
+
+    public boolean isNgayHopLe() {
+        if (ngayNhanPhong == null || ngayTraPhong == null) return false;
+        return !ngayTraPhong.isBefore(ngayNhanPhong);
+    }
+
+    public boolean isTrungLich(LocalDate tuNgay, LocalDate denNgay) {
+        if (this.trangThai == TrangThaiDatPhong.DA_HUY || this.trangThai == TrangThaiDatPhong.DA_TRA) {
+            return false;
+        }
+        return this.ngayNhanPhong.isBefore(denNgay) && this.ngayTraPhong.isAfter(tuNgay);
+    }
+
+    // --- CÁC PHƯƠNG THỨC OVERRIDE CHUẨN JAVA ---
+
+    @Override
+    public String toString() {
+        return "DatPhong{" +
+                "maDatPhong='" + maDatPhong + '\'' +
+                ", maKhachHang='" + maKhachHang + '\'' +
+                ", maPhong='" + maPhong + '\'' +
+                ", ngayDat=" + ngayDat +
+                ", ngayNhanPhong=" + ngayNhanPhong +
+                ", ngayTraPhong=" + ngayTraPhong +
+                ", trangThai=" + (trangThai != null ? trangThai.getTenTrangThai() : "") +
+                ", giaPhongNgay=" + giaPhongNgay +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DatPhong datPhong = (DatPhong) o;
+        return Objects.equals(maDatPhong, datPhong.maDatPhong);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maDatPhong);
+    }
+}
