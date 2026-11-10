@@ -1,3 +1,4 @@
+package model;
 public class NhanVien {
     private String maNV;
     private String hoTen;
