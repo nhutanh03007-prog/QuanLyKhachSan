@@ -1,6 +1,8 @@
-import model.NhanVien;
+package DAO;
+
 import java.util.ArrayList;
 import java.util.List;
+import model.NhanVien;
 
 /**
  * Quản lý nhân viên tạm thời bằng ArrayList.
