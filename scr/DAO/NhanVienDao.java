@@ -1,4 +1,4 @@
-
+import model.NhanVien;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +17,6 @@ public class NhanVienDAO {
     }
 
     // ================= THÊM NHÂN VIÊN =================
-
     public boolean them(NhanVien nv) {
 
         if (nv == null) {
