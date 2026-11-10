@@ -5,7 +5,6 @@ import dao.DichVuDAO;
 import model.ChiTietDichVu;
 import model.DichVu;
 
-/** Xử lý nghiệp vụ liên quan đến dịch vụ và chi tiết dịch vụ. */
 public class QLDichVuService {
     private DichVuDAO dichVuDAO = new DichVuDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();

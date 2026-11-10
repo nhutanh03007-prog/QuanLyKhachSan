@@ -2,7 +2,6 @@ package DAO;
 
 import model.ChiTietDichVu;
 
-/** DAO lưu chi tiết dịch vụ bằng mảng. */
 public class ChiTietDichVuDAO {
     public static ChiTietDichVu[] danhSachChiTiet = new ChiTietDichVu[100];
     public static int soLuongChiTiet = 0;
@@ -31,9 +30,8 @@ public class ChiTietDichVuDAO {
     public boolean xoa(String maDatPhong, String maDichVu) {
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) {
-                for (int j = i; j < soLuongChiTiet - 1; j++) {
-                    danhSachChiTiet[j] = danhSachChiTiet[j + 1];
-                }
+                 System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i,
+                        soLuongChiTiet - i - 1);
                 danhSachChiTiet[--soLuongChiTiet] = null;
                 return true;
             }
@@ -50,10 +48,9 @@ public class ChiTietDichVuDAO {
 
     public ChiTietDichVu[] layDanhSach() {
         ChiTietDichVu[] ketQua = new ChiTietDichVu[soLuongChiTiet];
-        for (int i = 0; i < soLuongChiTiet; i++) ketQua[i] = danhSachChiTiet[i];
+          System.arraycopy(danhSachChiTiet, 0, ketQua, 0, soLuongChiTiet);
         return ketQua;
     }
-
     public ChiTietDichVu[] layTheoMaDatPhong(String maDatPhong) {
         int dem = 0;
         for (int i = 0; i < soLuongChiTiet; i++) {

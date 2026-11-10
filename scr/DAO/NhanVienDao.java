@@ -1,6 +1,8 @@
+package DAO;
 
 import java.util.ArrayList;
 import java.util.List;
+import model.NhanVien;
 
 /**
  * Quản lý nhân viên tạm thời bằng ArrayList.
@@ -17,7 +19,6 @@ public class NhanVienDAO {
     }
 
     // ================= THÊM NHÂN VIÊN =================
-
     public boolean them(NhanVien nv) {
 
         if (nv == null) {
