@@ -1,21 +1,19 @@
 
 package service;
-
+import INTERFACE.IPhong;
 import DAO.PhongDAO;
 import model.Phong;
 import model.TinhTrangPhong;
-
 import java.math.BigDecimal;
-import java.util.List;
 
-public class QLPhong {
+public class QLPhong implements IPhong{
     private PhongDAO phongDAO;
 
     public QLPhong() {
         phongDAO = new PhongDAO();
     }
 
-    // 1. Thêm phòng
+    @Override
     public boolean themPhong(Phong phong) {
         if (phong == null) {
             System.out.println("Thong tin phong khong hop le!");
@@ -37,69 +35,88 @@ public class QLPhong {
         }
         return phongDAO.themPhong(phong);
     }
-    public List<Phong> layDanhSachPhong() {
+
+    @Override
+    public Phong[] layDanhSachPhong() {
         return phongDAO.layDanhSachPhong();
     }
 
-    // 3. Tìm phòng theo mã
-    public Phong timPhongTheoMa(String maPhong) {
+    @Override
+    public Phong[] layDanhSachPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
+        if (tinhTrang == null) {
+            System.out.println("Tinh trang khong hop le!");
+            return new Phong[0];
+        }
+        return phongDAO.layDanhSachPhongTheoTinhTrang(tinhTrang);
+    }
 
+    @Override
+    public Phong timPhongTheoMa(String maPhong) {
         if (maPhong == null || maPhong.trim().isEmpty()) {
+            System.out.println("Ma phong khong hop le!");
             return null;
         }
-
         return phongDAO.timPhongTheoMa(maPhong);
     }
 
-    // 4. Sửa thông tin phòng
+    @Override
     public boolean suaPhong(Phong phong) {
-
         if (phong == null) {
+            System.out.println("Thong tin phong khong hop le!");
             return false;
         }
-
-        Phong phongCu = phongDAO.timPhongTheoMa(phong.getMaPhong());
-
-        if (phongCu == null) {
-            System.out.println("Khong tim thay phong!");
+        if (phong.getMaPhong() == null ||
+            phong.getMaPhong().trim().isEmpty()) {
+            System.out.println("Ma phong khong duoc de trong!");
             return false;
         }
-
         if (phong.getGiaPhong() == null ||
             phong.getGiaPhong().compareTo(BigDecimal.ZERO) <= 0) {
             System.out.println("Gia phong khong hop le!");
             return false;
         }
-
+        Phong phongCu =
+                phongDAO.timPhongTheoMa(phong.getMaPhong());
+        if (phongCu == null) {
+            System.out.println("Khong tim thay phong!");
+            return false;
+        }
         return phongDAO.suaPhong(phong);
     }
+
+    @Override
     public boolean xoaPhong(String maPhong) {
 
         if (maPhong == null || maPhong.trim().isEmpty()) {
+            System.out.println("Ma phong khong hop le!");
             return false;
         }
-
-        Phong phong = phongDAO.timPhongTheoMa(maPhong);
-
-        if (phong == null) {
+        if (phongDAO.timPhongTheoMa(maPhong) == null) {
             System.out.println("Phong khong ton tai!");
             return false;
         }
         return phongDAO.xoaPhong(maPhong);
     }
-    public List<Phong> timPhongTheoTinhTrang(
+
+    @Override
+    public Phong[] timPhongTheoTinhTrang(
             TinhTrangPhong tinhTrang) {
-
         if (tinhTrang == null) {
-            return null;
+            System.out.println("Tinh trang khong hop le!");
+            return new Phong[0];
         }
-
-        return phongDAO.timPhongTheoTinhTrang(tinhTrang);
+        return phongDAO.layDanhSachPhongTheoTinhTrang(tinhTrang);
     }
+
+    @Override
     public int demSoLuongPhong() {
         return phongDAO.demSoLuongPhong();
     }
-    public int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang) {
+
+    @Override
+    public int demSoLuongPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
         if (tinhTrang == null) {
             return 0;
         }
