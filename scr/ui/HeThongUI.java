@@ -31,7 +31,6 @@ public class HeThongUI {
         String password = scanner.nextLine();
 
         // taiKhoanHienTai = taiKhoanDAO.kiemTraDangNhap(username, password);
-        
         // Giả lập logic kiểm tra:
         boolean dangNhapThanhCong = true; // Thay bằng: taiKhoanHienTai != null;
         
