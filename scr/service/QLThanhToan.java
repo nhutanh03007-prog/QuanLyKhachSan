@@ -1,15 +1,15 @@
 package service;
 
-import dao.ChiTietDichVuDAO;
-import dao.HoaDonDAO;
-import dao.ThanhToanDAO;
+import DAO.ChiTietDichVuDAO;
+import DAO.HoaDonDAO;
+import DAO.ThanhToanDAO;
+import java.time.LocalDate;
 import model.ChiTietDichVu;
 import model.HoaDon;
 import model.ThanhToan;
 import model.TrangThaiThanhToan;
-import java.time.LocalDate;
 
-public class QLThanhToanService {
+public class QLThanhToan {
     private HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
