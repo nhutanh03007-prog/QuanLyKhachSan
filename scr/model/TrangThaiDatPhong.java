@@ -1,5 +1,4 @@
-
-
+package model;
 public enum TrangThaiDatPhong {
     DA_DAT("Đã đặt trước"),
     DANG_SU_DUNG("Đang sử dụng"),

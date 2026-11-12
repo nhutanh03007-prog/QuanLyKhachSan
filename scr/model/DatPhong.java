@@ -1,4 +1,4 @@
-
+package model;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -79,7 +79,6 @@ public class DatPhong {
         return this.ngayNhanPhong.isBefore(denNgay) && this.ngayTraPhong.isAfter(tuNgay);
     }
 
-    // --- CÁC PHƯƠNG THỨC OVERRIDE CHUẨN JAVA ---
 
     @Override
     public String toString() {
