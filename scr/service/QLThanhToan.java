@@ -3,8 +3,10 @@ package service;
 import DAO.ChiTietDichVuDAO;
 import DAO.HoaDonDAO;
 import DAO.ThanhToanDAO;
+import DAO.DatPhongDAO;
 import INTERFACE.IThanhToan;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import model.ChiTietDichVu;
 import model.HoaDon;
 import model.ThanhToan;
@@ -16,6 +18,7 @@ public class QLThanhToan implements IThanhToan {
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
     private final ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
+    private final DatPhongDAO datPhongDAO = new DatPhongDAO();
 
     /** Thêm hóa đơn thông qua DAO. */
     @Override
@@ -84,20 +87,26 @@ public class QLThanhToan implements IThanhToan {
     }
 
     /** Lập hóa đơn, cộng tiền phòng với tổng tiền dịch vụ của đặt phòng. */
-    public HoaDon lapHoaDon(
-            String maHD, String maDatPhong, double tienPhong, double giamGia) {
+    public HoaDon lapHoaDonTuDatPhong(String maHD, String maDatPhong, BigDecimal giamGia) {
         try {
-            double tongTienDichVu = 0;
+            if (maHD == null || maHD.trim().isEmpty() || maDatPhong == null || maDatPhong.trim().isEmpty() || giamGia == null || giamGia.signum() < 0) return null;
+            model.DatPhong dp = datPhongDAO.timTheoMa(maDatPhong);
+            if (dp == null) { System.out.println("Lỗi [Lập Hóa Đơn]: Không tìm thấy mã đặt phòng từ hệ thống DatPhongDAO!"); return null; }
+            BigDecimal tienPhong = BigDecimal.valueOf(dp.tinhTienPhong());
+            if (tienPhong.signum() < 0) System.out.println("Cảnh báo [Lập Hóa Đơn]: Tiền phòng bất thường (âm).");
+            BigDecimal tongTienDichVu = BigDecimal.ZERO;
             for (ChiTietDichVu chiTiet : chiTietDAO.layTheoMaDatPhong(maDatPhong)) {
+                if (chiTiet == null || chiTiet.getThanhTien() == null) { System.out.println("Lỗi [Lập Hóa Đơn]: Chi tiết dịch vụ không hợp lệ."); return null; }
                 chiTiet.tinhThanhTien();
-                tongTienDichVu += chiTiet.getThanhTien();
+                tongTienDichVu = tongTienDichVu.add(chiTiet.getThanhTien());
             }
-
+            BigDecimal tongGia = tienPhong.add(tongTienDichVu);
+            if (giamGia.compareTo(tongGia) > 0) { System.out.println("Lỗi [Lập Hóa Đơn]: Giảm giá không được lớn hơn tổng tiền"); return null; }
             HoaDon hoaDon = new HoaDon(
                     maHD,
                     maDatPhong,
                     LocalDate.now(),
-                    tienPhong + tongTienDichVu,
+                    tongGia,
                     giamGia);
             return hoaDonDAO.them(hoaDon) ? hoaDon : null;
         } catch (Exception e) {

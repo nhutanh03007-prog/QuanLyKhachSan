@@ -7,7 +7,7 @@ public class ThanhToanDAO {
     public static int soLuongThanhToan = 0;
 
     public boolean them(ThanhToan thanhToan) {
-        if (thanhToan == null || thanhToan.getMaThanhToan() == null
+        if (thanhToan == null || rong(thanhToan.getMaThanhToan())
                 || timTheoMa(thanhToan.getMaThanhToan()) != null
                 || soLuongThanhToan == danhSachThanhToan.length) return false;
         danhSachThanhToan[soLuongThanhToan++] = thanhToan;
@@ -15,9 +15,9 @@ public class ThanhToanDAO {
     }
 
     public boolean sua(ThanhToan thanhToan) {
-        if (thanhToan == null) return false;
+        if (thanhToan == null || rong(thanhToan.getMaThanhToan())) return false;
         for (int i = 0; i < soLuongThanhToan; i++) {
-            if (danhSachThanhToan[i].getMaThanhToan().equals(thanhToan.getMaThanhToan())) {
+            if (danhSachThanhToan[i] != null && thanhToan.getMaThanhToan().equals(danhSachThanhToan[i].getMaThanhToan())) {
                 danhSachThanhToan[i] = thanhToan;
                 return true;
             }
@@ -26,8 +26,9 @@ public class ThanhToanDAO {
     }
 
     public boolean xoa(String maThanhToan) {
+        if (rong(maThanhToan)) return false;
         for (int i = 0; i < soLuongThanhToan; i++) {
-            if (danhSachThanhToan[i].getMaThanhToan().equals(maThanhToan)) {
+            if (danhSachThanhToan[i] != null && maThanhToan.equals(danhSachThanhToan[i].getMaThanhToan())) {
                 System.arraycopy(danhSachThanhToan, i + 1, danhSachThanhToan, i,
                         soLuongThanhToan - i - 1);
                 danhSachThanhToan[--soLuongThanhToan] = null;
@@ -38,11 +39,19 @@ public class ThanhToanDAO {
     }
 
     public ThanhToan timTheoMa(String maThanhToan) {
+        if (rong(maThanhToan)) return null;
         for (int i = 0; i < soLuongThanhToan; i++) {
-            if (danhSachThanhToan[i].getMaThanhToan().equals(maThanhToan)) return danhSachThanhToan[i];
+            if (danhSachThanhToan[i] != null && maThanhToan.equals(danhSachThanhToan[i].getMaThanhToan())) return danhSachThanhToan[i];
         }
         return null;
     }
+    public ThanhToan[] layTheoMaHD(String maHD) {
+        if (rong(maHD)) return new ThanhToan[0];
+        java.util.List<ThanhToan> ketQua = new java.util.ArrayList<>();
+        for (int i=0;i<soLuongThanhToan;i++) if (danhSachThanhToan[i]!=null && maHD.equals(danhSachThanhToan[i].getMaHD())) ketQua.add(danhSachThanhToan[i]);
+        return ketQua.toArray(new ThanhToan[0]);
+    }
+    private boolean rong(String s) { return s == null || s.trim().isEmpty(); }
 
     public ThanhToan[] layDanhSach() {
         ThanhToan[] ketQua = new ThanhToan[soLuongThanhToan];
