@@ -1,7 +1,7 @@
 package service;
 
-import dao.ChiTietDichVuDAO;
-import dao.DichVuDAO;
+import DAO.ChiTietDichVuDAO;
+import DAO.DichVuDAO;
 import model.ChiTietDichVu;
 import model.DichVu;
 
