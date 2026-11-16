@@ -1,11 +1,14 @@
+package DAO;
+import model.TaiKhoan;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Quan ly tai khoan tam thoi trong bo nho, khong dung database. */
-public class TaiKhoanDAO {
+public class TaiKhoanDao
+ {
     private final List<TaiKhoan> danhSach = new ArrayList<>();
 
-    public TaiKhoanDAO() {
+    public TaiKhoanDao() {
         // Tai khoan demo de thu chuong trinh.
         danhSach.add(new TaiKhoan("admin", "admin123", "NV001", "ADMIN", "HOAT_DONG"));
     }

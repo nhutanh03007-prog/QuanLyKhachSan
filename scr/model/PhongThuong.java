@@ -1,6 +1,6 @@
 package model;
 import java.math.BigDecimal;
-class PhongThuong extends Phong {
+public class PhongThuong extends Phong {
     private String dichVuThuong;
     private BigDecimal giaPhong;
     public PhongThuong(String maPhong, String tenPhong, String loaiPhong, BigDecimal giaPhong, TinhTrangPhong tinhTrang, String dichVuThuong) {

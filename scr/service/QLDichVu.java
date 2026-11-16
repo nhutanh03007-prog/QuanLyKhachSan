@@ -1,11 +1,11 @@
 package service;
 
-import dao.ChiTietDichVuDAO;
-import dao.DichVuDAO;
+import DAO.ChiTietDichVuDAO;
+import DAO.DichVuDAO;
 import model.ChiTietDichVu;
 import model.DichVu;
 
-public class QLDichVuService {
+public class QLDichVu{
     private DichVuDAO dichVuDAO = new DichVuDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
 

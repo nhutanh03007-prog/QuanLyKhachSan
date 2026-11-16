@@ -1,3 +1,4 @@
+package model;
 /** Menu thong ke tam thoi. So lieu se duoc tich hop sau khi nhom thong nhat database. */
 public class ThongKe {
     public void baoCaoDoanhThu() {
