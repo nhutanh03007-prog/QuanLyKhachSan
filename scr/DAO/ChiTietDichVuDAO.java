@@ -7,7 +7,7 @@ public class ChiTietDichVuDAO {
     public static int soLuongChiTiet = 0;
 
     public boolean them(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || timTheoMa(chiTiet.getMaDatPhong(), chiTiet.getMaDichVu()) != null
+        if (chiTiet == null || rong(chiTiet.getMaDatPhong()) || rong(chiTiet.getMaDichVu()) || timTheoMa(chiTiet.getMaDatPhong(), chiTiet.getMaDichVu()) != null
                 || soLuongChiTiet == danhSachChiTiet.length) return false;
         chiTiet.tinhThanhTien();
         danhSachChiTiet[soLuongChiTiet] = chiTiet;
@@ -16,7 +16,7 @@ public class ChiTietDichVuDAO {
     }
 
     public boolean sua(ChiTietDichVu chiTiet) {
-        if (chiTiet == null) return false;
+        if (chiTiet == null || rong(chiTiet.getMaDatPhong()) || rong(chiTiet.getMaDichVu())) return false;
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (laChiTietCanTim(danhSachChiTiet[i], chiTiet.getMaDatPhong(), chiTiet.getMaDichVu())) {
                 chiTiet.tinhThanhTien();
@@ -28,6 +28,7 @@ public class ChiTietDichVuDAO {
     }
 
     public boolean xoa(String maDatPhong, String maDichVu) {
+        if (rong(maDatPhong) || rong(maDichVu)) return false;
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) {
                  System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i,
@@ -40,6 +41,7 @@ public class ChiTietDichVuDAO {
     }
 
     public ChiTietDichVu timTheoMa(String maDatPhong, String maDichVu) {
+        if (rong(maDatPhong) || rong(maDichVu)) return null;
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) return danhSachChiTiet[i];
         }
@@ -52,6 +54,7 @@ public class ChiTietDichVuDAO {
         return ketQua;
     }
     public ChiTietDichVu[] layTheoMaDatPhong(String maDatPhong) {
+        if (rong(maDatPhong)) return new ChiTietDichVu[0];
         int dem = 0;
         for (int i = 0; i < soLuongChiTiet; i++) {
             if (maDatPhong.equals(danhSachChiTiet[i].getMaDatPhong())) dem++;
@@ -65,7 +68,8 @@ public class ChiTietDichVuDAO {
     }
 
     private boolean laChiTietCanTim(ChiTietDichVu chiTiet, String maDatPhong, String maDichVu) {
-        return maDatPhong.equals(chiTiet.getMaDatPhong())
+        return chiTiet != null && maDatPhong != null && maDichVu != null && maDatPhong.equals(chiTiet.getMaDatPhong())
                 && maDichVu.equals(chiTiet.getMaDichVu());
     }
+    private boolean rong(String s) { return s == null || s.trim().isEmpty(); }
 }

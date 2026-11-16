@@ -1,4 +1,8 @@
 package model;
+<<<<<<< HEAD
+=======
+
+>>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
 public class TaiKhoan {
     private String tenDangNhap;
     private String matKhau;

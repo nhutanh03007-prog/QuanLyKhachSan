@@ -1,56 +1,38 @@
 package model;
 
+import java.math.BigDecimal;
+
 public class DichVu {
-    private String maDichVu;
-    private String tenDichVu;
-    private String loaiDichVu;
-    private String donViTinh;
-    private double gia;
-    private String trangThai;
-    private String moTa;
+    private String maDichVu, tenDichVu, loaiDichVu, donViTinh;
+    private BigDecimal gia = BigDecimal.ZERO;
+    private String trangThai, moTa;
 
     public DichVu() { }
-
-    public DichVu(String maDichVu, String tenDichVu, String loaiDichVu,
-                  String donViTinh, double gia, String trangThai, String moTa) {
-        this.maDichVu = maDichVu;
-        this.tenDichVu = tenDichVu;
-        this.loaiDichVu = loaiDichVu;
-        this.donViTinh = donViTinh;
-        this.gia = gia;
-        this.trangThai = trangThai;
-        this.moTa = moTa;
+    public DichVu(String maDichVu, String tenDichVu, String loaiDichVu, String donViTinh,
+                  BigDecimal gia, String trangThai, String moTa) {
+        this.maDichVu = maDichVu; this.tenDichVu = tenDichVu; this.loaiDichVu = loaiDichVu;
+        this.donViTinh = donViTinh; this.gia = gia; this.trangThai = trangThai; this.moTa = moTa;
     }
-
     public void nhapThongTin() { }
     public void xuatThongTin() { System.out.println(this); }
     public void themDichVu() { System.out.println("Da them dich vu: " + tenDichVu); }
     public void suaDichVu() { System.out.println("Da cap nhat dich vu: " + tenDichVu); }
     public void xoaDichVu() { System.out.println("Da xoa dich vu: " + tenDichVu); }
-    public boolean kiemTra(String tuKhoa) {
-        if (tuKhoa == null) return false;
-        return maDichVu.contains(tuKhoa) || tenDichVu.contains(tuKhoa);
-    }
-    public double thongKeDoanhThu(int soLuong) { return gia * soLuong; }
-
+    public boolean kiemTra(String tuKhoa) { return tuKhoa != null && ((maDichVu != null && maDichVu.contains(tuKhoa)) || (tenDichVu != null && tenDichVu.contains(tuKhoa))); }
+    public BigDecimal thongKeDoanhThu(int soLuong) { return gia.multiply(BigDecimal.valueOf(soLuong)); }
     public String getMaDichVu() { return maDichVu; }
-    public void setMaDichVu(String maDichVu) { this.maDichVu = maDichVu; }
+    public void setMaDichVu(String v) { maDichVu = v; }
     public String getTenDichVu() { return tenDichVu; }
-    public void setTenDichVu(String tenDichVu) { this.tenDichVu = tenDichVu; }
+    public void setTenDichVu(String v) { tenDichVu = v; }
     public String getLoaiDichVu() { return loaiDichVu; }
-    public void setLoaiDichVu(String loaiDichVu) { this.loaiDichVu = loaiDichVu; }
+    public void setLoaiDichVu(String v) { loaiDichVu = v; }
     public String getDonViTinh() { return donViTinh; }
-    public void setDonViTinh(String donViTinh) { this.donViTinh = donViTinh; }
-    public double getGia() { return gia; }
-    public void setGia(double gia) { this.gia = gia; }
+    public void setDonViTinh(String v) { donViTinh = v; }
+    public BigDecimal getGia() { return gia; }
+    public void setGia(BigDecimal v) { gia = v; }
     public String getTrangThai() { return trangThai; }
-    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+    public void setTrangThai(String v) { trangThai = v; }
     public String getMoTa() { return moTa; }
-    public void setMoTa(String moTa) { this.moTa = moTa; }
-
-    @Override
-    public String toString() {
-        return "Ma dich vu: " + maDichVu + ", ten: " + tenDichVu + ", loai: " + loaiDichVu
-                + ", don vi: " + donViTinh + ", gia: " + gia + ", trang thai: " + trangThai;
-    }
+    public void setMoTa(String v) { moTa = v; }
+    @Override public String toString() { return "Ma dich vu: " + maDichVu + ", ten: " + tenDichVu + ", loai: " + loaiDichVu + ", don vi: " + donViTinh + ", gia: " + gia + ", trang thai: " + trangThai; }
 }

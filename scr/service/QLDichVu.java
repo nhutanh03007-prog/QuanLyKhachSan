@@ -4,18 +4,23 @@ import DAO.ChiTietDichVuDAO;
 import DAO.DichVuDAO;
 import model.ChiTietDichVu;
 import model.DichVu;
+import java.math.BigDecimal;
 
+<<<<<<< HEAD
 public class QLDichVu{
+=======
+public class QLDichVu {
+>>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
     private DichVuDAO dichVuDAO = new DichVuDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
 
-    public boolean themDichVu(DichVu dichVu) { return dichVuDAO.them(dichVu); }
-    public boolean suaDichVu(DichVu dichVu) { return dichVuDAO.sua(dichVu); }
+    public boolean themDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.them(dichVu); }
+    public boolean suaDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.sua(dichVu); }
     public boolean xoaDichVu(String maDichVu) { return dichVuDAO.xoa(maDichVu); }
     public DichVu[] layDanhSachDichVu() { return dichVuDAO.layDanhSach(); }
 
     public boolean themChiTiet(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0) return false;
+        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getMaDichVu() == null) return false;
         DichVu dichVu = dichVuDAO.timTheoMa(chiTiet.getMaDichVu());
         if (dichVu == null) return false;
         chiTiet.setDonGia(dichVu.getGia());
@@ -24,7 +29,10 @@ public class QLDichVu{
     }
 
     public boolean suaChiTiet(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0) return false;
+        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getMaDichVu() == null) return false;
+        DichVu dichVu = dichVuDAO.timTheoMa(chiTiet.getMaDichVu());
+        if (dichVu == null) return false;
+        chiTiet.setDonGia(dichVu.getGia());
         chiTiet.tinhThanhTien();
         return chiTietDAO.sua(chiTiet);
     }
@@ -39,11 +47,11 @@ public class QLDichVu{
         return chiTietDAO.layTheoMaDatPhong(maDatPhong);
     }
 
-    public double tinhTongTienDichVu(String maDatPhong) {
-        double tongTien = 0;
+    public BigDecimal tinhTongTienDichVu(String maDatPhong) {
+        BigDecimal tongTien = BigDecimal.ZERO;
         for (ChiTietDichVu chiTiet : chiTietDAO.layTheoMaDatPhong(maDatPhong)) {
             chiTiet.tinhThanhTien();
-            tongTien += chiTiet.getThanhTien();
+            tongTien = tongTien.add(chiTiet.getThanhTien());
         }
         return tongTien;
     }

@@ -8,7 +8,7 @@ public class HoaDonDAO {
     public static int soLuongHoaDon = 0;
 
     public boolean them(HoaDon hoaDon) {
-        if (hoaDon == null || hoaDon.getMaHD() == null
+        if (hoaDon == null || rong(hoaDon.getMaHD())
                 || timTheoMa(hoaDon.getMaHD()) != null
                 || soLuongHoaDon == danhSachHoaDon.length) return false;
         danhSachHoaDon[soLuongHoaDon++] = hoaDon;
@@ -16,9 +16,9 @@ public class HoaDonDAO {
     }
 
     public boolean sua(HoaDon hoaDon) {
-        if (hoaDon == null) return false;
+        if (hoaDon == null || rong(hoaDon.getMaHD())) return false;
         for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i].getMaHD().equals(hoaDon.getMaHD())) {
+            if (danhSachHoaDon[i] != null && hoaDon.getMaHD().equals(danhSachHoaDon[i].getMaHD())) {
                 danhSachHoaDon[i] = hoaDon;
                 return true;
             }
@@ -27,8 +27,9 @@ public class HoaDonDAO {
     }
 
     public boolean xoa(String maHD) {
+        if (rong(maHD)) return false;
         for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i].getMaHD().equals(maHD)) {
+            if (danhSachHoaDon[i] != null && maHD.equals(danhSachHoaDon[i].getMaHD())) {
                  System.arraycopy(danhSachHoaDon, i + 1, danhSachHoaDon, i,
                         soLuongHoaDon - i - 1);
                 danhSachHoaDon[--soLuongHoaDon] = null;
@@ -38,11 +39,18 @@ public class HoaDonDAO {
         return false;
     }
     public HoaDon timTheoMa(String maHD) {
+        if (rong(maHD)) return null;
         for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i].getMaHD().equals(maHD)) return danhSachHoaDon[i];
+            if (danhSachHoaDon[i] != null && maHD.equals(danhSachHoaDon[i].getMaHD())) return danhSachHoaDon[i];
         }
         return null;
     }
+    public HoaDon timTheoMaDatPhong(String maDatPhong) {
+        if (rong(maDatPhong)) return null;
+        for (int i=0;i<soLuongHoaDon;i++) if (danhSachHoaDon[i]!=null && maDatPhong.equals(danhSachHoaDon[i].getMaDatPhong())) return danhSachHoaDon[i];
+        return null;
+    }
+    private boolean rong(String s) { return s == null || s.trim().isEmpty(); }
 
     public HoaDon[] layDanhSach() {
         HoaDon[] ketQua = new HoaDon[soLuongHoaDon];

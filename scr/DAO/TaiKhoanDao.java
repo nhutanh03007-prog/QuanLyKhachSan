@@ -1,7 +1,13 @@
 package DAO;
+<<<<<<< HEAD
 import model.TaiKhoan;
 import java.util.ArrayList;
+=======
+
+import model.TaiKhoan;
+>>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
 import java.util.List;
+import java.util.ArrayList;  
 
 /** Quan ly tai khoan tam thoi trong bo nho, khong dung database. */
 public class TaiKhoanDao
