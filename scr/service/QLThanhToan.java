@@ -3,27 +3,19 @@ package service;
 import DAO.ChiTietDichVuDAO;
 import DAO.HoaDonDAO;
 import DAO.ThanhToanDAO;
-<<<<<<< HEAD
-=======
-import DAO.DatPhongDAO;
+
+import DAO.DatPhongDAO; 
 import INTERFACE.IThanhToan;
 import java.time.LocalDate;
 import java.math.BigDecimal;
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
+
 import model.ChiTietDichVu;
 import model.HoaDon;
 import model.ThanhToan;
 import model.TrangThaiThanhToan;
 
-<<<<<<< HEAD
-public class QLThanhToan {
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
-    private ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
-    private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
-=======
-/** Thực thi nghiệp vụ quản lý hóa đơn và thanh toán. */
 public class QLThanhToan implements IThanhToan {
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
+
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final ThanhToanDAO thanhToanDAO = new ThanhToanDAO();

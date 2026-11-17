@@ -6,11 +6,7 @@ import model.ChiTietDichVu;
 import model.DichVu;
 import java.math.BigDecimal;
 
-<<<<<<< HEAD
-public class QLDichVu{
-=======
 public class QLDichVu {
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
     private DichVuDAO dichVuDAO = new DichVuDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
 

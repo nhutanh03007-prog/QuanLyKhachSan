@@ -15,8 +15,6 @@ public interface IPhong{
 
     boolean xoaPhong(String maPhong);
 
-    Phong[] timPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
-
     int demSoLuongPhong();
 
     int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);

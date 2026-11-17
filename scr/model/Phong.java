@@ -1,6 +1,10 @@
+
 package model;
+
 import java.math.BigDecimal;
+
 public abstract class Phong {
+
     private String maPhong;
     private String tenPhong;
     private String loaiPhong;
@@ -10,12 +14,16 @@ public abstract class Phong {
     public Phong(String maPhong, String tenPhong,
                  String loaiPhong, BigDecimal giaPhong,
                  TinhTrangPhong tinhTrang) {
+
         this.maPhong = maPhong;
         this.tenPhong = tenPhong;
         this.loaiPhong = loaiPhong;
         this.giaPhong = giaPhong;
         this.tinhTrang = tinhTrang;
     }
+    public void setMaPhong(String maPhong) {
+    this.maPhong = maPhong;
+}
 
     public String getMaPhong() {
         return maPhong;
@@ -37,10 +45,6 @@ public abstract class Phong {
         return tinhTrang;
     }
 
-    public void setTinhTrang(TinhTrangPhong tinhTrang) {
-        this.tinhTrang = tinhTrang;
-    }
-
     public void setTenPhong(String tenPhong) {
         this.tenPhong = tenPhong;
     }
@@ -49,14 +53,16 @@ public abstract class Phong {
         this.giaPhong = giaPhong;
     }
 
+    public void setTinhTrang(TinhTrangPhong tinhTrang) {
+        this.tinhTrang = tinhTrang;
+    }
+
     @Override
     public String toString() {
-        return "Phong{" +
-                "maPhong='" + maPhong + '\'' +
-                ", tenPhong='" + tenPhong + '\'' +
-                ", loaiPhong='" + loaiPhong + '\'' +
-                ", giaPhong=" + giaPhong +
-                ", tinhTrang=" + tinhTrang +
-                '}';
+        return "Ma phong: " + maPhong +
+                " | Ten phong: " + tenPhong +
+                " | Loai phong: " + loaiPhong +
+                " | Gia phong: " + giaPhong +
+                " | Tinh trang: " + tinhTrang;
     }
 }
