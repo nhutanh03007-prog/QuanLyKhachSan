@@ -12,7 +12,6 @@ public class MAINNE {
         }
     }
 
-=======
 import ui.HeThongUI;
 
 public class MAINNE{
@@ -33,14 +32,13 @@ public class MAINNE{
                 // Mở menu Quản lý Nhân viên & Thống kê của bạn
                 heThongUI.menuQuanLyHeThong(); 
             } else if (role.equals("NHAN_VIEN")) {
-                // Chỗ này sau này đồng đội của bạn sẽ khởi tạo PhongUI
+                // Chỗ này sau sẽ khởi tạo PhongUI
                 System.out.println("Chuyển hướng sang giao diện Lễ tân / Phòng...");
-                // PhongUI phongUI = new PhongUI();
-                // phongUI.menuNhanVien();
+                PhongUI phongUI = new PhongUI();
+                phongUI.menuPhong();
             }
         } else {
             System.out.println("Đăng nhập thất bại. Chương trình kết thúc.");
         }
     }
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
 }
