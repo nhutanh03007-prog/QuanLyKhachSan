@@ -1,14 +1,18 @@
 package service;
 
 import DAO.ChiTietDichVuDAO;
+import DAO.DatPhongDAO;
 import DAO.DichVuDAO;
 import model.ChiTietDichVu;
+import model.DatPhong;
 import model.DichVu;
+import model.TrangThaiDatPhong;
 import java.math.BigDecimal;
 
 public class QLDichVu {
     private DichVuDAO dichVuDAO = new DichVuDAO();
     private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
+    private DatPhongDAO datPhongDAO = new DatPhongDAO();
 
     public boolean themDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.them(dichVu); }
     public boolean suaDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.sua(dichVu); }
@@ -16,9 +20,14 @@ public class QLDichVu {
     public DichVu[] layDanhSachDichVu() { return dichVuDAO.layDanhSach(); }
 
     public boolean themChiTiet(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getMaDichVu() == null) return false;
+        if (chiTiet == null || chiTiet.getSoLuong() <= 0
+                || chiTiet.getMaDatPhong() == null || chiTiet.getMaDatPhong().trim().isEmpty()
+                || chiTiet.getMaDichVu() == null || chiTiet.getMaDichVu().trim().isEmpty()) return false;
+        DatPhong dp = datPhongDAO.timTheoMa(chiTiet.getMaDatPhong());
+        if (dp == null || dp.getTrangThai() == TrangThaiDatPhong.DA_HUY
+                || dp.getTrangThai() == TrangThaiDatPhong.DA_TRA) return false;
         DichVu dichVu = dichVuDAO.timTheoMa(chiTiet.getMaDichVu());
-        if (dichVu == null) return false;
+        if (dichVu == null || "NGUNG_HOAT_DONG".equals(dichVu.getTrangThai())) return false;
         chiTiet.setDonGia(dichVu.getGia());
         chiTiet.tinhThanhTien();
         return chiTietDAO.them(chiTiet);
