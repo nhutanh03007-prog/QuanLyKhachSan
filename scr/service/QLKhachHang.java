@@ -1,41 +1,86 @@
 package service;
 
 import DAO.KhachHangDAO;
+import INTERFACE.IKhachHang;
 import model.KhachHang;
 
-public class QLKhachHang {
-    private KhachHangDAO khachHangDAO = new KhachHangDAO();
+public class QLKhachHang implements IKhachHang {
+    private KhachHangDAO khachHangDAO;
 
-    public boolean themKhachHang(KhachHang kh) {
-        if (kh == null || kh.getMaKH() == null || kh.getMaKH().trim().isEmpty()) {
-            System.out.println("Thông tin khách hàng không hợp lệ!");
-            return false;
+    public QLKhachHang() {
+        this.khachHangDAO = new KhachHangDAO();
+    }
+
+    @Override
+    public boolean themKhachHang(KhachHang khachHang) {
+        return khachHangDAO.them(khachHang);
+    }
+
+    @Override
+    public KhachHang[] layDanhSachKhachHang() {
+        return khachHangDAO.layDanhSach();
+    }
+
+    @Override
+    public KhachHang[] layDanhSachKhachHangTheoLoai(String loaiKhach) {
+        KhachHang[] tatCa = khachHangDAO.layDanhSach();
+        int count = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+                count++;
+            }
         }
-        boolean kq = khachHangDAO.them(kh);
-        if (kq) System.out.println("Thêm khách hàng thành công!");
-        else System.out.println("Thêm thất bại (Trùng mã hoặc danh sách đầy)!");
-        return kq;
+        KhachHang[] ketQua = new KhachHang[count];
+        int index = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+                ketQua[index++] = kh;
+            }
+        }
+        return ketQua;
     }
 
-    public boolean suaKhachHang(KhachHang kh) {
-        boolean kq = khachHangDAO.sua(kh);
-        if (kq) System.out.println("Cập nhật khách hàng thành công!");
-        else System.out.println("Không tìm thấy mã khách hàng để sửa!");
-        return kq;
-    }
-
-    public boolean xoaKhachHang(String maKH) {
-        boolean kq = khachHangDAO.xoa(maKH);
-        if (kq) System.out.println("Xóa khách hàng thành công!");
-        else System.out.println("Không tìm thấy mã khách hàng để xóa!");
-        return kq;
-    }
-
-    public KhachHang timKhachHang(String maKH) {
+    @Override
+    public KhachHang timKhachHangTheoMa(String maKH) {
         return khachHangDAO.timTheoMa(maKH);
     }
 
-    public KhachHang[] layTatCa() {
-        return khachHangDAO.layDanhSach();
+    @Override
+    public boolean suaKhachHang(KhachHang khachHang) {
+        return khachHangDAO.sua(khachHang);
+    }
+
+    @Override
+    public boolean xoaKhachHang(String maKH) {
+        return khachHangDAO.xoa(maKH);
+    }
+
+    @Override
+    public KhachHang[] timKhachHangTheoTen(String hoTen) {
+        KhachHang[] tatCa = khachHangDAO.layDanhSach();
+        int count = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+                count++;
+            }
+        }
+        KhachHang[] ketQua = new KhachHang[count];
+        int index = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+                ketQua[index++] = kh;
+            }
+        }
+        return ketQua;
+    }
+
+    @Override
+    public int demSoLuongKhachHang() {
+        return KhachHangDAO.soLuongKhachHang;
+    }
+
+    @Override
+    public int demSoLuongKhachHangTheoLoai(String loaiKhach) {
+        return layDanhSachKhachHangTheoLoai(loaiKhach).length;
     }
 }
