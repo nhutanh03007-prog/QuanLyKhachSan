@@ -1,26 +1,27 @@
 package DAO;
 
-import java.util.ArrayList;
-import java.util.List;
 import model.NhanVien;
 
-/**
- * Quản lý nhân viên tạm thời bằng ArrayList.
- * Chưa kết nối Database.
- */
 public class NhanVienDAO {
 
-    private final List<NhanVien> danhSach = new ArrayList<>();
+    private NhanVien[] danhSach;
+    private int soLuong;
 
-    // ================= LẤY DANH SÁCH =================
-
-    public List<NhanVien> layTatCa() {
-        return new ArrayList<>(danhSach);
+    public NhanVienDAO() {
+        this.danhSach = new NhanVien[10];
+        this.soLuong = 0;
     }
 
-    // ================= THÊM NHÂN VIÊN =================
-    public boolean them(NhanVien nv) {
+    public NhanVien[] layTatCa() {
+        NhanVien[] ketQua = new NhanVien[soLuong];
+        for (int i = 0; i < soLuong; i++) {
+            ketQua[i] = danhSach[i];
+        }
+        return ketQua;
+    }
 
+
+    public boolean them(NhanVien nv) {
         if (nv == null) {
             return false;
         }
@@ -33,20 +34,21 @@ public class NhanVienDAO {
             return false;
         }
 
-        // Kiểm tra mã nhân viên đã tồn tại chưa
         if (timTheoMa(nv.getMaNV()) != null) {
             return false;
         }
 
-        danhSach.add(nv);
+        if (soLuong == danhSach.length) {
+            moRongMang();
+        }
+
+        danhSach[soLuong] = nv;
+        soLuong++;
 
         return true;
     }
 
-    // ================= CẬP NHẬT NHÂN VIÊN =================
-
     public boolean capNhat(NhanVien nv) {
-
         if (nv == null) {
             return false;
         }
@@ -61,15 +63,12 @@ public class NhanVienDAO {
 
         String ma = nv.getMaNV().trim();
 
-        for (int i = 0; i < danhSach.size(); i++) {
+        for (int i = 0; i < soLuong; i++) {
+            NhanVien nhanVienCu = danhSach[i];
 
-            NhanVien nhanVienCu = danhSach.get(i);
-
-            if (nhanVienCu.getMaNV() != null
+            if (nhanVienCu != null && nhanVienCu.getMaNV() != null
                     && nhanVienCu.getMaNV().equalsIgnoreCase(ma)) {
-
-                danhSach.set(i, nv);
-
+                danhSach[i] = nv;
                 return true;
             }
         }
@@ -77,20 +76,23 @@ public class NhanVienDAO {
         return false;
     }
 
-    // ================= XÓA NHÂN VIÊN =================
-
     public boolean xoa(String maNV) {
-
         if (maNV == null || maNV.trim().isEmpty()) {
             return false;
         }
 
-        for (int i = 0; i < danhSach.size(); i++) {
+        String maCanXoa = maNV.trim();
 
-            if (danhSach.get(i).getMaNV() != null
-                    && danhSach.get(i).getMaNV().equalsIgnoreCase(maNV.trim())) {
+        for (int i = 0; i < soLuong; i++) {
+            if (danhSach[i] != null && danhSach[i].getMaNV() != null
+                    && danhSach[i].getMaNV().equalsIgnoreCase(maCanXoa)) {
 
-                danhSach.remove(i);
+                for (int j = i; j < soLuong - 1; j++) {
+                    danhSach[j] = danhSach[j + 1];
+                }
+
+                danhSach[soLuong - 1] = null;
+                soLuong--;
 
                 return true;
             }
@@ -99,21 +101,18 @@ public class NhanVienDAO {
         return false;
     }
 
-    // ================= TÌM NHÂN VIÊN THEO MÃ =================
-
     public NhanVien timTheoMa(String maNV) {
-
         if (maNV == null || maNV.trim().isEmpty()) {
             return null;
         }
 
         String maCanTim = maNV.trim();
 
-        for (NhanVien nv : danhSach) {
+        for (int i = 0; i < soLuong; i++) {
+            NhanVien nv = danhSach[i];
 
-            if (nv.getMaNV() != null
+            if (nv != null && nv.getMaNV() != null
                     && nv.getMaNV().equalsIgnoreCase(maCanTim)) {
-
                 return nv;
             }
         }
@@ -121,17 +120,19 @@ public class NhanVienDAO {
         return null;
     }
 
-    // ================= KIỂM TRA MÃ NHÂN VIÊN =================
-
     public boolean kiemTraMaTonTai(String maNV) {
-
         return timTheoMa(maNV) != null;
     }
 
-    // ================= ĐẾM SỐ LƯỢNG NHÂN VIÊN =================
-
     public int demSoLuong() {
+        return soLuong;
+    }
 
-        return danhSach.size();
+    private void moRongMang() {
+        NhanVien[] mangMoi = new NhanVien[danhSach.length * 2];
+        for (int i = 0; i < soLuong; i++) {
+            mangMoi[i] = danhSach[i];
+        }
+        danhSach = mangMoi;
     }
 }

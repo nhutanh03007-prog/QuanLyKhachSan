@@ -1,22 +1,17 @@
 package DAO;
-<<<<<<< HEAD
-import model.TaiKhoan;
-import java.util.ArrayList;
-=======
 
 import model.TaiKhoan;
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
-import java.util.List;
-import java.util.ArrayList;  
 
-/** Quan ly tai khoan tam thoi trong bo nho, khong dung database. */
-public class TaiKhoanDao
- {
-    private final List<TaiKhoan> danhSach = new ArrayList<>();
+public class TaiKhoanDao {
+    private TaiKhoan[] danhSach;
+    private int soLuong; 
 
     public TaiKhoanDao() {
-        // Tai khoan demo de thu chuong trinh.
-        danhSach.add(new TaiKhoan("admin", "admin123", "NV001", "ADMIN", "HOAT_DONG"));
+        this.danhSach = new TaiKhoan[10];
+        this.soLuong = 0;
+
+        // Tai khoan demo
+        them(new TaiKhoan("admin", "admin123", "NV001", "ADMIN", "HOAT_DONG"));
     }
 
     public TaiKhoan dangNhap(String tenDangNhap, String matKhau) {
@@ -24,8 +19,10 @@ public class TaiKhoanDao
             return null;
         }
         String tenCanTim = tenDangNhap.trim();
-        for (TaiKhoan tk : danhSach) {
-            if (tk.getTenDangNhap() != null
+
+        for (int i = 0; i < soLuong; i++) {
+            TaiKhoan tk = danhSach[i];
+            if (tk != null && tk.getTenDangNhap() != null
                     && tk.getTenDangNhap().equalsIgnoreCase(tenCanTim)
                     && tk.getMatKhau() != null
                     && tk.getMatKhau().equals(matKhau)
@@ -45,7 +42,13 @@ public class TaiKhoanDao
         if (timTheoTen(tk.getTenDangNhap()) != null) {
             return false;
         }
-        danhSach.add(tk);
+
+        if (soLuong == danhSach.length) {
+            moRongMang();
+        }
+
+        danhSach[soLuong] = tk;
+        soLuong++;
         return true;
     }
 
@@ -66,12 +69,29 @@ public class TaiKhoanDao
             return null;
         }
         String tenCanTim = ten.trim();
-        for (TaiKhoan tk : danhSach) {
-            if (tk.getTenDangNhap() != null
+        for (int i = 0; i < soLuong; i++) {
+            TaiKhoan tk = danhSach[i];
+            if (tk != null && tk.getTenDangNhap() != null
                     && tk.getTenDangNhap().equalsIgnoreCase(tenCanTim)) {
                 return tk;
             }
         }
         return null;
+    }
+
+    private void moRongMang() {
+        TaiKhoan[] mangMoi = new TaiKhoan[danhSach.length * 2];
+        for (int i = 0; i < soLuong; i++) {
+            mangMoi[i] = danhSach[i];
+        }
+        danhSach = mangMoi;
+    }
+
+    public TaiKhoan[] layTatCa() {
+        TaiKhoan[] ketQua = new TaiKhoan[soLuong];
+        for (int i = 0; i < soLuong; i++) {
+            ketQua[i] = danhSach[i];
+        }
+        return ketQua;
     }
 }
