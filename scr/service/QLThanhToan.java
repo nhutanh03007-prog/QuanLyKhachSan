@@ -3,27 +3,18 @@ package service;
 import DAO.ChiTietDichVuDAO;
 import DAO.HoaDonDAO;
 import DAO.ThanhToanDAO;
-<<<<<<< HEAD
-=======
 import DAO.DatPhongDAO;
 import INTERFACE.IThanhToan;
 import java.time.LocalDate;
 import java.math.BigDecimal;
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
 import model.ChiTietDichVu;
 import model.HoaDon;
 import model.ThanhToan;
+import model.TrangThaiDatPhong;
 import model.TrangThaiThanhToan;
 
-<<<<<<< HEAD
-public class QLThanhToan {
-    private HoaDonDAO hoaDonDAO = new HoaDonDAO();
-    private ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
-    private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
-=======
 /** Thực thi nghiệp vụ quản lý hóa đơn và thanh toán. */
 public class QLThanhToan implements IThanhToan {
->>>>>>> b4615793e733115e86ed0e3ba0dce299370b900f
 
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
@@ -45,6 +36,12 @@ public class QLThanhToan implements IThanhToan {
     @Override
     public boolean suaHoaDon(HoaDon hoaDon) {
         try {
+            if (hoaDon == null || hoaDon.getMaHD() == null || hoaDon.getMaHD().trim().isEmpty()) return false;
+            HoaDon hienTai = hoaDonDAO.timTheoMa(hoaDon.getMaHD());
+            if (hienTai == null || hienTai.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN
+                    || hoaDon.getTongGia() == null || hoaDon.getGiamGia() == null
+                    || hoaDon.getGiamGia().signum() < 0
+                    || hoaDon.getGiamGia().compareTo(hoaDon.getTongGia()) > 0) return false;
             return hoaDonDAO.sua(hoaDon);
         } catch (Exception e) {
             e.printStackTrace();
@@ -56,6 +53,8 @@ public class QLThanhToan implements IThanhToan {
     @Override
     public boolean xoaHoaDon(String maHD) {
         try {
+            HoaDon hoaDon = hoaDonDAO.timTheoMa(maHD);
+            if (hoaDon == null || hoaDon.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) return false;
             return hoaDonDAO.xoa(maHD);
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,7 +83,7 @@ public class QLThanhToan implements IThanhToan {
             }
 
             HoaDon hoaDon = hoaDonDAO.timTheoMa(maHD);
-            if (hoaDon == null) {
+            if (hoaDon == null || hoaDon.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) {
                 return false;
             }
 
@@ -102,6 +101,8 @@ public class QLThanhToan implements IThanhToan {
             if (maHD == null || maHD.trim().isEmpty() || maDatPhong == null || maDatPhong.trim().isEmpty() || giamGia == null || giamGia.signum() < 0) return null;
             model.DatPhong dp = datPhongDAO.timTheoMa(maDatPhong);
             if (dp == null) { System.out.println("Lỗi [Lập Hóa Đơn]: Không tìm thấy mã đặt phòng từ hệ thống DatPhongDAO!"); return null; }
+            if (dp.getTrangThai() == TrangThaiDatPhong.DA_HUY) { System.out.println("Lỗi [Lập Hóa Đơn]: Đặt phòng đã hủy."); return null; }
+            if (hoaDonDAO.timTheoMaDatPhong(maDatPhong) != null) { System.out.println("Lỗi [Lập Hóa Đơn]: Đặt phòng này đã có hóa đơn."); return null; }
             BigDecimal tienPhong = BigDecimal.valueOf(dp.tinhTienPhong());
             if (tienPhong.signum() < 0) System.out.println("Cảnh báo [Lập Hóa Đơn]: Tiền phòng bất thường (âm).");
             BigDecimal tongTienDichVu = BigDecimal.ZERO;
