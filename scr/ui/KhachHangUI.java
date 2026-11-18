@@ -34,64 +34,43 @@ public class KhachHangUI {
             try {
                 choice = Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("Vui long nhap so hop le!");
+                System.out.println("Loi: Vui long nhap so hop le!");
                 continue;
             }
 
             switch (choice) {
-                case 1:
-                    themKhachHang();
-                    break;
-                case 2:
-                    hienThiDanhSach(qlKhachHang.layDanhSachKhachHang());
-                    break;
-                case 3:
-                    timTheoMa();
-                    break;
-                case 4:
-                    timTheoTen();
-                    break;
-                case 5:
-                    locTheoLoai();
-                    break;
-                case 6:
-                    suaKhachHang();
-                    break;
-                case 7:
-                    xoaKhachHang();
-                    break;
-                case 8:
-                    thongKe();
-                    break;
-                case 0:
-                    System.out.println("Quay lai menu chinh...");
-                    break;
-                default:
-                    System.out.println("Lua chon khong hop le!");
+                case 1 -> themKhachHang();
+                case 2 -> hienThiDanhSach(qlKhachHang.layDanhSachKhachHang());
+                case 3 -> timTheoMa();
+                case 4 -> timTheoTen();
+                case 5 -> locTheoLoai();
+                case 6 -> suaKhachHang();
+                case 7 -> xoaKhachHang();
+                case 8 -> thongKe();
+                case 0 -> System.out.println("Quay lai menu chinh...");
+                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 den 8)!");
             }
         } while (choice != 0);
     }
 
     private void themKhachHang() {
         System.out.println("\n--- THEM KHACH HANG MOI ---");
-        String maKH = nhapChuoi("Nhap ma KH: ");
-        String hoTen = nhapChuoi("Nhap ho ten: ");
-        String gioiTinh = nhapChuoi("Nhap gioi tinh (Nam/Nu): ");
-
-        LocalDate ngaySinh = null;
-        while (ngaySinh == null) {
-            try {
-                String nsStr = nhapChuoi("Nhap ngay sinh (yyyy-MM-dd): ");
-                ngaySinh = LocalDate.parse(nsStr);
-            } catch (DateTimeParseException e) {
-                System.out.println("Sai dinh dang ngay (VD: 2000-05-20). Nhap lai!");
-            }
+        String maKH = nhapChuoi("Nhap ma KH (VD: KH01): ");
+        
+        // Kiểm tra trùng mã ngay từ đầu
+        if (qlKhachHang.timKhachHangTheoMa(maKH) != null) {
+            System.out.println("Loi: Ma khach hang '" + maKH + "' da ton tai!");
+            return;
         }
 
+        String hoTen = nhapChuoi("Nhap ho ten: ");
+        String gioiTinh = nhapGioiTinh("Nhap gioi tinh (Nam/Nu): ");
+        LocalDate ngaySinh = nhapNgaySinh("Nhap ngay sinh (yyyy-MM-dd): ");
         String diaChi = nhapChuoi("Nhap dia chi: ");
-        String sdt = nhapChuoi("Nhap so dien thoai: ");
-        String email = nhapChuoi("Nhap email: ");
-        String loaiKhach = nhapChuoi("Nhap loai khach (Thuong/VIP): ");
+        String sdt = nhapSDT("Nhap so dien thoai (10-11 so): ");
+        String email = nhapEmail("Nhap email: ");
+        String loaiKhach = nhapLoaiKhach("Nhap loai khach (Thuong/VIP): ");
+
         System.out.print("Nhap ghi chu (Enter de bo qua): ");
         String ghiChu = scanner.nextLine().trim();
 
@@ -99,7 +78,7 @@ public class KhachHangUI {
         if (qlKhachHang.themKhachHang(kh)) {
             System.out.println("Them khach hang thanh cong!");
         } else {
-            System.out.println("Them khach hang that bai (Trung ma hoac danh sach day)!");
+            System.out.println("Them khach hang that bai (Danh sach da day)!");
         }
     }
 
@@ -115,12 +94,7 @@ public class KhachHangUI {
         for (KhachHang kh : danhSach) {
             if (kh != null) {
                 System.out.printf("%-10s %-22s %-10s %-12s %-15s %-12s%n",
-                        kh.getMaKH(),
-                        kh.getHoTen(),
-                        kh.getGioiTinh(),
-                        kh.getNgaySinh(),
-                        kh.getSdt(),
-                        kh.getLoaiKhach());
+                        kh.getMaKH(), kh.getHoTen(), kh.getGioiTinh(), kh.getNgaySinh(), kh.getSdt(), kh.getLoaiKhach());
             }
         }
     }
@@ -142,7 +116,7 @@ public class KhachHangUI {
     }
 
     private void locTheoLoai() {
-        String loai = nhapChuoi("Nhap loai khach (Thuong/VIP): ");
+        String loai = nhapLoaiKhach("Nhap loai khach (Thuong/VIP): ");
         KhachHang[] ketQua = qlKhachHang.layDanhSachKhachHangTheoLoai(loai);
         hienThiDanhSach(ketQua);
     }
@@ -150,27 +124,19 @@ public class KhachHangUI {
     private void suaKhachHang() {
         String maKH = nhapChuoi("Nhap ma KH can sua: ");
         if (qlKhachHang.timKhachHangTheoMa(maKH) == null) {
-            System.out.println("Khong tim thay ma khach hang!");
+            System.out.println("Loi: Khong tim thay ma khach hang '" + maKH + "'!");
             return;
         }
 
         String hoTen = nhapChuoi("Nhap ho ten moi: ");
-        String gioiTinh = nhapChuoi("Nhap gioi tinh moi: ");
-
-        LocalDate ngaySinh = null;
-        while (ngaySinh == null) {
-            try {
-                ngaySinh = LocalDate.parse(nhapChuoi("Nhap ngay sinh moi (yyyy-MM-dd): "));
-            } catch (DateTimeParseException e) {
-                System.out.println("Sai dinh dang ngay! Nhap lai.");
-            }
-        }
-
+        String gioiTinh = nhapGioiTinh("Nhap gioi tinh moi (Nam/Nu): ");
+        LocalDate ngaySinh = nhapNgaySinh("Nhap ngay sinh moi (yyyy-MM-dd): ");
         String diaChi = nhapChuoi("Nhap dia chi moi: ");
-        String sdt = nhapChuoi("Nhap SDT moi: ");
-        String email = nhapChuoi("Nhap email moi: ");
-        String loaiKhach = nhapChuoi("Nhap loai khach moi: ");
-        System.out.print("Nhap ghi chu moi: ");
+        String sdt = nhapSDT("Nhap SDT moi (10-11 so): ");
+        String email = nhapEmail("Nhap email moi: ");
+        String loaiKhach = nhapLoaiKhach("Nhap loai khach moi (Thuong/VIP): ");
+
+        System.out.print("Nhap ghi chu moi (Enter de bo qua): ");
         String ghiChu = scanner.nextLine().trim();
 
         KhachHang khMoi = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
@@ -183,19 +149,33 @@ public class KhachHangUI {
 
     private void xoaKhachHang() {
         String maKH = nhapChuoi("Nhap ma KH can xoa: ");
-        if (qlKhachHang.xoaKhachHang(maKH)) {
-            System.out.println("Xoa khach hang thanh cong!");
+        KhachHang kh = qlKhachHang.timKhachHangTheoMa(maKH);
+        if (kh == null) {
+            System.out.println("Loi: Khong tim thay ma khach hang '" + maKH + "' de xoa!");
+            return;
+        }
+
+        System.out.print("Ban co chac chan muon xoa khach hang '" + kh.getHoTen() + "'? (Y/N): ");
+        String xacNhan = scanner.nextLine().trim();
+        if (xacNhan.equalsIgnoreCase("Y")) {
+            if (qlKhachHang.xoaKhachHang(maKH)) {
+                System.out.println("Xoa khach hang thanh cong!");
+            } else {
+                System.out.println("Xoa khach hang that bai!");
+            }
         } else {
-            System.out.println("Khong tim thay ma khach hang de xoa!");
+            System.out.println("Da huy thao tac xoa.");
         }
     }
 
     private void thongKe() {
         System.out.println("\n--- THONG KE KHACH HANG ---");
         System.out.println("Tong so khach hang: " + qlKhachHang.demSoLuongKhachHang());
-        String loai = nhapChuoi("Nhap loai khach muon dem (Thuong/VIP): ");
+        String loai = nhapLoaiKhach("Nhap loai khach muon dem (Thuong/VIP): ");
         System.out.println("So luong khach loai " + loai + ": " + qlKhachHang.demSoLuongKhachHangTheoLoai(loai));
     }
+
+    // --- CÁC HÀM HỖ TRỢ KIỂM TRA DỮ LIỆU ĐẦU VÀO ---
 
     private String nhapChuoi(String thongBao) {
         while (true) {
@@ -204,7 +184,61 @@ public class KhachHangUI {
             if (!input.isEmpty()) {
                 return input;
             }
-            System.out.println("Khong duoc de trong! Vui long nhap lai.");
+            System.out.println("Loi: Khong duoc de trong! Vui long nhap lai.");
+        }
+    }
+
+    private String nhapGioiTinh(String thongBao) {
+        while (true) {
+            String gt = nhapChuoi(thongBao);
+            if (gt.equalsIgnoreCase("Nam")) return "Nam";
+            if (gt.equalsIgnoreCase("Nu")) return "Nu";
+            System.out.println("Loi: Chi nhap 'Nam' hoac 'Nu'! Vui long nhap lai.");
+        }
+    }
+
+    private String nhapLoaiKhach(String thongBao) {
+        while (true) {
+            String loai = nhapChuoi(thongBao);
+            if (loai.equalsIgnoreCase("Thuong")) return "Thuong";
+            if (loai.equalsIgnoreCase("VIP")) return "VIP";
+            System.out.println("Loi: Chi nhap 'Thuong' hoac 'VIP'! Vui long nhap lai.");
+        }
+    }
+
+    private LocalDate nhapNgaySinh(String thongBao) {
+        while (true) {
+            try {
+                String nsStr = nhapChuoi(thongBao);
+                LocalDate ngaySinh = LocalDate.parse(nsStr);
+                if (ngaySinh.isAfter(LocalDate.now())) {
+                    System.out.println("Loi: Ngay sinh khong duoc lon hon ngay hien tai!");
+                } else {
+                    return ngaySinh;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Loi: Sai dinh dang ngay (VD: 2000-05-20). Nhap lai!");
+            }
+        }
+    }
+
+    private String nhapSDT(String thongBao) {
+        while (true) {
+            String sdt = nhapChuoi(thongBao);
+            if (sdt.matches("^0\\d{9,10}$")) {
+                return sdt;
+            }
+            System.out.println("Loi: SDT phai bat dau bang so 0 va gom 10-11 chu so! Nhap lai.");
+        }
+    }
+
+    private String nhapEmail(String thongBao) {
+        while (true) {
+            String email = nhapChuoi(thongBao);
+            if (email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+                return email;
+            }
+            System.out.println("Loi: Dinh dang email khong hop le (VD: ten@gmail.com)! Nhap lai.");
         }
     }
 }

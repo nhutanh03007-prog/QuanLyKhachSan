@@ -12,7 +12,9 @@ public class KhachHang {
     private String loaiKhach;
     private String ghiChu;
 
-
+    public KhachHang() {
+    }
+    
     public KhachHang(String maKH, String hoTen, String gioiTinh,
                      LocalDate ngaySinh, String diaChi, String sdt,
                      String email, String loaiKhach, String ghiChu) {

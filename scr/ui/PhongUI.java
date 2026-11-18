@@ -136,33 +136,6 @@ public class PhongUI {
         }
     }
 
-    // ================= NHAP TINH TRANG =================
-
-    private TinhTrangPhong nhapTinhTrang() {
-        while (true) {
-            System.out.println("\n--- TINH TRANG PHONG ---");
-            System.out.println("1. TRONG");
-            System.out.println("2. DANG_SU_DUNG");
-            System.out.println("3. DANG_BAO_TRI");
-
-            int chon = nhapSoNguyen("Chon tinh trang: ");
-
-            switch (chon) {
-                case 1:
-                    return TinhTrangPhong.TRONG;
-
-                case 2:
-                    return TinhTrangPhong.DANG_SU_DUNG;
-
-                case 3:
-                    return TinhTrangPhong.DANG_BAO_TRI;
-
-                default:
-                    System.out.println("Lua chon khong hop le!");
-            }
-        }
-    }
-
     // ================= NHAP LOAI PHONG =================
 
     private int nhapLoaiPhong() {
@@ -497,4 +470,25 @@ public class PhongUI {
         System.out.println(
                 "Tong so phong: " + qlPhong.demSoLuongPhong());
     }
+    private TinhTrangPhong nhapTinhTrang() {
+    while (true) {
+        System.out.println("\n--- TINH TRANG PHONG ---");
+        System.out.println("1. " + TinhTrangPhong.TRONG);
+        System.out.println("2. " + TinhTrangPhong.DANG_SU_DUNG);
+        System.out.println("3. " + TinhTrangPhong.DANG_BAO_TRI);
+
+        int chon = nhapSoNguyen("Chon tinh trang: ");
+
+        switch (chon) {
+            case 1:
+                return TinhTrangPhong.TRONG;
+            case 2:
+                return TinhTrangPhong.DANG_SU_DUNG;
+            case 3:
+                return TinhTrangPhong.DANG_BAO_TRI;
+            default:
+                System.out.println("Lua chon khong hop le! Vui long nhap lai.");
+        }
+    }
+}
 }

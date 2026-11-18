@@ -2,11 +2,11 @@ package DAO;
 
 import model.TaiKhoan;
 
-public class TaiKhoanDao {
+public class TaiKhoanDAO {
     private TaiKhoan[] danhSach;
     private int soLuong; 
 
-    public TaiKhoanDao() {
+    public TaiKhoanDAO() {
         this.danhSach = new TaiKhoan[10];
         this.soLuong = 0;
 

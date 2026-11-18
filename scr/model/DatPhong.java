@@ -14,8 +14,7 @@ public class DatPhong {
     private double giaPhongNgay;
 
     public DatPhong() {
-        this.ngayDat = LocalDate.now();
-        this.trangThai = TrangThaiDatPhong.DA_DAT;
+        
     }
 
     public DatPhong(String maDatPhong, String maKhachHang, String maPhong, 
@@ -28,6 +27,7 @@ public class DatPhong {
         this.ngayTraPhong = ngayTraPhong;
         this.giaPhongNgay = giaPhongNgay;
         this.trangThai = TrangThaiDatPhong.DA_DAT;
+        
     }
 
 

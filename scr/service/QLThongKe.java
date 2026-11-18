@@ -1,40 +1,73 @@
 package service;
 
-public class QLThongKe {
-    private QLThanhToan qlThanhToan;
-    private QLPhong qlPhong;
-    private QLKhachHang qlKhachHang;
-    private QLDichVu qlDichVu;
+import java.math.BigDecimal;
+import model.DichVu;
+import model.HoaDon;
+import model.TinhTrangPhong;
+import model.TrangThaiThanhToan;
 
-    public QLThongKe(QLThanhToan qlThanhToan, QLPhong qlPhong, QLKhachHang qlKhachHang, QLDichVu qlDichVu) {
-        this.qlThanhToan = qlThanhToan;
+public class QLThongKe {
+    private final QLHoaDon qlHoaDon;
+    private final QLPhong qlPhong;
+    private final QLKhachHang qlKhachHang;
+    private final QLDichVu qlDichVu;
+
+    public QLThongKe(QLHoaDon qlHoaDon, QLPhong qlPhong, QLKhachHang qlKhachHang, QLDichVu qlDichVu) {
+        this.qlHoaDon = qlHoaDon;
         this.qlPhong = qlPhong;
         this.qlKhachHang = qlKhachHang;
         this.qlDichVu = qlDichVu;
     }
 
-    // Tổng hợp doanh thu từ danh sách hóa đơn thanh toán
-    public double tinhTongDoanhThu() {
-        double tong = 0;
-        // Gọi phương thức lấy danh sách hóa đơn từ QLThanhToan của thành viên trong nhóm
-        var dsHoaDon = qlThanhToan.getDanhSach(); 
+    public BigDecimal tinhTongDoanhThu() {
+        BigDecimal tong = BigDecimal.ZERO;
+        HoaDon[] dsHoaDon = qlHoaDon.layDanhSachHoaDon();
         if (dsHoaDon != null) {
-            for (var hd : dsHoaDon) {
-                if (hd != null) {
-                    tong += hd.getTongTien();
+            for (HoaDon h : dsHoaDon) {
+                if (h != null && h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN && h.getThanhTien() != null) {
+                    tong = tong.add(h.getThanhTien());
                 }
             }
         }
+
         return tong;
     }
 
-    // Thống kê số lượng phòng theo trạng thái (VD: "Trống", "Đang thuê", "Bảo trì")
-    public int demPhongTheoTrangThai(String trangThai) {
+    public BigDecimal tinhTongDoanhThuPhong() {
+        BigDecimal tongPhong = BigDecimal.ZERO;
+        HoaDon[] dsHoaDon = qlHoaDon.layDanhSachHoaDon();
+        if (dsHoaDon != null) {
+            for (HoaDon h : dsHoaDon) {
+                if (h != null && h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) {
+                    tongPhong = tongPhong.add(qlHoaDon.tinhTienPhongTrongHoaDon(h));
+                }
+            }
+        }
+        return tongPhong;
+    }
+
+    public BigDecimal tinhTongDoanhThuDichVu() {
+        BigDecimal tongDichVu = BigDecimal.ZERO;
+        HoaDon[] dsHoaDon = qlHoaDon.layDanhSachHoaDon();
+        if (dsHoaDon != null) {
+            for (HoaDon h : dsHoaDon) {
+                if (h != null && h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN && h.getMaDatPhong() != null) {
+                    BigDecimal tienDV = qlDichVu.tinhTongTienDichVu(h.getMaDatPhong());
+                    if (tienDV != null) {
+                        tongDichVu = tongDichVu.add(tienDV);
+                    }
+                }
+            }
+        }
+        return tongDichVu;
+    }
+
+    public int demHoaDonTheoTrangThai(TrangThaiThanhToan trangThai) {
         int count = 0;
-        var dsPhong = qlPhong.getDanhSach();
-        if (dsPhong != null) {
-            for (var p : dsPhong) {
-                if (p != null && p.getTrangThai().equalsIgnoreCase(trangThai)) {
+        HoaDon[] dsHoaDon = qlHoaDon.layDanhSachHoaDon();
+        if (dsHoaDon != null) {
+            for (HoaDon h : dsHoaDon) {
+                if (h != null && h.getTrangThai() == trangThai) {
                     count++;
                 }
             }
@@ -42,8 +75,34 @@ public class QLThongKe {
         return count;
     }
 
+    public int tongSoPhong() {
+        return qlPhong.demSoLuongPhong();
+    }
+
+    public int demPhongTheoTrangThai(TinhTrangPhong tinhTrang) {
+        return qlPhong.demSoLuongPhongTheoTinhTrang(tinhTrang);
+    }
+
+
     public int tongSoKhachHang() {
-        var dsKH = qlKhachHang.getDanhSach();
-        return dsKH != null ? dsKH.length : 0;
+        return qlKhachHang.demSoLuongKhachHang();
+    }
+
+    public int demKhachHangTheoLoai(String loaiKhach) {
+        return qlKhachHang.demSoLuongKhachHangTheoLoai(loaiKhach);
+    }
+
+
+    public int tongSoDichVuHoatDong() {
+        int count = 0;
+        DichVu[] dsDichVu = qlDichVu.layDanhSachDichVu();
+        if (dsDichVu != null) {
+            for (DichVu dv : dsDichVu) {
+                if (dv != null && !"NGUNG_HOAT_DONG".equals(dv.getTrangThai())) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }
