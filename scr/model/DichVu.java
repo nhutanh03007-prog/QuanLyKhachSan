@@ -3,9 +3,13 @@ package model;
 import java.math.BigDecimal;
 
 public class DichVu {
-    private String maDichVu, tenDichVu, loaiDichVu, donViTinh;
+    private String maDichVu;
+    private String tenDichVu;
+    private String loaiDichVu;
+    private String donViTinh;
     private BigDecimal gia;
-    private String trangThai, moTa;
+    private String trangThai;
+    private String moTa;
 
     public DichVu() {
     }

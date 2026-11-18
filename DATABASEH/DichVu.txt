@@ -1,0 +1,12 @@
+DV01|Giat ui|Giat la|kg|50000|DANG_HOAT_DONG|Giat va gap ui
+DV02|An sang buffet|Am thuc|suat|180000|DANG_HOAT_DONG|Buffet sang
+DV03|Dua don san bay|Van chuyen|chuyen|450000|DANG_HOAT_DONG|Xe don san bay
+DV04|Spa thu gian|Spa|gio|600000|DANG_HOAT_DONG|Lieu trinh spa
+DV05|Thue xe may|Thue xe|ngay|200000|DANG_HOAT_DONG|Xe may trong ngay
+DV06|Nuoc suoi|Do uong|chai|15000|DANG_HOAT_DONG|Nuoc suoi minibar
+DV07|Minibar|Do uong|lan|120000|DANG_HOAT_DONG|Goi minibar
+DV08|Don phong nhanh|Buong phong|lan|100000|DANG_HOAT_DONG|Don phong theo yeu cau
+DV09|Tra phong tre|Tien ich|gio|150000|DANG_HOAT_DONG|Gia moi gio
+DV10|To chuc tiec|Su kien|suat|900000|DANG_HOAT_DONG|Dich vu tiec theo suat
+DV11|Trang tri phong|Tien ich|lan|350000|NGUNG_HOAT_DONG|Tam ngung cung cap
+DV12|Giu hanh ly|Tien ich|gio|50000|NGUNG_HOAT_DONG|Tam ngung cung cap

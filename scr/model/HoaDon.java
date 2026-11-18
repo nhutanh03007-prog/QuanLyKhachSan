@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class HoaDon {
-    private String maHD, maDatPhong;
-    private LocalDate ngayLap, ngayThanhToan;
-    private BigDecimal tongGia, giamGia, thanhTien;
+    private String maHD;
+    private String maDatPhong;
+    private LocalDate ngayLap;
+    private LocalDate ngayThanhToan;
+    private BigDecimal tongGia;
+    private BigDecimal giamGia;
+    private BigDecimal thanhTien;
     private String phuongThucTT;
     private TrangThaiThanhToan trangThai;
 
@@ -95,7 +99,8 @@ public class HoaDon {
 
     @Override
     public String toString() {
-        return "HoaDon{maHD='" + maHD + "', maDatPhong='" + maDatPhong + "', tongGia=" + tongGia + ", giamGia="
+        return "HoaDon{maHD='" + maHD + "', maDatPhong='" + maDatPhong + "', tongGia=" + tongGia
+                + ", giamGia="
                 + giamGia + ", thanhTien=" + thanhTien + ", trangThai=" + trangThai + '}';
     }
 }
