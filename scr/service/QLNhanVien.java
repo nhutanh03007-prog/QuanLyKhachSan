@@ -19,6 +19,8 @@ public class QLNhanVien {
             this.dsNhanVien = new NhanVien[0];
             this.soLuong = 0;
         }
+
+        return nvDAO.timTheoMa(maNV.trim());
     }
 
     public NhanVien[] getDanhSach() {
@@ -31,18 +33,13 @@ public class QLNhanVien {
                 return dsNhanVien[i];
             }
         }
-        return null;
-    }
 
     public boolean them(NhanVien nv) {
         if (timTheoMa(nv.getMaNV()) != null) {
-            return false; // Trùng mã nhân viên
+            return false;
         }
-        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong + 1);
-        dsNhanVien[soLuong] = nv;
-        soLuong++;
-        nvDAO.ghiFile(dsNhanVien);
-        return true;
+
+        return nvDAO.them(nv);
     }
 
     public boolean sua(NhanVien nvMoi) {
@@ -53,25 +50,39 @@ public class QLNhanVien {
                 return true;
             }
         }
-        return false;
+
+        if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
+            return false;
+        }
+
+        if (timTheoMa(nv.getMaNV()) == null) {
+            return false;
+        }
+
+        return nvDAO.capNhat(nv);
     }
 
+    // Xóa nhân viên
     public boolean xoa(String maNV) {
-        int index = -1;
-        for (int i = 0; i < soLuong; i++) {
-            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) return false;
 
-        for (int i = index; i < soLuong - 1; i++) {
-            dsNhanVien[i] = dsNhanVien[i + 1];
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return false;
         }
-        soLuong--;
-        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong);
-        nvDAO.ghiFile(dsNhanVien);
-        return true;
+
+        if (timTheoMa(maNV) == null) {
+            return false;
+        }
+
+        return nvDAO.xoa(maNV);
+    }
+
+    // Kiểm tra mã nhân viên
+    public boolean kiemTraMaTonTai(String maNV) {
+        return timTheoMa(maNV) != null;
+    }
+
+    // Đếm nhân viên
+    public int demSoLuong() {
+        return nvDAO.demSoLuong();
     }
 }

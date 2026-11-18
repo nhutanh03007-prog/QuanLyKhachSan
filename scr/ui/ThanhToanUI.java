@@ -50,65 +50,65 @@ public class ThanhToanUI {
             System.out.println(" 0. Quay lai");
             chon = nhapSoNguyen("Nhap lua chon: ");
             switch (chon) {
-                case 1:
-                    hienThiDichVu(qlDichVu.layDanhSachDichVu());
-                    break;
-                case 2:
-                    themDichVu();
-                    break;
-                case 3:
-                    suaDichVu();
-                    break;
-                case 4:
-                    xoaDichVu();
-                    break;
-                case 5:
-                    timDichVu();
-                    break;
-                case 6:
-                    themChiTiet();
-                    break;
-                case 7:
-                    suaChiTiet();
-                    break;
-                case 8:
-                    xoaChiTiet();
-                    break;
-                case 9:
-                    xemChiTietTheoDatPhong();
-                    break;
-                case 10:
-                    inDanhSachChiTiet(qlDichVu.layDanhSachChiTiet());
-                    break;
-                case 11:
-                    lapHoaDonTuDatPhong();
-                    break;
-                case 12:
-                    themHoaDon();
-                    break;
-                case 13:
-                    thanhToanHoaDon();
-                    break;
-                case 14:
-                    hienThiDanhSachHoaDon();
-                    break;
-                case 15:
-                    timVaInHoaDon();
-                    break;
-                case 16:
-                    suaHoaDon();
-                    break;
-                case 17:
-                    xoaHoaDon();
-                    break;
-                case 18:
-                    xemLichSuThanhToan();
-                    break;
-                case 0:
-                    System.out.println("Quay lai menu truoc...");
-                    break;
-                default:
-                    System.out.println("Lua chon khong hop le!");
+            case 1:
+                hienThiDichVu(qlDichVu.layDanhSachDichVu());
+                break;
+            case 2:
+                themDichVu();
+                break;
+            case 3:
+                suaDichVu();
+                break;
+            case 4:
+                xoaDichVu();
+                break;
+            case 5:
+                timDichVu();
+                break;
+            case 6:
+                themChiTiet();
+                break;
+            case 7:
+                suaChiTiet();
+                break;
+            case 8:
+                xoaChiTiet();
+                break;
+            case 9:
+                xemChiTietTheoDatPhong();
+                break;
+            case 10:
+                inDanhSachChiTiet(qlDichVu.layDanhSachChiTiet());
+                break;
+            case 11:
+                lapHoaDonTuDatPhong();
+                break;
+            case 12:
+                themHoaDon();
+                break;
+            case 13:
+                thanhToanHoaDon();
+                break;
+            case 14:
+                hienThiDanhSachHoaDon();
+                break;
+            case 15:
+                timVaInHoaDon();
+                break;
+            case 16:
+                suaHoaDon();
+                break;
+            case 17:
+                xoaHoaDon();
+                break;
+            case 18:
+                xemLichSuThanhToan();
+                break;
+            case 0:
+                System.out.println("Quay lai menu truoc...");
+                break;
+            default:
+                System.out.println("Lua chon khong hop le!");
             }
         } while (chon != 0);
     }
@@ -144,8 +144,7 @@ public class ThanhToanUI {
         String trangThai = chonTrangThai == 1 ? "DANG_HOAT_DONG" : "NGUNG_HOAT_DONG";
         String moTa = nhapChuoiChoPhepTrong("Mo ta moi (Enter de bo qua): ");
         DichVu dv = new DichVu(ma, ten, loai, donVi, gia, trangThai, moTa);
-        System.out.println(qlDichVu.suaDichVu(dv) ? "Cap nhat dich vu thanh cong!"
-                : "Cap nhat dich vu that bai!");
+        System.out.println(qlDichVu.suaDichVu(dv) ? "Cap nhat dich vu thanh cong!" : "Cap nhat dich vu that bai!");
     }
 
     private void xoaDichVu() {
@@ -164,16 +163,16 @@ public class ThanhToanUI {
             System.out.println("Danh sach dich vu trong!");
             return;
         }
-        System.out.printf("%-5s %-12s %-24s %-16s %-12s %-16s %-20s%n", "STT", "Ma DV", "Ten dich vu",
-                "Loai", "Don vi", "Gia", "Trang thai");
+        System.out.printf("%-5s %-12s %-24s %-16s %-12s %-16s %-20s%n", "STT", "Ma DV", "Ten dich vu", "Loai", "Don vi",
+                "Gia", "Trang thai");
         System.out.println("---------------------------------------------------------------"
                 + "--------------------------------------------------------");
         int stt = 0;
         for (DichVu dv : ds) {
             if (dv != null) {
-                System.out.printf("%-5d %-12s %-24s %-16s %-12s %-16s %-20s%n", ++stt,
-                        safe(dv.getMaDichVu()), safe(dv.getTenDichVu()), safe(dv.getLoaiDichVu()),
-                        safe(dv.getDonViTinh()), tien(dv.getGia()), safe(dv.getTrangThai()));
+                System.out.printf("%-5d %-12s %-24s %-16s %-12s %-16s %-20s%n", ++stt, safe(dv.getMaDichVu()),
+                        safe(dv.getTenDichVu()), safe(dv.getLoaiDichVu()), safe(dv.getDonViTinh()), tien(dv.getGia()),
+                        safe(dv.getTrangThai()));
             }
         }
     }
@@ -182,10 +181,8 @@ public class ThanhToanUI {
         String maDP = nhapChuoi("Ma dat phong: ");
         String maDV = nhapChuoi("Ma dich vu: ");
         int soLuong = nhapSoDuong("So luong: ");
-        ChiTietDichVu ct = new ChiTietDichVu(maDP, maDV, LocalDate.now(), LocalDate.now(), soLuong,
-                BigDecimal.ZERO);
-        System.out.println(qlDichVu.themChiTiet(ct) ? "Ghi nhan dich vu thanh cong!"
-                : "Ghi nhan dich vu that bai!");
+        ChiTietDichVu ct = new ChiTietDichVu(maDP, maDV, LocalDate.now(), LocalDate.now(), soLuong, BigDecimal.ZERO);
+        System.out.println(qlDichVu.themChiTiet(ct) ? "Ghi nhan dich vu thanh cong!" : "Ghi nhan dich vu that bai!");
     }
 
     private void suaChiTiet() {
@@ -197,15 +194,13 @@ public class ThanhToanUI {
             return;
         }
         cu.setSoLuong(nhapSoDuong("So luong moi: "));
-        System.out.println(qlDichVu.suaChiTiet(cu) ? "Cap nhat chi tiet thanh cong!"
-                : "Cap nhat chi tiet that bai!");
+        System.out.println(qlDichVu.suaChiTiet(cu) ? "Cap nhat chi tiet thanh cong!" : "Cap nhat chi tiet that bai!");
     }
 
     private void xoaChiTiet() {
         String maDP = nhapChuoi("Ma dat phong: ");
         String maDV = nhapChuoi("Ma dich vu can xoa: ");
-        System.out.println(qlDichVu.xoaChiTiet(maDP, maDV) ? "Xoa chi tiet thanh cong!"
-                : "Xoa chi tiet that bai!");
+        System.out.println(qlDichVu.xoaChiTiet(maDP, maDV) ? "Xoa chi tiet thanh cong!" : "Xoa chi tiet that bai!");
     }
 
     private void xemChiTietTheoDatPhong() {
@@ -227,10 +222,9 @@ public class ThanhToanUI {
         int stt = 0;
         for (ChiTietDichVu ct : ds) {
             if (ct != null) {
-                System.out.printf("%-5d %-14s %-12s %-24s %-12d %-14s %-14s %-16s%n", ++stt,
-                        safe(ct.getMaDatPhong()), safe(ct.getMaDichVu()),
-                        safe(qlDichVu.layTenDichVu(ct.getMaDichVu())), ct.getSoLuong(), tien(ct.getDonGia()),
-                        tien(ct.getThanhTien()), ct.getNgayDatDichVu());
+                System.out.printf("%-5d %-14s %-12s %-24s %-12d %-14s %-14s %-16s%n", ++stt, safe(ct.getMaDatPhong()),
+                        safe(ct.getMaDichVu()), safe(qlDichVu.layTenDichVu(ct.getMaDichVu())), ct.getSoLuong(),
+                        tien(ct.getDonGia()), tien(ct.getThanhTien()), ct.getNgayDatDichVu());
             }
         }
     }
@@ -262,8 +256,7 @@ public class ThanhToanUI {
             return;
         }
         HoaDon hd = new HoaDon(maHD, maDP, LocalDate.now(), tongGia, giamGia);
-        System.out.println(qlThanhToan.themHoaDon(hd) ? "Them hoa don thanh cong!"
-                : "Them hoa don that bai!");
+        System.out.println(qlThanhToan.themHoaDon(hd) ? "Them hoa don thanh cong!" : "Them hoa don that bai!");
     }
 
     private void thanhToanHoaDon() {
@@ -288,8 +281,8 @@ public class ThanhToanUI {
             System.out.println("Danh sach hoa don trong!");
             return;
         }
-        System.out.printf("%-5s %-14s %-14s %-14s %-14s %-14s %-20s%n", "STT", "Ma HD", "Ma dat phong",
-                "Tong gia", "Giam gia", "Thanh tien", "Trang thai");
+        System.out.printf("%-5s %-14s %-14s %-14s %-14s %-14s %-20s%n", "STT", "Ma HD", "Ma dat phong", "Tong gia",
+                "Giam gia", "Thanh tien", "Trang thai");
         System.out.println("---------------------------------------------------------------"
                 + "-----------------------------------------");
         int stt = 0;
@@ -301,9 +294,9 @@ public class ThanhToanUI {
     }
 
     private void inDongHoaDon(int stt, HoaDon hd) {
-        System.out.printf("%-5d %-14s %-14s %-14s %-14s %-14s %-20s%n", stt,
-                safe(hd.getMaHD()), safe(hd.getMaDatPhong()), tien(hd.getTongGia()),
-                tien(hd.getGiamGia()), tien(hd.getThanhTien()), hd.getTrangThai());
+        System.out.printf("%-5d %-14s %-14s %-14s %-14s %-14s %-20s%n", stt, safe(hd.getMaHD()),
+                safe(hd.getMaDatPhong()), tien(hd.getTongGia()), tien(hd.getGiamGia()), tien(hd.getThanhTien()),
+                hd.getTrangThai());
     }
 
     private void timVaInHoaDon() {
@@ -355,8 +348,7 @@ public class ThanhToanUI {
         }
         cu.setTongGia(tongGia);
         cu.setGiamGia(giamGia);
-        System.out.println(qlThanhToan.suaHoaDon(cu) ? "Cap nhat hoa don thanh cong!"
-                : "Cap nhat hoa don that bai!");
+        System.out.println(qlThanhToan.suaHoaDon(cu) ? "Cap nhat hoa don thanh cong!" : "Cap nhat hoa don that bai!");
     }
 
     private void xoaHoaDon() {
@@ -380,16 +372,16 @@ public class ThanhToanUI {
             System.out.println("Chua co giao dich.");
             return;
         }
-        System.out.printf("%-5s %-16s %-14s %-16s %-18s %-16s %-20s%n", "STT", "Ma giao dich", "Ma HD",
-                "So tien", "Phuong thuc", "Ngay thanh toan", "Trang thai");
+        System.out.printf("%-5s %-16s %-14s %-16s %-18s %-16s %-20s%n", "STT", "Ma giao dich", "Ma HD", "So tien",
+                "Phuong thuc", "Ngay thanh toan", "Trang thai");
         System.out.println("---------------------------------------------------------------"
                 + "------------------------------------------------------------");
         int stt = 0;
         for (ThanhToan gd : ds) {
             if (gd != null) {
-                System.out.printf("%-5d %-16s %-14s %-16s %-18s %-16s %-20s%n", ++stt,
-                        safe(gd.getMaThanhToan()), safe(gd.getMaHD()), tien(gd.getSoTien()),
-                        safe(gd.getPhuongThuc()), gd.getNgayThanhToan(), gd.getTrangThai());
+                System.out.printf("%-5d %-16s %-14s %-16s %-18s %-16s %-20s%n", ++stt, safe(gd.getMaThanhToan()),
+                        safe(gd.getMaHD()), tien(gd.getSoTien()), safe(gd.getPhuongThuc()), gd.getNgayThanhToan(),
+                        gd.getTrangThai());
             }
         }
     }

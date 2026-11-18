@@ -1,86 +1,115 @@
+
 package service;
 
-import dao.TaiKhoanDAO;
+import DAO.TaiKhoanDao;
 import model.TaiKhoan;
-import java.util.Arrays;
 
 public class QLTaiKhoan {
-    private TaiKhoan[] dsTaiKhoan;
-    private int soLuong;
-    private TaiKhoanDAO tkDAO;
+
+    private TaiKhoanDao tkDAO;
 
     public QLTaiKhoan() {
-        this.tkDAO = new TaiKhoanDAO();
-        TaiKhoan[] data = tkDAO.docFile();
-        if (data != null) {
-            this.dsTaiKhoan = data;
-            this.soLuong = data.length;
-        } else {
-            this.dsTaiKhoan = new TaiKhoan[0];
-            this.soLuong = 0;
-        }
+        tkDAO = new TaiKhoanDao();
     }
 
-    public TaiKhoan kiemTraDangNhap(String tenDangNhap, String matKhau) {
-        for (int i = 0; i < soLuong; i++) {
-            if (dsTaiKhoan[i].getTenDangNhap().equals(tenDangNhap) && 
-                dsTaiKhoan[i].getMatKhau().equals(matKhau)) {
-                return dsTaiKhoan[i];
-            }
+    // ================= ĐĂNG NHẬP =================
+
+    public TaiKhoan kiemTraDangNhap(
+            String tenDangNhap,
+            String matKhau) {
+
+        if (rong(tenDangNhap) || rong(matKhau)) {
+            return null;
         }
-        return null;
+
+        return tkDAO.dangNhap(tenDangNhap.trim(), matKhau);
     }
+
+    // ================= TÌM TÀI KHOẢN =================
 
     public TaiKhoan timTheoTenDN(String tenDangNhap) {
-        for (int i = 0; i < soLuong; i++) {
-            if (dsTaiKhoan[i].getTenDangNhap().equalsIgnoreCase(tenDangNhap)) {
-                return dsTaiKhoan[i];
-            }
+
+        if (rong(tenDangNhap)) {
+            return null;
         }
-        return null;
+
+        return tkDAO.timTheoTen(tenDangNhap.trim());
     }
 
+    // ================= THÊM =================
+
     public boolean them(TaiKhoan tk) {
+
+        if (tk == null
+                || rong(tk.getTenDangNhap())
+                || rong(tk.getMatKhau())) {
+
+            return false;
+        }
+
+        // Kiểm tra trùng tên đăng nhập
         if (timTheoTenDN(tk.getTenDangNhap()) != null) {
             return false;
         }
-        dsTaiKhoan = Arrays.copyOf(dsTaiKhoan, soLuong + 1);
-        dsTaiKhoan[soLuong] = tk;
-        soLuong++;
-        tkDAO.ghiFile(dsTaiKhoan);
-        return true;
+
+        // DAO tự thêm và ghi file
+        return tkDAO.them(tk);
     }
 
-    public boolean doiMatKhau(String tenDangNhap, String matKhauMoi) {
-        TaiKhoan tk = timTheoTenDN(tenDangNhap);
-        if (tk != null) {
-            tk.setMatKhau(matKhauMoi);
-            tkDAO.ghiFile(dsTaiKhoan);
-            return true;
+    // ================= ĐỔI MẬT KHẨU =================
+
+    public boolean doiMatKhau(
+            String tenDangNhap,
+            String matKhauMoi) {
+
+        if (rong(tenDangNhap) || rong(matKhauMoi)) {
+            return false;
         }
-        return false;
+
+        // Kiểm tra tài khoản tồn tại
+        if (timTheoTenDN(tenDangNhap) == null) {
+            return false;
+        }
+
+        // DAO tự đổi và ghi file
+        return tkDAO.doiMatKhau(
+                tenDangNhap.trim(),
+                matKhauMoi
+        );
     }
+
+    // ================= XÓA =================
 
     public boolean xoa(String tenDangNhap) {
-        int index = -1;
-        for (int i = 0; i < soLuong; i++) {
-            if (dsTaiKhoan[i].getTenDangNhap().equalsIgnoreCase(tenDangNhap)) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) return false;
 
-        for (int i = index; i < soLuong - 1; i++) {
-            dsTaiKhoan[i] = dsTaiKhoan[i + 1];
+        if (rong(tenDangNhap)) {
+            return false;
         }
-        soLuong--;
-        dsTaiKhoan = Arrays.copyOf(dsTaiKhoan, soLuong);
-        tkDAO.ghiFile(dsTaiKhoan);
-        return true;
+
+        // Kiểm tra tồn tại
+        if (timTheoTenDN(tenDangNhap) == null) {
+            return false;
+        }
+
+        // DAO tự xóa và ghi file
+        return tkDAO.xoa(tenDangNhap.trim());
     }
 
+    // ================= DANH SÁCH =================
+
     public TaiKhoan[] getDanhSach() {
-        return Arrays.copyOf(dsTaiKhoan, soLuong);
+        return tkDAO.layTatCa();
+    }
+
+    // ================= SỐ LƯỢNG =================
+
+    public int getSoLuong() {
+        return tkDAO.getSoLuong();
+    }
+
+    // ================= KIỂM TRA RỖNG =================
+
+    private boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
     }
 }

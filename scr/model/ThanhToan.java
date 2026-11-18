@@ -14,8 +14,8 @@ public class ThanhToan {
     public ThanhToan() {
     }
 
-    public ThanhToan(String maThanhToan, String maHD, BigDecimal soTien, String phuongThuc,
-            LocalDate ngayThanhToan, TrangThaiThanhToan trangThai) {
+    public ThanhToan(String maThanhToan, String maHD, BigDecimal soTien, String phuongThuc, LocalDate ngayThanhToan,
+            TrangThaiThanhToan trangThai) {
         this.maThanhToan = maThanhToan;
         this.maHD = maHD;
         this.soTien = soTien;
@@ -74,8 +74,7 @@ public class ThanhToan {
 
     @Override
     public String toString() {
-        return "ThanhToan{maThanhToan='" + maThanhToan + "', maHD='" + maHD + "', soTien=" + soTien
-                + ", phuongThuc='"
+        return "ThanhToan{maThanhToan='" + maThanhToan + "', maHD='" + maHD + "', soTien=" + soTien + ", phuongThuc='"
                 + phuongThuc + "', ngayThanhToan=" + ngayThanhToan + ", trangThai=" + trangThai + '}';
     }
 }
