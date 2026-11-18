@@ -1,32 +1,31 @@
 package service;
 
-import dao.nhanvienDAO;
-import model.nhanvien;
+import dao.NhanVienDAO;
+import model.NhanVien;
 import java.util.Arrays;
 
 public class QLNhanVien {
-    private nhanvien[] dsNhanVien;
+    private NhanVien[] dsNhanVien;
     private int soLuong;
-    private nhanvienDAO nvDAO;
+    private NhanVienDAO nvDAO;
 
     public QLNhanVien() {
-        this.nvDAO = new nhanvienDAO();
-        // Giả sử nvDAO có hàm đọc danh sách từ file trả về mảng nhanvien[]
-        nhanvien[] data = nvDAO.docFile(); 
+        this.nvDAO = new NhanVienDAO();
+        NhanVien[] data = nvDAO.docFile(); 
         if (data != null) {
             this.dsNhanVien = data;
             this.soLuong = data.length;
         } else {
-            this.dsNhanVien = new nhanvien[0];
+            this.dsNhanVien = new NhanVien[0];
             this.soLuong = 0;
         }
     }
 
-    public nhanvien[] getDanhSach() {
+    public NhanVien[] getDanhSach() {
         return Arrays.copyOf(dsNhanVien, soLuong);
     }
 
-    public nhanvien timTheoMa(String maNV) {
+    public NhanVien timTheoMa(String maNV) {
         for (int i = 0; i < soLuong; i++) {
             if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
                 return dsNhanVien[i];
@@ -35,7 +34,7 @@ public class QLNhanVien {
         return null;
     }
 
-    public boolean them(nhanvien nv) {
+    public boolean them(NhanVien nv) {
         if (timTheoMa(nv.getMaNV()) != null) {
             return false; // Trùng mã nhân viên
         }
@@ -46,7 +45,7 @@ public class QLNhanVien {
         return true;
     }
 
-    public boolean sua(nhanvien nvMoi) {
+    public boolean sua(NhanVien nvMoi) {
         for (int i = 0; i < soLuong; i++) {
             if (dsNhanVien[i].getMaNV().equalsIgnoreCase(nvMoi.getMaNV())) {
                 dsNhanVien[i] = nvMoi;
