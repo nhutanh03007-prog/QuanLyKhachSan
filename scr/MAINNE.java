@@ -1,7 +1,6 @@
-import ui.PhongUI;
-    public class Main {
 import ui.HeThongUI;
 import ui.PhongUI;
+    public class Main {
 
         public static void main(String[] args) {
 
