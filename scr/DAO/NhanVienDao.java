@@ -2,12 +2,12 @@ package DAO;
 
 import model.NhanVien;
 
-public class NhanVienDAO {
+public class NhanVienDao {
 
     private NhanVien[] danhSach;
     private int soLuong;
 
-    public NhanVienDAO() {
+    public NhanVienDao() {
         this.danhSach = new NhanVien[10];
         this.soLuong = 0;
     }
