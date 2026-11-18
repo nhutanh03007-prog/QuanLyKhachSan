@@ -72,10 +72,7 @@ public class QLThongKe {
                 }
             }
         }
-
-        return qlPhong.demSoLuongPhongTheoTinhTrang(
-                tinhTrang
-        );
+        return count;
     }
 
     public int tongSoPhong() {
