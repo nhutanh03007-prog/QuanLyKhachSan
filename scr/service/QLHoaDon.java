@@ -1,10 +1,15 @@
 package service;
 
-import DAO.*;
+import DAO.ChiTietDichVuDAO;
+import DAO.DatPhongDAO;
+import DAO.HoaDonDAO;
 import INTERFACE.IHoaDon;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import model.*;
+import model.DatPhong;
+import model.HoaDon;
+import model.TrangThaiDatPhong;
+import model.TrangThaiThanhToan;
 
 public class QLHoaDon implements IHoaDon {
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
@@ -28,7 +33,8 @@ public class QLHoaDon implements IHoaDon {
     }
 
     public boolean capNhatTrangThaiThanhToan(String ma, TrangThaiThanhToan t) {
-        return hoaDonDAO.capNhatTrangThai(ma, t, null, t == TrangThaiThanhToan.DA_THANH_TOAN ? LocalDate.now() : null);
+        LocalDate ngayThanhToan = t == TrangThaiThanhToan.DA_THANH_TOAN ? LocalDate.now() : null;
+        return hoaDonDAO.capNhatTrangThai(ma, t, null, ngayThanhToan);
     }
 
     public HoaDon timHoaDon(String ma) {
@@ -40,20 +46,23 @@ public class QLHoaDon implements IHoaDon {
     }
 
     public BigDecimal tinhTienPhongTrongHoaDon(HoaDon h) {
-        if (h == null || h.getTongGia() == null)
+        if (h == null || h.getTongGia() == null) {
             return BigDecimal.ZERO;
+        }
         return h.getTongGia().subtract(chiTietDAO.tinhTongTienTheoDatPhong(h.getMaDatPhong()));
     }
 
     public HoaDon lapHoaDonTuDatPhong(String maHD, String maDP, BigDecimal giamGia) {
         DatPhong dp = datPhongDAO.timTheoMa(maDP);
         if (dp == null || dp.getTrangThai() == TrangThaiDatPhong.DA_HUY || daCoHoaDon(maDP) || giamGia == null
-                || giamGia.signum() < 0)
+                || giamGia.signum() < 0) {
             return null;
+        }
         BigDecimal phong = BigDecimal.valueOf(dp.tinhTienPhong());
         BigDecimal tong = phong.add(chiTietDAO.tinhTongTienTheoDatPhong(maDP));
-        if (giamGia.compareTo(tong) > 0)
+        if (giamGia.compareTo(tong) > 0) {
             return null;
+        }
         HoaDon h = new HoaDon(maHD, maDP, LocalDate.now(), tong, giamGia);
         return themHoaDon(h) ? h : null;
     }

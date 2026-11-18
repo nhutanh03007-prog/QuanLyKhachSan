@@ -4,16 +4,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class ChiTietDichVu {
-    private String maDatPhong, maDichVu;
-    private LocalDate ngayDatDichVu, ngayNhan;
+    private String maDatPhong;
+    private String maDichVu;
+    private LocalDate ngayDatDichVu;
+    private LocalDate ngayNhan;
     private int soLuong;
-    private BigDecimal donGia, thanhTien;
+    private BigDecimal donGia;
+    private BigDecimal thanhTien;
 
     public ChiTietDichVu() {
     }
 
-    public ChiTietDichVu(String maDatPhong, String maDichVu, LocalDate ngayDatDichVu, LocalDate ngayNhan, int soLuong,
-            BigDecimal donGia) {
+    public ChiTietDichVu(String maDatPhong, String maDichVu, LocalDate ngayDatDichVu, LocalDate ngayNhan,
+            int soLuong, BigDecimal donGia) {
         this.maDatPhong = maDatPhong;
         this.maDichVu = maDichVu;
         this.ngayDatDichVu = ngayDatDichVu;
@@ -80,7 +83,8 @@ public class ChiTietDichVu {
 
     @Override
     public String toString() {
-        return "ChiTietDichVu{maDatPhong='" + maDatPhong + "', maDichVu='" + maDichVu + "', soLuong=" + soLuong
+        return "ChiTietDichVu{maDatPhong='" + maDatPhong + "', maDichVu='" + maDichVu
+                + "', soLuong=" + soLuong
                 + ", donGia=" + donGia + ", thanhTien=" + thanhTien + '}';
     }
 }

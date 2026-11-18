@@ -1,8 +1,14 @@
 package service;
 
-import DAO.*;
+import DAO.ChiTietDichVuDAO;
+import DAO.DatPhongDAO;
+import DAO.DichVuDAO;
+import DAO.HoaDonDAO;
 import java.math.BigDecimal;
-import model.*;
+import model.ChiTietDichVu;
+import model.DichVu;
+import model.DatPhong;
+import model.TrangThaiDatPhong;
 
 public class QLDichVu {
     private final DichVuDAO dichVuDAO = new DichVuDAO();
@@ -45,25 +51,30 @@ public class QLDichVu {
 
     private boolean datPhongChuaChot(String ma) {
         DatPhong dp = datPhongDAO.timTheoMa(ma);
-        return dp != null && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY && hoaDonDAO.timTheoMaDatPhong(ma) == null;
+        return dp != null && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
+                && hoaDonDAO.timTheoMaDatPhong(ma) == null;
     }
 
     public boolean themChiTiet(ChiTietDichVu c) {
-        if (c == null || !datPhongChuaChot(c.getMaDatPhong()))
+        if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
             return false;
+        }
         DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());
-        if (d == null || "NGUNG_HOAT_DONG".equals(d.getTrangThai()))
+        if (d == null || "NGUNG_HOAT_DONG".equals(d.getTrangThai())) {
             return false;
+        }
         c.setDonGia(d.getGia());
         return chiTietDAO.them(c);
     }
 
     public boolean suaChiTiet(ChiTietDichVu c) {
-        if (c == null || !datPhongChuaChot(c.getMaDatPhong()))
+        if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
             return false;
+        }
         DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());
-        if (d == null)
+        if (d == null) {
             return false;
+        }
         c.setDonGia(d.getGia());
         return chiTietDAO.sua(c);
     }
