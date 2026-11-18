@@ -21,7 +21,6 @@ public class QLTaiKhoan {
         }
     }
 
-    // Trả về đối tượng TaiKhoan nếu đăng nhập thành công để HeThongUI phân quyền
     public TaiKhoan kiemTraDangNhap(String tenDangNhap, String matKhau) {
         for (int i = 0; i < soLuong; i++) {
             if (dsTaiKhoan[i].getTenDangNhap().equals(tenDangNhap) && 

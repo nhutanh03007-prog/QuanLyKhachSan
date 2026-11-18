@@ -4,7 +4,7 @@ public class NhanVien {
     private String maNV;
     private String hoTen;
     private String gioiTinh;
-    private String ngaySinh; // yyyy-MM-dd
+    private String ngaySinh;
     private String diaChi;
     private String soDienThoai;
     private String chucVu;
