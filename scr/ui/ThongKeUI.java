@@ -1,83 +1,99 @@
 package ui;
 
-import service.QLThongKe;
-import service.QLThanhToan;
-import service.QLPhong;
-import service.QLKhachHang;
-import service.QLDichVu;
-
 import java.util.Scanner;
+import model.TinhTrangPhong;
+import model.TrangThaiThanhToan;
+import service.QLDichVu;
+import service.QLHoaDon;
+import service.QLKhachHang;
+import service.QLPhong;
+import service.QLThongKe;
 
 public class ThongKeUI {
 
     private final Scanner sc = new Scanner(System.in);
-
     private final QLThongKe qlThongKe;
 
     public ThongKeUI() {
-
-        qlThongKe = new QLThongKe(
-                new QLThanhToan(),
+        // Sửa QLThanhToan() thành QLHoaDon() cho đúng thứ tự tham số constructor
+        this.qlThongKe = new QLThongKe(
+                new QLHoaDon(),
                 new QLPhong(),
                 new QLKhachHang(),
                 new QLDichVu()
         );
     }
 
-    public void menuThongKe() {
+    // Constructor mở rộng nếu muốn truyền sẵn đối tượng QLThongKe từ ngoài vào
+    public ThongKeUI(QLThongKe qlThongKe) {
+        this.qlThongKe = qlThongKe;
+    }
 
+    public void menuThongKe() {
         int chon;
 
         do {
-            System.out.println("\n===== MENU THONG KE =====");
-            System.out.println("1. Thong ke phong");
-            System.out.println("2. Thong ke khach hang");
-            System.out.println("3. Thong ke dich vu");
-            System.out.println("4. Thong ke doanh thu");
-            System.out.println("5. Bao cao tong hop");
-            System.out.println("0. Quay lai");
-
-            System.out.print("Nhap lua chon: ");
+            System.out.println("\n===== MENU THỐNG KÊ =====");
+            System.out.println("1. Thống kê phòng");
+            System.out.println("2. Thống kê khách hàng");
+            System.out.println("3. Thống kê dịch vụ");
+            System.out.println("4. Thống kê hóa đơn / doanh thu");
+            System.out.println("5. Báo cáo tổng hợp");
+            System.out.println("0. Quay lại");
+            System.out.print("Nhập lựa chọn: ");
 
             try {
                 chon = Integer.parseInt(sc.nextLine());
-
             } catch (NumberFormatException e) {
-                System.out.println("Vui long nhap so!");
+                System.out.println("Vui lòng nhập số!");
                 chon = -1;
                 continue;
             }
 
             switch (chon) {
-
-                case 1:
-                    qlThongKe.thongKePhong();
-                    break;
-
-                case 2:
-                    qlThongKe.thongKeKhachHang();
-                    break;
-
-                case 3:
-                    qlThongKe.thongKeDichVu();
-                    break;
-
-                case 4:
-                    qlThongKe.thongKeDoanhThu();
-                    break;
-
-                case 5:
-                    qlThongKe.baoCaoTongHop();
-                    break;
-
-                case 0:
-                    System.out.println("Quay lai menu!");
-                    break;
-
-                default:
-                    System.out.println("Lua chon khong hop le!");
+                case 1 -> thongKePhong();
+                case 2 -> thongKeKhachHang();
+                case 3 -> thongKeDichVu();
+                case 4 -> thongKeHoaDon();
+                case 5 -> baoCaoTongHop();
+                case 0 -> System.out.println("Quay lại menu!");
+                default -> System.out.println("Lựa chọn không hợp lệ!");
             }
 
         } while (chon != 0);
+    }
+
+    private void thongKePhong() {
+        System.out.println("\n--- THỐNG KÊ PHÒNG ---");
+        System.out.println("Tổng số phòng: " + qlThongKe.tongSoPhong());
+        for (TinhTrangPhong tt : TinhTrangPhong.values()) {
+            System.out.println("- Phòng trạng thái [" + tt + "]: " + qlThongKe.demPhongTheoTrangThai(tt));
+        }
+    }
+
+    private void thongKeKhachHang() {
+        System.out.println("\n--- THỐNG KÊ KHÁCH HÀNG ---");
+        System.out.print("Nhập loại khách hàng cần thống kê (VD: VIP, Thuong): ");
+        String loaiKhach = sc.nextLine();
+        System.out.println("Số lượng khách hàng loại [" + loaiKhach + "]: " + qlThongKe.demKhachHangTheoLoai(loaiKhach));
+    }
+
+    private void thongKeDichVu() {
+        System.out.println("\n--- THỐNG KÊ DỊCH VỤ ---");
+        System.out.println("Tổng số dịch vụ đang hoạt động: " + qlThongKe.tongSoDichVuHoatDong());
+    }
+
+    private void thongKeHoaDon() {
+        System.out.println("\n--- THỐNG KÊ HÓA ĐƠN ---");
+        for (TrangThaiThanhToan tt : TrangThaiThanhToan.values()) {
+            System.out.println("- Hóa đơn [" + tt + "]: " + qlThongKe.demHoaDonTheoTrangThai(tt));
+        }
+    }
+
+    private void baoCaoTongHop() {
+        System.out.println("\n========= BÁO CÁO TỔNG HỢP =========");
+        thongKePhong();
+        thongKeDichVu();
+        thongKeHoaDon();
     }
 }
