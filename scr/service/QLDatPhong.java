@@ -5,14 +5,14 @@ import model.DatPhong;
 import model.TrangThaiDatPhong;
 
 public class QLDatPhong {
-    private DatPhongDAO datPhongDAO = new DatPhongDAO();
+    private final DatPhongDAO datPhongDAO = new DatPhongDAO();
 
     public boolean taoDatPhong(DatPhong dp) {
         if (dp == null || !dp.isNgayHopLe()) {
             System.out.println("Lỗi: Ngày nhận hoặc ngày trả phòng không hợp lệ!");
             return false;
         }
-        // Kiểm tra phòng có trống trong lịch đặt không
+        
         if (!datPhongDAO.kiemTraPhongTrong(dp.getMaPhong(), dp.getNgayNhanPhong(), dp.getNgayTraPhong())) {
             System.out.println("Lỗi: Phòng " + dp.getMaPhong() + " đã có người đặt trong thời gian này!");
             return false;
