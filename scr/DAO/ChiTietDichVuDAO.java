@@ -1,75 +1,100 @@
 package DAO;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import model.ChiTietDichVu;
 
 public class ChiTietDichVuDAO {
     public static ChiTietDichVu[] danhSachChiTiet = new ChiTietDichVu[100];
     public static int soLuongChiTiet = 0;
 
-    public boolean them(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || rong(chiTiet.getMaDatPhong()) || rong(chiTiet.getMaDichVu()) || timTheoMa(chiTiet.getMaDatPhong(), chiTiet.getMaDichVu()) != null
-                || soLuongChiTiet == danhSachChiTiet.length) return false;
-        chiTiet.tinhThanhTien();
-        danhSachChiTiet[soLuongChiTiet] = chiTiet;
-        soLuongChiTiet++;
+    public boolean them(ChiTietDichVu c) {
+        if (!hopLe(c))
+            return false;
+        ChiTietDichVu cu = timTheoMa(c.getMaDatPhong(), c.getMaDichVu());
+        if (cu != null) {
+            cu.setSoLuong(cu.getSoLuong() + c.getSoLuong());
+            cu.setDonGia(c.getDonGia());
+            cu.setThanhTien(tinhThanhTien(cu));
+            return true;
+        }
+        if (soLuongChiTiet >= 100)
+            return false;
+        c.setThanhTien(tinhThanhTien(c));
+        danhSachChiTiet[soLuongChiTiet++] = c;
         return true;
     }
 
-    public boolean sua(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || rong(chiTiet.getMaDatPhong()) || rong(chiTiet.getMaDichVu())) return false;
-        for (int i = 0; i < soLuongChiTiet; i++) {
-            if (laChiTietCanTim(danhSachChiTiet[i], chiTiet.getMaDatPhong(), chiTiet.getMaDichVu())) {
-                chiTiet.tinhThanhTien();
-                danhSachChiTiet[i] = chiTiet;
+    public boolean sua(ChiTietDichVu c) {
+        if (!hopLe(c))
+            return false;
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], c.getMaDatPhong(), c.getMaDichVu())) {
+                c.setThanhTien(tinhThanhTien(c));
+                danhSachChiTiet[i] = c;
                 return true;
             }
-        }
         return false;
     }
 
-    public boolean xoa(String maDatPhong, String maDichVu) {
-        if (rong(maDatPhong) || rong(maDichVu)) return false;
-        for (int i = 0; i < soLuongChiTiet; i++) {
-            if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) {
-                 System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i,
-                        soLuongChiTiet - i - 1);
+    private boolean hopLe(ChiTietDichVu c) {
+        return c != null && !rong(c.getMaDatPhong()) && !rong(c.getMaDichVu()) && c.getSoLuong() > 0
+                && c.getDonGia() != null && c.getDonGia().signum() >= 0;
+    }
+
+    public BigDecimal tinhThanhTien(ChiTietDichVu c) {
+        return c == null || c.getDonGia() == null ? BigDecimal.ZERO
+                : c.getDonGia().multiply(BigDecimal.valueOf(c.getSoLuong()));
+    }
+
+    public boolean xoa(String dp, String dv) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], dp, dv)) {
+                System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i, soLuongChiTiet - i - 1);
                 danhSachChiTiet[--soLuongChiTiet] = null;
                 return true;
             }
-        }
         return false;
     }
 
-    public ChiTietDichVu timTheoMa(String maDatPhong, String maDichVu) {
-        if (rong(maDatPhong) || rong(maDichVu)) return null;
-        for (int i = 0; i < soLuongChiTiet; i++) {
-            if (laChiTietCanTim(danhSachChiTiet[i], maDatPhong, maDichVu)) return danhSachChiTiet[i];
-        }
+    public ChiTietDichVu timTheoMa(String dp, String dv) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], dp, dv))
+                return danhSachChiTiet[i];
         return null;
     }
 
     public ChiTietDichVu[] layDanhSach() {
-        ChiTietDichVu[] ketQua = new ChiTietDichVu[soLuongChiTiet];
-          System.arraycopy(danhSachChiTiet, 0, ketQua, 0, soLuongChiTiet);
-        return ketQua;
-    }
-    public ChiTietDichVu[] layTheoMaDatPhong(String maDatPhong) {
-        if (rong(maDatPhong)) return new ChiTietDichVu[0];
-        int dem = 0;
-        for (int i = 0; i < soLuongChiTiet; i++) {
-            if (maDatPhong.equals(danhSachChiTiet[i].getMaDatPhong())) dem++;
-        }
-        ChiTietDichVu[] ketQua = new ChiTietDichVu[dem];
-        int viTri = 0;
-        for (int i = 0; i < soLuongChiTiet; i++) {
-            if (maDatPhong.equals(danhSachChiTiet[i].getMaDatPhong())) ketQua[viTri++] = danhSachChiTiet[i];
-        }
-        return ketQua;
+        return java.util.Arrays.copyOf(danhSachChiTiet, soLuongChiTiet);
     }
 
-    private boolean laChiTietCanTim(ChiTietDichVu chiTiet, String maDatPhong, String maDichVu) {
-        return chiTiet != null && maDatPhong != null && maDichVu != null && maDatPhong.equals(chiTiet.getMaDatPhong())
-                && maDichVu.equals(chiTiet.getMaDichVu());
+    public ChiTietDichVu[] layTheoMaDatPhong(String dp) {
+        ArrayList<ChiTietDichVu> a = new ArrayList<>();
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (danhSachChiTiet[i] != null && dp != null && dp.equals(danhSachChiTiet[i].getMaDatPhong()))
+                a.add(danhSachChiTiet[i]);
+        return a.toArray(new ChiTietDichVu[0]);
     }
-    private boolean rong(String s) { return s == null || s.trim().isEmpty(); }
+
+    public boolean kiemTraDichVuDangSuDung(String ma) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (danhSachChiTiet[i] != null && ma != null && ma.equals(danhSachChiTiet[i].getMaDichVu()))
+                return true;
+        return false;
+    }
+
+    public BigDecimal tinhTongTienTheoDatPhong(String dp) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ChiTietDichVu c : layTheoMaDatPhong(dp))
+            sum = sum.add(tinhThanhTien(c));
+        return sum;
+    }
+
+    private boolean cungKhoa(ChiTietDichVu c, String dp, String dv) {
+        return c != null && dp != null && dv != null && dp.equals(c.getMaDatPhong()) && dv.equals(c.getMaDichVu());
+    }
+
+    private boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }
