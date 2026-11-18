@@ -1,78 +1,92 @@
 package service;
 
-import dao.nhanvienDAO;
-import model.nhanvien;
-import java.util.Arrays;
+import DAO.NhanVienDao;
+import model.NhanVien;
 
 public class QLNhanVien {
-    private nhanvien[] dsNhanVien;
-    private int soLuong;
-    private nhanvienDAO nvDAO;
+
+    private NhanVienDao nvDAO;
 
     public QLNhanVien() {
-        this.nvDAO = new nhanvienDAO();
-        // Giả sử nvDAO có hàm đọc danh sách từ file trả về mảng nhanvien[]
-        nhanvien[] data = nvDAO.docFile(); 
-        if (data != null) {
-            this.dsNhanVien = data;
-            this.soLuong = data.length;
-        } else {
-            this.dsNhanVien = new nhanvien[0];
-            this.soLuong = 0;
+        nvDAO = new NhanVienDao();
+    }
+
+    // Lấy danh sách nhân viên
+    public NhanVien[] getDanhSach() {
+        return nvDAO.layTatCa();
+    }
+
+    // Tìm theo mã nhân viên
+    public NhanVien timTheoMa(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return null;
         }
+
+        return nvDAO.timTheoMa(maNV.trim());
     }
 
-    public nhanvien[] getDanhSach() {
-        return Arrays.copyOf(dsNhanVien, soLuong);
-    }
+    // Thêm nhân viên
+    public boolean them(NhanVien nv) {
 
-    public nhanvien timTheoMa(String maNV) {
-        for (int i = 0; i < soLuong; i++) {
-            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
-                return dsNhanVien[i];
-            }
+        if (nv == null) {
+            return false;
         }
-        return null;
-    }
 
-    public boolean them(nhanvien nv) {
+        if (nv.getMaNV() == null || nv.getMaNV().trim().isEmpty()) {
+            return false;
+        }
+
+        if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
+            return false;
+        }
+
         if (timTheoMa(nv.getMaNV()) != null) {
-            return false; // Trùng mã nhân viên
+            return false;
         }
-        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong + 1);
-        dsNhanVien[soLuong] = nv;
-        soLuong++;
-        nvDAO.ghiFile(dsNhanVien);
-        return true;
+
+        return nvDAO.them(nv);
     }
 
-    public boolean sua(nhanvien nvMoi) {
-        for (int i = 0; i < soLuong; i++) {
-            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(nvMoi.getMaNV())) {
-                dsNhanVien[i] = nvMoi;
-                nvDAO.ghiFile(dsNhanVien);
-                return true;
-            }
+    // Sửa nhân viên
+    public boolean sua(NhanVien nv) {
+
+        if (nv == null || nv.getMaNV() == null
+                || nv.getMaNV().trim().isEmpty()) {
+            return false;
         }
-        return false;
+
+        if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
+            return false;
+        }
+
+        if (timTheoMa(nv.getMaNV()) == null) {
+            return false;
+        }
+
+        return nvDAO.capNhat(nv);
     }
 
+    // Xóa nhân viên
     public boolean xoa(String maNV) {
-        int index = -1;
-        for (int i = 0; i < soLuong; i++) {
-            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
-                index = i;
-                break;
-            }
-        }
-        if (index == -1) return false;
 
-        for (int i = index; i < soLuong - 1; i++) {
-            dsNhanVien[i] = dsNhanVien[i + 1];
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return false;
         }
-        soLuong--;
-        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong);
-        nvDAO.ghiFile(dsNhanVien);
-        return true;
+
+        if (timTheoMa(maNV) == null) {
+            return false;
+        }
+
+        return nvDAO.xoa(maNV);
+    }
+
+    // Kiểm tra mã nhân viên
+    public boolean kiemTraMaTonTai(String maNV) {
+        return timTheoMa(maNV) != null;
+    }
+
+    // Đếm nhân viên
+    public int demSoLuong() {
+        return nvDAO.demSoLuong();
     }
 }

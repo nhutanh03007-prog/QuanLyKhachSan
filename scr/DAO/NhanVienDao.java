@@ -135,9 +135,3 @@ public class NhanVienDao {
     public int demSoLuong() {
         return soLuong;
     }
-
-    // Mở rộng mảng
-    private void moRongMang() {
-        danhSach = Arrays.copyOf(danhSach, danhSach.length * 2);
-    }
-}

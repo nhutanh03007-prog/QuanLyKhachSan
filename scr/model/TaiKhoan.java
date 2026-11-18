@@ -1,5 +1,7 @@
 package model;
+
 public class TaiKhoan {
+
     private String tenDangNhap;
     private String matKhau;
     private String maNV;
@@ -9,8 +11,9 @@ public class TaiKhoan {
     public TaiKhoan() {
     }
 
-    public TaiKhoan(String tenDangNhap, String matKhau, String maNV,
-                    String vaiTro, String trangThai) {
+    public TaiKhoan(String tenDangNhap, String matKhau,
+                    String maNV, String vaiTro, String trangThai) {
+
         this.tenDangNhap = tenDangNhap;
         this.matKhau = matKhau;
         this.maNV = maNV;
@@ -18,14 +21,55 @@ public class TaiKhoan {
         this.trangThai = trangThai;
     }
 
-    public String getTenDangNhap() { return tenDangNhap; }
-    public void setTenDangNhap(String tenDangNhap) { this.tenDangNhap = tenDangNhap; }
-    public String getMatKhau() { return matKhau; }
-    public void setMatKhau(String matKhau) { this.matKhau = matKhau; }
-    public String getMaNV() { return maNV; }
-    public void setMaNV(String maNV) { this.maNV = maNV; }
-    public String getVaiTro() { return vaiTro; }
-    public void setVaiTro(String vaiTro) { this.vaiTro = vaiTro; }
-    public String getTrangThai() { return trangThai; }
-    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+    // Getter và Setter
+
+    public String getTenDangNhap() {
+        return tenDangNhap;
+    }
+
+    public void setTenDangNhap(String tenDangNhap) {
+        this.tenDangNhap = tenDangNhap;
+    }
+
+    public String getMatKhau() {
+        return matKhau;
+    }
+
+    public void setMatKhau(String matKhau) {
+        this.matKhau = matKhau;
+    }
+
+    public String getMaNV() {
+        return maNV;
+    }
+
+    public void setMaNV(String maNV) {
+        this.maNV = maNV;
+    }
+
+    public String getVaiTro() {
+        return vaiTro;
+    }
+
+    public void setVaiTro(String vaiTro) {
+        this.vaiTro = vaiTro;
+    }
+
+    public String getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(String trangThai) {
+        this.trangThai = trangThai;
+    }
+
+    @Override
+    public String toString() {
+        return "TaiKhoan{" +
+                "tenDangNhap='" + tenDangNhap + '\'' +
+                ", maNV='" + maNV + '\'' +
+                ", vaiTro='" + vaiTro + '\'' +
+                ", trangThai='" + trangThai + '\'' +
+                '}';
+    }
 }
