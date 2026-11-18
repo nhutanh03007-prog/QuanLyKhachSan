@@ -5,7 +5,7 @@ import INTERFACE.IKhachHang;
 import model.KhachHang;
 
 public class QLKhachHang implements IKhachHang {
-    private KhachHangDAO khachHangDAO;
+    private final KhachHangDAO khachHangDAO;
 
     public QLKhachHang() {
         this.khachHangDAO = new KhachHangDAO();
