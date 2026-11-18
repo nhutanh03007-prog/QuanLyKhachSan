@@ -1,8 +1,8 @@
 
 package DAO;
 
-import model.NhanVien;
 import java.util.Arrays;
+import model.NhanVien;
 
 public class NhanVienDao {
 
@@ -14,12 +14,10 @@ public class NhanVienDao {
         this.soLuong = 0;
     }
 
-    // Lấy danh sách nhân viên
     public NhanVien[] layTatCa() {
         return Arrays.copyOf(danhSach, soLuong);
     }
 
-    // Thêm nhân viên
     public boolean them(NhanVien nv) {
         if (nv == null) {
             return false;
@@ -47,7 +45,6 @@ public class NhanVienDao {
         return true;
     }
 
-    // Cập nhật nhân viên
     public boolean capNhat(NhanVien nv) {
         if (nv == null) {
             return false;
@@ -78,7 +75,6 @@ public class NhanVienDao {
         return false;
     }
 
-    // Xóa nhân viên
     public boolean xoa(String maNV) {
         if (maNV == null || maNV.trim().isEmpty()) {
             return false;
@@ -105,7 +101,6 @@ public class NhanVienDao {
         return false;
     }
 
-    // Tìm nhân viên theo mã
     public NhanVien timTheoMa(String maNV) {
         if (maNV == null || maNV.trim().isEmpty()) {
             return null;
@@ -126,17 +121,14 @@ public class NhanVienDao {
         return null;
     }
 
-    // Kiểm tra mã nhân viên tồn tại
     public boolean kiemTraMaTonTai(String maNV) {
         return timTheoMa(maNV) != null;
     }
 
-    // Đếm số lượng nhân viên
     public int demSoLuong() {
         return soLuong;
     }
 
-    // Mở rộng mảng
     private void moRongMang() {
         danhSach = Arrays.copyOf(danhSach, danhSach.length * 2);
     }
