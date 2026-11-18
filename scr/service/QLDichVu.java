@@ -51,8 +51,7 @@ public class QLDichVu {
 
     private boolean datPhongChuaChot(String ma) {
         DatPhong dp = datPhongDAO.timTheoMa(ma);
-        return dp != null && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
-                && hoaDonDAO.timTheoMaDatPhong(ma) == null;
+        return dp != null && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY && hoaDonDAO.timTheoMaDatPhong(ma) == null;
     }
 
     public boolean themChiTiet(ChiTietDichVu c) {

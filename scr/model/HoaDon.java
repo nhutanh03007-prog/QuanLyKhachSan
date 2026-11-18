@@ -99,8 +99,7 @@ public class HoaDon {
 
     @Override
     public String toString() {
-        return "HoaDon{maHD='" + maHD + "', maDatPhong='" + maDatPhong + "', tongGia=" + tongGia
-                + ", giamGia="
+        return "HoaDon{maHD='" + maHD + "', maDatPhong='" + maDatPhong + "', tongGia=" + tongGia + ", giamGia="
                 + giamGia + ", thanhTien=" + thanhTien + ", trangThai=" + trangThai + '}';
     }
 }

@@ -1,25 +1,14 @@
 package DAO;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import model.DichVu;
 
 public class DichVuDAO {
-    private static final String FILE_PATH = "DATABASEH/DichVu.txt";
-
+    private static final String FILE_PATH = "DATABASEH/DichVu.dat";
     public static DichVu[] danhSachDichVu = new DichVu[100];
     public static int soLuongDichVu = 0;
-
     static {
         docFile();
     }
@@ -27,41 +16,31 @@ public class DichVuDAO {
     public DichVuDAO() {
     }
 
+    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
+        dos.writeUTF(s == null ? "" : s);
+    }
+
+    private static String docChuoi(DataInputStream dis) throws IOException {
+        String s = dis.readUTF();
+        return s.isEmpty() ? null : s;
+    }
+
     private static void docFile() {
         soLuongDichVu = 0;
         Arrays.fill(danhSachDichVu, null);
         File f = new File(FILE_PATH);
-
         try {
-            File parent = f.getParentFile();
-            if (parent != null) {
-                parent.mkdirs();
-            }
-            if (!f.exists()) {
-                f.createNewFile();
-            }
-
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null && soLuongDichVu < danhSachDichVu.length) {
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
-
-                    try {
-                        String[] c = line.split("\\|", -1);
-                        if (c.length != 7) {
-                            continue;
-                        }
-
-                        DichVu d = new DichVu(c[0], c[1], c[2], c[3], new BigDecimal(c[4]), c[5], c[6]);
-                        if (hopLe(d) && timTheoMaNoiBo(d.getMaDichVu()) == null) {
-                            danhSachDichVu[soLuongDichVu++] = d;
-                        }
-                    } catch (RuntimeException e) {
-                        // Bỏ qua bản ghi lỗi.
-                    }
+            if (!f.exists() || f.length() == 0)
+                return;
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
+                int count = dis.readInt();
+                if (count < 0 || count > 100)
+                    throw new IOException("So luong khong hop le");
+                for (int i = 0; i < count; i++) {
+                    DichVu d = new DichVu(docChuoi(dis), docChuoi(dis), docChuoi(dis), docChuoi(dis),
+                            new BigDecimal(dis.readUTF()), docChuoi(dis), dis.readUTF());
+                    if (hopLe(d) && timNoiBo(d.getMaDichVu()) == null)
+                        danhSachDichVu[soLuongDichVu++] = d;
                 }
             }
         } catch (Exception e) {
@@ -69,31 +48,31 @@ public class DichVuDAO {
         }
     }
 
-    private static DichVu timTheoMaNoiBo(String ma) {
-        for (int i = 0; i < soLuongDichVu; i++) {
-            if (ma.equals(danhSachDichVu[i].getMaDichVu())) {
+    private static DichVu timNoiBo(String ma) {
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && ma.equals(danhSachDichVu[i].getMaDichVu()))
                 return danhSachDichVu[i];
-            }
-        }
         return null;
     }
 
     private static boolean ghiFile() {
         File f = new File(FILE_PATH);
+        if (!f.exists()) {
+            System.err.println("Khong tim thay file: " + FILE_PATH);
+            return false;
+        }
         try {
-            File parent = f.getParentFile();
-            if (parent != null) {
-                parent.mkdirs();
-            }
-
-            try (BufferedWriter bw = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8))) {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+                dos.writeInt(soLuongDichVu);
                 for (int i = 0; i < soLuongDichVu; i++) {
                     DichVu d = danhSachDichVu[i];
-                    bw.write(String.join("|", giaTri(d.getMaDichVu()), giaTri(d.getTenDichVu()),
-                            giaTri(d.getLoaiDichVu()), giaTri(d.getDonViTinh()), giaTri(d.getGia()),
-                            giaTri(d.getTrangThai()), giaTri(d.getMoTa())));
-                    bw.newLine();
+                    ghiChuoi(dos, d.getMaDichVu());
+                    ghiChuoi(dos, d.getTenDichVu());
+                    ghiChuoi(dos, d.getLoaiDichVu());
+                    ghiChuoi(dos, d.getDonViTinh());
+                    dos.writeUTF(d.getGia().toString());
+                    ghiChuoi(dos, d.getTrangThai());
+                    dos.writeUTF(d.getMoTa() == null ? "" : d.getMoTa());
                 }
             }
             return true;
@@ -112,65 +91,71 @@ public class DichVuDAO {
     }
 
     public boolean them(DichVu d) {
-        if (!hopLe(d) || timTheoMa(d.getMaDichVu()) != null || soLuongDichVu >= 100) {
+        if (!hopLe(d) || timTheoMa(d.getMaDichVu()) != null || soLuongDichVu >= 100)
+            return false;
+        int old = soLuongDichVu;
+        danhSachDichVu[soLuongDichVu++] = d;
+        if (!ghiFile()) {
+            soLuongDichVu = old;
+            danhSachDichVu[old] = null;
             return false;
         }
-        danhSachDichVu[soLuongDichVu++] = d;
-        ghiFile();
         return true;
     }
 
     public boolean sua(DichVu d) {
-        if (!hopLe(d)) {
+        if (!hopLe(d))
             return false;
-        }
-        for (int i = 0; i < soLuongDichVu; i++) {
+        for (int i = 0; i < soLuongDichVu; i++)
             if (danhSachDichVu[i] != null && d.getMaDichVu().equals(danhSachDichVu[i].getMaDichVu())) {
+                DichVu old = danhSachDichVu[i];
                 danhSachDichVu[i] = d;
-                ghiFile();
+                if (!ghiFile()) {
+                    danhSachDichVu[i] = old;
+                    return false;
+                }
                 return true;
             }
-        }
         return false;
     }
 
     public boolean xoa(String ma) {
-        for (int i = 0; i < soLuongDichVu; i++) {
+        for (int i = 0; i < soLuongDichVu; i++)
             if (danhSachDichVu[i] != null && ma != null && ma.equals(danhSachDichVu[i].getMaDichVu())) {
+                DichVu[] old = Arrays.copyOf(danhSachDichVu, soLuongDichVu);
+                int n = soLuongDichVu;
                 System.arraycopy(danhSachDichVu, i + 1, danhSachDichVu, i, --soLuongDichVu - i);
                 danhSachDichVu[soLuongDichVu] = null;
-                ghiFile();
+                if (!ghiFile()) {
+                    System.arraycopy(old, 0, danhSachDichVu, 0, n);
+                    soLuongDichVu = n;
+                    return false;
+                }
                 return true;
             }
-        }
         return false;
     }
 
     public DichVu timTheoMa(String ma) {
-        if (rong(ma)) {
+        if (rong(ma))
             return null;
-        }
-        for (int i = 0; i < soLuongDichVu; i++) {
-            if (danhSachDichVu[i] != null && ma.equals(danhSachDichVu[i].getMaDichVu())) {
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && ma.equals(danhSachDichVu[i].getMaDichVu()))
                 return danhSachDichVu[i];
-            }
-        }
         return null;
     }
 
     public DichVu[] timKiem(String key) {
         List<DichVu> out = new ArrayList<>();
-        if (!rong(key)) {
+        if (!rong(key))
             for (int i = 0; i < soLuongDichVu; i++) {
                 DichVu d = danhSachDichVu[i];
                 if (d != null && ((d.getMaDichVu() != null
                         && d.getMaDichVu().toLowerCase().contains(key.trim().toLowerCase()))
                         || (d.getTenDichVu() != null
-                                && d.getTenDichVu().toLowerCase().contains(key.trim().toLowerCase())))) {
+                                && d.getTenDichVu().toLowerCase().contains(key.trim().toLowerCase()))))
                     out.add(d);
-                }
             }
-        }
         return out.toArray(new DichVu[0]);
     }
 
@@ -185,10 +170,6 @@ public class DichVuDAO {
     private static boolean hopLe(DichVu d) {
         return d != null && !rong(d.getMaDichVu()) && !rong(d.getTenDichVu()) && !rong(d.getLoaiDichVu())
                 && !rong(d.getDonViTinh()) && d.getGia() != null && d.getGia().signum() > 0;
-    }
-
-    private static String giaTri(Object v) {
-        return v == null ? "" : v.toString();
     }
 
     private static boolean rong(String s) {

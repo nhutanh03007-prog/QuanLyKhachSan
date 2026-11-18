@@ -1,0 +1,4856 @@
+=== AGENTS.md ===
+# Hướng dẫn cho agent — QuanLyKhachSan
+
+## Phạm vi và cấu trúc
+
+Mã nguồn Java hiện nằm trong thư mục `scr/` (tên thư mục này được giữ nguyên; không tự đổi thành `src/`). `MAINNE.java` ở ngay trong `scr/` và không khai báo package.
+
+- `scr/MAINNE.java`: điểm vào `main`, khởi chạy `ui.HeThongUI`, gọi đăng nhập rồi rẽ nhánh theo vai trò. Vai trò đang gán cứng `ADMIN`; nhánh nhân viên hiện chỉ là phần khung/comment.
+- `scr/DAO/`: lớp truy cập dữ liệu cho khách hàng, đặt phòng, dịch vụ, chi tiết dịch vụ, hóa đơn, thanh toán, phòng, tài khoản và nhân viên. Hầu hết DAO thao tác trên bộ nhớ; các DAO dạng mảng có sức chứa cố định 100 phần tử, biến danh sách/số lượng `static`, cung cấp các thao tác CRUD và tìm kiếm. Một số lớp dùng `ArrayList`. Chưa có persistence thực sự.
+- `scr/Database/`: hiện chỉ có `.gitkeep`, chưa có lớp kết nối, schema hay cấu hình cơ sở dữ liệu.
+- `scr/INTERFACE/`: `IPhong` và `IThanhToan` là file rỗng hiện tại; tuy nhiên `QLPhong`/`PhongUI` đang import và sử dụng `INTERFACE.IPhong`, vì vậy cần đối chiếu trạng thái build thực tế trước khi sửa các phụ thuộc này.
+- `scr/model/`: mô hình nghiệp vụ và trạng thái. Gồm khách hàng, nhân viên, tài khoản, phòng (lớp cơ sở cùng `PhongThuong`/`PhongVIP`), đặt phòng, dịch vụ, chi tiết dịch vụ, hóa đơn, thanh toán, thống kê và các enum trạng thái. Có tính toán tiền/kiểm tra ngày ở một số mô hình; dùng `LocalDate`, `BigDecimal` và các kiểu Java chuẩn.
+- `scr/service/`: nghiệp vụ quản lý đặt phòng, dịch vụ, khách hàng, phòng và thanh toán. Các lớp service gọi DAO, kiểm tra đầu vào/quy tắc nghiệp vụ, phối hợp nhiều thực thể khi đặt phòng hoặc thanh toán.
+- `scr/ui/`: giao diện console dùng `Scanner`/`System.out`. `PhongUI` cung cấp menu CRUD/thống kê phòng thông qua `QLPhong`; `HeThongUI` có đăng nhập/menu quản trị nhưng một số nghiệp vụ còn mô phỏng hoặc đang phát triển.
+- `scr/util/`: hiện có `CheckVariable`, `DateTime`, `FormatHelper`, `InputHelper` nhưng đều là khung rỗng.
+
+Có thư mục `scRr/test/java/README.md` riêng (khác cách viết hoa/thường với `scr`); không xem đây là package nguồn chính nếu chưa xác minh cấu hình build.
+
+## Kiến trúc và luồng phụ thuộc
+
+Định hướng tổng thể là phân lớp kiểu console MVC/service/DAO: `MAINNE` → `ui` → `service` → `DAO` → `model`. Mô hình chứa dữ liệu và một phần hành vi nghiệp vụ; DAO hiện là kho dữ liệu trong bộ nhớ; service thực hiện xác thực và điều phối; UI xử lý nhập/xuất. Duy trì chiều phụ thuộc này khi bổ sung chức năng, tránh để model phụ thuộc UI/DAO. Tuy nhiên mã hiện chưa đồng nhất hoàn toàn: `QLDichVu` import package chữ thường `dao.*`, trong khi các DAO trong `scr/DAO` khai báo `package DAO`; một vài lớp DAO/model thiếu khai báo package; `PhongDAO` trong workspace hiện là bộ khung với chữ ký `void`, không khớp API mà `QLPhong` gọi. Không giả định dự án đang biên dịch được hoặc tự ý sửa hàng loạt các bất nhất này khi chỉ làm tài liệu.
+
+## Công nghệ và trạng thái triển khai
+
+- Java, giao diện dòng lệnh; không thấy cấu hình Maven/Gradle hay framework trong cấu trúc được quét.
+- Thư viện chuẩn Java được dùng gồm `java.util` (`Scanner`, `List`, `ArrayList`), `java.time` (`LocalDate`, `ChronoUnit`) và `java.math.BigDecimal`.
+- Lưu trữ hiện tại chủ yếu là mảng/`ArrayList` trong tiến trình; dữ liệu không được lưu bền qua lần chạy. Không có kết nối JDBC/cơ sở dữ liệu được triển khai trong `Database`.
+- Một số luồng còn là demo/placeholder: đăng nhập trong `HeThongUI` luôn thành công theo logic giả lập; vai trò trong `MAINNE` bị gán cứng; menu nhân viên/tài khoản/thống kê chưa nối đầy đủ; util và interface đang rỗng.
+- Mã nguồn hiện có dấu hiệu không đồng nhất encoding tiếng Việt ở comment/thông báo. Giữ UTF-8 khi đọc/ghi file và không tự đổi encoding nếu không nằm trong phạm vi yêu cầu.
+
+## Quy tắc khi chỉnh sửa
+
+1. Đọc các lớp liên quan và giữ đúng tên package, kiểu dữ liệu, chữ ký phương thức hiện có; lưu ý Java phân biệt hoa/thường trong package và đường dẫn.
+2. Giữ phân lớp UI → service → DAO → model. UI chỉ lo nhập/xuất và gọi service; đặt kiểm tra nghiệp vụ trong service/model; DAO lo truy xuất/lưu trữ.
+3. Với DAO CRUD, giữ quy ước trả `boolean` cho thao tác thành công/thất bại, trả `null` khi không tìm thấy đối tượng và trả danh sách/array không chứa ô trống. Tôn trọng giới hạn mảng hiện có hoặc làm rõ mọi thay đổi về cấu trúc lưu trữ.
+4. Kiểm tra `null`, chuỗi rỗng, mã trùng và dữ liệu số/ngày hợp lệ theo quy tắc của miền nghiệp vụ. Trạng thái nên dùng enum sẵn có thay vì thêm chuỗi tùy ý khi phù hợp.
+5. Dùng `BigDecimal` cho tiền phòng/giá trị tiền được mô hình hóa bằng `BigDecimal`; tránh chuyển qua `double` nếu không cần thiết. Ngày nghiệp vụ dùng `LocalDate`.
+6. Dùng tên tiếng Việt không dấu theo phong cách hiện hữu cho định danh và tên miền; tên lớp/enum viết PascalCase, phương thức/biến camelCase. Giữ thay đổi gọn trong phạm vi nhiệm vụ.
+7. Không coi class rỗng, comment mô tả dự định, hoặc menu giả lập là chức năng đã hoàn tất. Nêu rõ phần nào là triển khai thực tế và phần nào là placeholder khi tài liệu hóa hoặc mở rộng.
+8. Trước khi thêm phụ thuộc/thư viện hoặc tích hợp database, kiểm tra cấu hình dự án (hiện chưa thấy Maven/Gradle); không khẳng định công nghệ chưa được khai báo là đang sử dụng.
+
+## Kiểm tra thay đổi
+
+Khi được yêu cầu kiểm chứng code, trước tiên xác định cách build/chạy khả dụng từ repository. Do package/API đang có bất nhất, ghi nhận chính xác lỗi nền nếu build không thành công và phân biệt với lỗi do thay đổi mới. Không tự sửa các vấn đề ngoài phạm vi chỉ để làm cho build xanh.
+
+## Phân công module của người dùng
+
+Khi làm việc trên các phần liên quan, lưu ý phạm vi phụ trách của người dùng:
+
+- **Model:** chi tiết dịch vụ, dịch vụ, hóa đơn, thanh toán và trạng thái thanh toán.
+- **DAO:** dịch vụ, hóa đơn và thanh toán.
+- **Service:** `QLDichVu` và `QThanhToan`.
+- **Interface:** `IThanhToan`.
+- **UI:** chưa làm.
+
+Ưu tiên giữ các lớp thuộc phạm vi này nhất quán với nhau; không giả định UI của các chức năng này đã được triển khai.
+
+=== DataBase ===
+=== scr/MAINNE.java ===
+<<<<<<< HEAD
+
+import ui.PhongUI;
+public class MAINNE {
+    public class Main {
+
+        public static void main(String[] args) {
+
+            PhongUI phongUI = new PhongUI();
+
+            phongUI.menuPhong();
+        }
+    }
+
+import ui.HeThongUI;
+
+public class MAINNE{
+    public static void main(String[] args) {
+        // Khởi tạo giao diện quản lý hệ thống của bạn
+        HeThongUI heThongUI = new HeThongUI();
+        
+        // 1. Yêu cầu đăng nhập đầu tiên
+        boolean isLogged = heThongUI.dangNhap();
+        
+        // 2. Nếu đăng nhập thành công thì mới chia nhánh menu
+        if (isLogged) {
+            // Sau này bạn sẽ lấy quyền thực tế từ tài khoản đăng nhập
+            // Ví dụ: String role = heThongUI.getTaiKhoanHienTai().getQuyen();
+            String role = "ADMIN"; // Tạm thời gán cứng để test
+
+            if (role.equals("ADMIN")) {
+                // Mở menu Quản lý Nhân viên & Thống kê của bạn
+                heThongUI.menuQuanLyHeThong(); 
+            } else if (role.equals("NHAN_VIEN")) {
+                // Chỗ này sau sẽ khởi tạo PhongUI
+                System.out.println("Chuyển hướng sang giao diện Lễ tân / Phòng...");
+                PhongUI phongUI = new PhongUI();
+                phongUI.menuPhong();
+            }
+        } else {
+            System.out.println("Đăng nhập thất bại. Chương trình kết thúc.");
+        }
+    }
+}
+
+=== scr/DAO/.gitkeep ===
+=== scr/DAO/ChiTietDichVuDAO.java ===
+package DAO;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import model.ChiTietDichVu;
+
+public class ChiTietDichVuDAO {
+    private static final String FILE_PATH = "DATABASEH/ChiTietDichVu.dat";
+    public static ChiTietDichVu[] danhSachChiTiet = new ChiTietDichVu[100];
+    public static int soLuongChiTiet = 0;
+    static {
+        docFile();
+    }
+
+    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
+        dos.writeUTF(s == null ? "" : s);
+    }
+
+    private static String docChuoi(DataInputStream dis) throws IOException {
+        String s = dis.readUTF();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static void ghiNgay(DataOutputStream dos, LocalDate d) throws IOException {
+        dos.writeLong(d == null ? -1L : d.toEpochDay());
+    }
+
+    private static LocalDate docNgay(DataInputStream dis) throws IOException {
+        long v = dis.readLong();
+        return v == -1L ? null : LocalDate.ofEpochDay(v);
+    }
+
+    private static void docFile() {
+        soLuongChiTiet = 0;
+        Arrays.fill(danhSachChiTiet, null);
+        File f = new File(FILE_PATH);
+        try {
+            if (!f.exists() || f.length() == 0)
+                return;
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
+                int count = dis.readInt();
+                if (count < 0 || count > 100)
+                    throw new IOException("So luong khong hop le");
+                for (int i = 0; i < count; i++) {
+                    ChiTietDichVu c = new ChiTietDichVu(docChuoi(dis), docChuoi(dis), docNgay(dis), docNgay(dis),
+                            dis.readInt(), new BigDecimal(dis.readUTF()));
+                    BigDecimal total = new BigDecimal(dis.readUTF());
+                    if (hopLe(c) && timNoiBo(c.getMaDatPhong(), c.getMaDichVu()) == null) {
+                        c.setThanhTien(total);
+                        danhSachChiTiet[soLuongChiTiet++] = c;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
+        }
+    }
+
+    private static ChiTietDichVu timNoiBo(String dp, String dv) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], dp, dv))
+                return danhSachChiTiet[i];
+        return null;
+    }
+
+    private static boolean ghiFile() {
+        File f = new File(FILE_PATH);
+        if (!f.exists()) {
+            System.err.println("Khong tim thay file: " + FILE_PATH);
+            return false;
+        }
+        try {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+                dos.writeInt(soLuongChiTiet);
+                for (int i = 0; i < soLuongChiTiet; i++) {
+                    ChiTietDichVu c = danhSachChiTiet[i];
+                    ghiChuoi(dos, c.getMaDatPhong());
+                    ghiChuoi(dos, c.getMaDichVu());
+                    ghiNgay(dos, c.getNgayDatDichVu());
+                    ghiNgay(dos, c.getNgayNhan());
+                    dos.writeInt(c.getSoLuong());
+                    dos.writeUTF(c.getDonGia().toString());
+                    dos.writeUTF(tinhThanhTienNoiBo(c).toString());
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean them(ChiTietDichVu c) {
+        if (!hopLe(c))
+            return false;
+        ChiTietDichVu cu = timTheoMa(c.getMaDatPhong(), c.getMaDichVu());
+        if (cu != null) {
+            int sl = cu.getSoLuong();
+            BigDecimal dg = cu.getDonGia(), tt = cu.getThanhTien();
+            cu.setSoLuong(sl + c.getSoLuong());
+            cu.setDonGia(c.getDonGia());
+            cu.setThanhTien(tinhThanhTien(cu));
+            if (!ghiFile()) {
+                cu.setSoLuong(sl);
+                cu.setDonGia(dg);
+                cu.setThanhTien(tt);
+                return false;
+            }
+            return true;
+        }
+        if (soLuongChiTiet >= 100)
+            return false;
+        c.setThanhTien(tinhThanhTien(c));
+        int old = soLuongChiTiet;
+        danhSachChiTiet[soLuongChiTiet++] = c;
+        if (!ghiFile()) {
+            soLuongChiTiet = old;
+            danhSachChiTiet[old] = null;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean sua(ChiTietDichVu c) {
+        if (!hopLe(c))
+            return false;
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], c.getMaDatPhong(), c.getMaDichVu())) {
+                ChiTietDichVu old = danhSachChiTiet[i];
+                BigDecimal tt = c.getThanhTien();
+                c.setThanhTien(tinhThanhTien(c));
+                danhSachChiTiet[i] = c;
+                if (!ghiFile()) {
+                    danhSachChiTiet[i] = old;
+                    c.setThanhTien(tt);
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public BigDecimal tinhThanhTien(ChiTietDichVu c) {
+        return tinhThanhTienNoiBo(c);
+    }
+
+    public boolean xoa(String dp, String dv) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (cungKhoa(danhSachChiTiet[i], dp, dv)) {
+                ChiTietDichVu[] old = Arrays.copyOf(danhSachChiTiet, soLuongChiTiet);
+                int n = soLuongChiTiet;
+                System.arraycopy(danhSachChiTiet, i + 1, danhSachChiTiet, i, --soLuongChiTiet - i);
+                danhSachChiTiet[soLuongChiTiet] = null;
+                if (!ghiFile()) {
+                    System.arraycopy(old, 0, danhSachChiTiet, 0, n);
+                    soLuongChiTiet = n;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public ChiTietDichVu timTheoMa(String dp, String dv) {
+        return timNoiBo(dp, dv);
+    }
+
+    public ChiTietDichVu[] layDanhSach() {
+        return Arrays.copyOf(danhSachChiTiet, soLuongChiTiet);
+    }
+
+    public ChiTietDichVu[] layTheoMaDatPhong(String dp) {
+        ArrayList<ChiTietDichVu> a = new ArrayList<>();
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (danhSachChiTiet[i] != null && dp != null && dp.equals(danhSachChiTiet[i].getMaDatPhong()))
+                a.add(danhSachChiTiet[i]);
+        return a.toArray(new ChiTietDichVu[0]);
+    }
+
+    public boolean kiemTraDichVuDangSuDung(String ma) {
+        for (int i = 0; i < soLuongChiTiet; i++)
+            if (danhSachChiTiet[i] != null && ma != null && ma.equals(danhSachChiTiet[i].getMaDichVu()))
+                return true;
+        return false;
+    }
+
+    public BigDecimal tinhTongTienTheoDatPhong(String dp) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (ChiTietDichVu c : layTheoMaDatPhong(dp))
+            sum = sum.add(tinhThanhTien(c));
+        return sum;
+    }
+
+    private static BigDecimal tinhThanhTienNoiBo(ChiTietDichVu c) {
+        return c == null || c.getDonGia() == null ? BigDecimal.ZERO
+                : c.getDonGia().multiply(BigDecimal.valueOf(c.getSoLuong()));
+    }
+
+    private static boolean hopLe(ChiTietDichVu c) {
+        return c != null && !rong(c.getMaDatPhong()) && !rong(c.getMaDichVu()) && c.getSoLuong() > 0
+                && c.getDonGia() != null && c.getDonGia().signum() >= 0;
+    }
+
+    private static boolean cungKhoa(ChiTietDichVu c, String dp, String dv) {
+        return c != null && dp != null && dv != null && dp.equals(c.getMaDatPhong()) && dv.equals(c.getMaDichVu());
+    }
+
+    private static boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+}
+
+=== scr/DAO/DatPhongDAO.java ===
+package DAO;
+
+import model.DatPhong;
+import model.TrangThaiDatPhong;
+import java.time.LocalDate;
+
+
+public class DatPhongDAO {
+    public static DatPhong[] danhSachDatPhong = new DatPhong[100];
+    public static int soLuongDatPhong = 0;
+
+    public boolean them(DatPhong datPhong) {
+        if (datPhong == null || datPhong.getMaDatPhong() == null 
+            || timTheoMa(datPhong.getMaDatPhong()) != null 
+            || soLuongDatPhong == danhSachDatPhong.length) {
+            return false;
+        }
+        danhSachDatPhong[soLuongDatPhong] = datPhong;
+        soLuongDatPhong++;
+        return true;
+    }
+
+    public boolean sua(DatPhong datPhong) {
+        if (datPhong == null) return false;
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i].getMaDatPhong().equals(datPhong.getMaDatPhong())) {
+                danhSachDatPhong[i] = datPhong;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean xoa(String maDatPhong) {
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i].getMaDatPhong().equals(maDatPhong)) {
+                System.arraycopy(danhSachDatPhong, i + 1, danhSachDatPhong, i, soLuongDatPhong - i - 1);
+                danhSachDatPhong[--soLuongDatPhong] = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public DatPhong timTheoMa(String maDatPhong) {
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i].getMaDatPhong().equals(maDatPhong)) {
+                return danhSachDatPhong[i];
+            }
+        }
+        return null;
+    }
+
+    /** Kiểm tra xem phòng có trống trong khoảng thời gian dự định đặt hay không */
+    public boolean kiemTraPhongTrong(String maPhong, LocalDate ngayNhan, LocalDate ngayTra) {
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            DatPhong dp = danhSachDatPhong[i];
+            // Chỉ kiểm tra các phòng trùng mã và phiếu đặt chưa bị hủy hoặc trả phòng
+            if (dp.getMaPhong().equalsIgnoreCase(maPhong) &&
+                dp.getTrangThai() != TrangThaiDatPhong.DA_HUY &&
+                dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
+                
+                // Nếu khoảng thời gian bị chồng lấp -> Phòng không trống
+                if (dp.isTrungLich(ngayNhan, ngayTra)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public DatPhong[] layDanhSach() {
+        DatPhong[] ketQua = new DatPhong[soLuongDatPhong];
+        System.arraycopy(danhSachDatPhong, 0, ketQua, 0, soLuongDatPhong);
+        return ketQua;
+    }
+}
+=== scr/DAO/DichVuDAO.java ===
+package DAO;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.util.*;
+import model.DichVu;
+
+public class DichVuDAO {
+    private static final String FILE_PATH = "DATABASEH/DichVu.dat";
+    public static DichVu[] danhSachDichVu = new DichVu[100];
+    public static int soLuongDichVu = 0;
+    static {
+        docFile();
+    }
+
+    public DichVuDAO() {
+    }
+
+    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
+        dos.writeUTF(s == null ? "" : s);
+    }
+
+    private static String docChuoi(DataInputStream dis) throws IOException {
+        String s = dis.readUTF();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static void docFile() {
+        soLuongDichVu = 0;
+        Arrays.fill(danhSachDichVu, null);
+        File f = new File(FILE_PATH);
+        try {
+            if (!f.exists() || f.length() == 0)
+                return;
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
+                int count = dis.readInt();
+                if (count < 0 || count > 100)
+                    throw new IOException("So luong khong hop le");
+                for (int i = 0; i < count; i++) {
+                    DichVu d = new DichVu(docChuoi(dis), docChuoi(dis), docChuoi(dis), docChuoi(dis),
+                            new BigDecimal(dis.readUTF()), docChuoi(dis), dis.readUTF());
+                    if (hopLe(d) && timNoiBo(d.getMaDichVu()) == null)
+                        danhSachDichVu[soLuongDichVu++] = d;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
+        }
+    }
+
+    private static DichVu timNoiBo(String ma) {
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && ma.equals(danhSachDichVu[i].getMaDichVu()))
+                return danhSachDichVu[i];
+        return null;
+    }
+
+    private static boolean ghiFile() {
+        File f = new File(FILE_PATH);
+        if (!f.exists()) {
+            System.err.println("Khong tim thay file: " + FILE_PATH);
+            return false;
+        }
+        try {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+                dos.writeInt(soLuongDichVu);
+                for (int i = 0; i < soLuongDichVu; i++) {
+                    DichVu d = danhSachDichVu[i];
+                    ghiChuoi(dos, d.getMaDichVu());
+                    ghiChuoi(dos, d.getTenDichVu());
+                    ghiChuoi(dos, d.getLoaiDichVu());
+                    ghiChuoi(dos, d.getDonViTinh());
+                    dos.writeUTF(d.getGia().toString());
+                    ghiChuoi(dos, d.getTrangThai());
+                    dos.writeUTF(d.getMoTa() == null ? "" : d.getMoTa());
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean kiemTraTenDichVuKhongRong(String s) {
+        return !rong(s);
+    }
+
+    public boolean kiemTraSoTienKhongAm(BigDecimal n) {
+        return n != null && n.signum() >= 0;
+    }
+
+    public boolean them(DichVu d) {
+        if (!hopLe(d) || timTheoMa(d.getMaDichVu()) != null || soLuongDichVu >= 100)
+            return false;
+        int old = soLuongDichVu;
+        danhSachDichVu[soLuongDichVu++] = d;
+        if (!ghiFile()) {
+            soLuongDichVu = old;
+            danhSachDichVu[old] = null;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean sua(DichVu d) {
+        if (!hopLe(d))
+            return false;
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && d.getMaDichVu().equals(danhSachDichVu[i].getMaDichVu())) {
+                DichVu old = danhSachDichVu[i];
+                danhSachDichVu[i] = d;
+                if (!ghiFile()) {
+                    danhSachDichVu[i] = old;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public boolean xoa(String ma) {
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && ma != null && ma.equals(danhSachDichVu[i].getMaDichVu())) {
+                DichVu[] old = Arrays.copyOf(danhSachDichVu, soLuongDichVu);
+                int n = soLuongDichVu;
+                System.arraycopy(danhSachDichVu, i + 1, danhSachDichVu, i, --soLuongDichVu - i);
+                danhSachDichVu[soLuongDichVu] = null;
+                if (!ghiFile()) {
+                    System.arraycopy(old, 0, danhSachDichVu, 0, n);
+                    soLuongDichVu = n;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public DichVu timTheoMa(String ma) {
+        if (rong(ma))
+            return null;
+        for (int i = 0; i < soLuongDichVu; i++)
+            if (danhSachDichVu[i] != null && ma.equals(danhSachDichVu[i].getMaDichVu()))
+                return danhSachDichVu[i];
+        return null;
+    }
+
+    public DichVu[] timKiem(String key) {
+        List<DichVu> out = new ArrayList<>();
+        if (!rong(key))
+            for (int i = 0; i < soLuongDichVu; i++) {
+                DichVu d = danhSachDichVu[i];
+                if (d != null && ((d.getMaDichVu() != null
+                        && d.getMaDichVu().toLowerCase().contains(key.trim().toLowerCase()))
+                        || (d.getTenDichVu() != null
+                                && d.getTenDichVu().toLowerCase().contains(key.trim().toLowerCase()))))
+                    out.add(d);
+            }
+        return out.toArray(new DichVu[0]);
+    }
+
+    public DichVu[] timTheoTen(String key) {
+        return timKiem(key);
+    }
+
+    public DichVu[] layDanhSach() {
+        return Arrays.copyOf(danhSachDichVu, soLuongDichVu);
+    }
+
+    private static boolean hopLe(DichVu d) {
+        return d != null && !rong(d.getMaDichVu()) && !rong(d.getTenDichVu()) && !rong(d.getLoaiDichVu())
+                && !rong(d.getDonViTinh()) && d.getGia() != null && d.getGia().signum() > 0;
+    }
+
+    private static boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+}
+
+=== scr/DAO/HoaDonDAO.java ===
+package DAO;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Arrays;
+import model.HoaDon;
+import model.TrangThaiThanhToan;
+
+public class HoaDonDAO {
+    private static final String FILE_PATH = "DATABASEH/HoaDon.dat";
+    public static HoaDon[] danhSachHoaDon = new HoaDon[100];
+    public static int soLuongHoaDon = 0;
+    static {
+        docFile();
+    }
+
+    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
+        dos.writeUTF(s == null ? "" : s);
+    }
+
+    private static String docChuoi(DataInputStream dis) throws IOException {
+        String s = dis.readUTF();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static void ghiNgay(DataOutputStream dos, LocalDate d) throws IOException {
+        dos.writeLong(d == null ? -1L : d.toEpochDay());
+    }
+
+    private static LocalDate docNgay(DataInputStream dis) throws IOException {
+        long v = dis.readLong();
+        return v == -1L ? null : LocalDate.ofEpochDay(v);
+    }
+
+    private static void docFile() {
+        soLuongHoaDon = 0;
+        Arrays.fill(danhSachHoaDon, null);
+        File f = new File(FILE_PATH);
+        try {
+            if (!f.exists() || f.length() == 0)
+                return;
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
+                int count = dis.readInt();
+                if (count < 0 || count > 100)
+                    throw new IOException("So luong khong hop le");
+                for (int i = 0; i < count; i++) {
+                    HoaDon h = new HoaDon();
+                    h.setMaHD(docChuoi(dis));
+                    h.setMaDatPhong(docChuoi(dis));
+                    h.setNgayLap(docNgay(dis));
+                    h.setNgayThanhToan(docNgay(dis));
+                    h.setTongGia(new BigDecimal(dis.readUTF()));
+                    h.setGiamGia(new BigDecimal(dis.readUTF()));
+                    h.setThanhTien(new BigDecimal(dis.readUTF()));
+                    h.setPhuongThucTT(docChuoi(dis));
+                    String t = docChuoi(dis);
+                    h.setTrangThai(t == null ? null : TrangThaiThanhToan.valueOf(t));
+                    if (hopLe(h) && timNoiBo(h.getMaHD()) == null && timNoiBoDatPhong(h.getMaDatPhong()) == null) {
+                        h.setThanhTien(tinhThanhTienNoiBo(h));
+                        danhSachHoaDon[soLuongHoaDon++] = h;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
+        }
+    }
+
+    private static HoaDon timNoiBo(String ma) {
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (ma.equals(danhSachHoaDon[i].getMaHD()))
+                return danhSachHoaDon[i];
+        return null;
+    }
+
+    private static HoaDon timNoiBoDatPhong(String ma) {
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (ma.equals(danhSachHoaDon[i].getMaDatPhong()))
+                return danhSachHoaDon[i];
+        return null;
+    }
+
+    private static boolean ghiFile() {
+        File f = new File(FILE_PATH);
+        if (!f.exists()) {
+            System.err.println("Khong tim thay file: " + FILE_PATH);
+            return false;
+        }
+        try {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+                dos.writeInt(soLuongHoaDon);
+                for (int i = 0; i < soLuongHoaDon; i++) {
+                    HoaDon h = danhSachHoaDon[i];
+                    ghiChuoi(dos, h.getMaHD());
+                    ghiChuoi(dos, h.getMaDatPhong());
+                    ghiNgay(dos, h.getNgayLap());
+                    ghiNgay(dos, h.getNgayThanhToan());
+                    dos.writeUTF(h.getTongGia().toString());
+                    dos.writeUTF(h.getGiamGia().toString());
+                    dos.writeUTF(tinhThanhTienNoiBo(h).toString());
+                    ghiChuoi(dos, h.getPhuongThucTT());
+                    ghiChuoi(dos, h.getTrangThai() == null ? null : h.getTrangThai().name());
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean them(HoaDon h) {
+        if (!hopLe(h) || timTheoMa(h.getMaHD()) != null || timTheoMaDatPhong(h.getMaDatPhong()) != null
+                || soLuongHoaDon >= 100)
+            return false;
+        if (h.getNgayLap() == null)
+            h.setNgayLap(LocalDate.now());
+        if (h.getTrangThai() == null)
+            h.setTrangThai(TrangThaiThanhToan.CHUA_THANH_TOAN);
+        h.setThanhTien(tinhThanhTien(h));
+        int old = soLuongHoaDon;
+        danhSachHoaDon[soLuongHoaDon++] = h;
+        if (!ghiFile()) {
+            soLuongHoaDon = old;
+            danhSachHoaDon[old] = null;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean sua(HoaDon h) {
+        if (!hopLe(h))
+            return false;
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (danhSachHoaDon[i] != null && h.getMaHD().equals(danhSachHoaDon[i].getMaHD())) {
+                if (danhSachHoaDon[i].getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN)
+                    return false;
+                HoaDon old = danhSachHoaDon[i];
+                h.setThanhTien(tinhThanhTien(h));
+                danhSachHoaDon[i] = h;
+                if (!ghiFile()) {
+                    danhSachHoaDon[i] = old;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public boolean xoa(String ma) {
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (danhSachHoaDon[i] != null && ma != null && ma.equals(danhSachHoaDon[i].getMaHD())) {
+                if (danhSachHoaDon[i].getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN)
+                    return false;
+                HoaDon[] old = Arrays.copyOf(danhSachHoaDon, soLuongHoaDon);
+                int n = soLuongHoaDon;
+                System.arraycopy(danhSachHoaDon, i + 1, danhSachHoaDon, i, --soLuongHoaDon - i);
+                danhSachHoaDon[soLuongHoaDon] = null;
+                if (!ghiFile()) {
+                    System.arraycopy(old, 0, danhSachHoaDon, 0, n);
+                    soLuongHoaDon = n;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public BigDecimal tinhThanhTien(HoaDon h) {
+        return tinhThanhTienNoiBo(h);
+    }
+
+    public boolean capNhatTrangThai(String ma, TrangThaiThanhToan t, String p, LocalDate d) {
+        HoaDon h = timTheoMa(ma);
+        if (h == null || t == null)
+            return false;
+        TrangThaiThanhToan oldT = h.getTrangThai();
+        String oldP = h.getPhuongThucTT();
+        LocalDate oldD = h.getNgayThanhToan();
+        h.setTrangThai(t);
+        h.setPhuongThucTT(p);
+        h.setNgayThanhToan(d);
+        if (!ghiFile()) {
+            h.setTrangThai(oldT);
+            h.setPhuongThucTT(oldP);
+            h.setNgayThanhToan(oldD);
+            return false;
+        }
+        return true;
+    }
+
+    public HoaDon timTheoMa(String ma) {
+        if (rong(ma))
+            return null;
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (danhSachHoaDon[i] != null && ma.equals(danhSachHoaDon[i].getMaHD()))
+                return danhSachHoaDon[i];
+        return null;
+    }
+
+    public HoaDon timTheoMaDatPhong(String dp) {
+        if (rong(dp))
+            return null;
+        for (int i = 0; i < soLuongHoaDon; i++)
+            if (danhSachHoaDon[i] != null && dp.equals(danhSachHoaDon[i].getMaDatPhong()))
+                return danhSachHoaDon[i];
+        return null;
+    }
+
+    public HoaDon[] layDanhSach() {
+        return Arrays.copyOf(danhSachHoaDon, soLuongHoaDon);
+    }
+
+    private static BigDecimal tinhThanhTienNoiBo(HoaDon h) {
+        return h == null || h.getTongGia() == null || h.getGiamGia() == null ? BigDecimal.ZERO
+                : h.getTongGia().subtract(h.getGiamGia());
+    }
+
+    private static boolean hopLe(HoaDon h) {
+        return h != null && !rong(h.getMaHD()) && !rong(h.getMaDatPhong()) && h.getTongGia() != null
+                && h.getGiamGia() != null && h.getTongGia().signum() >= 0 && h.getGiamGia().signum() >= 0
+                && h.getGiamGia().compareTo(h.getTongGia()) <= 0;
+    }
+
+    private static boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+}
+
+=== scr/DAO/KhachHangDAO.java ===
+package DAO;
+
+import model.KhachHang;
+
+public class KhachHangDAO {
+    public static KhachHang[] danhSachKhachHang = new KhachHang[100];
+    public static int soLuongKhachHang = 0;
+
+    public boolean them(KhachHang khachHang) {
+        if (khachHang == null || khachHang.getMaKH() == null 
+            || timTheoMa(khachHang.getMaKH()) != null 
+            || soLuongKhachHang == danhSachKhachHang.length) {
+            return false;
+        }
+        danhSachKhachHang[soLuongKhachHang] = khachHang;
+        soLuongKhachHang++;
+        return true;
+    }
+
+    public boolean sua(KhachHang khachHang) {
+        if (khachHang == null) return false;
+        for (int i = 0; i < soLuongKhachHang; i++) {
+            if (danhSachKhachHang[i].getMaKH().equals(khachHang.getMaKH())) {
+                danhSachKhachHang[i] = khachHang;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean xoa(String maKhachHang) {
+        for (int i = 0; i < soLuongKhachHang; i++) {
+            if (danhSachKhachHang[i].getMaKH().equals(maKhachHang)) {
+                System.arraycopy(danhSachKhachHang, i + 1, danhSachKhachHang, i, soLuongKhachHang - i - 1);
+                danhSachKhachHang[--soLuongKhachHang] = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public KhachHang timTheoMa(String maKhachHang) {
+        for (int i = 0; i < soLuongKhachHang; i++) {
+            if (danhSachKhachHang[i].getMaKH().equals(maKhachHang)) {
+                return danhSachKhachHang[i];
+            }
+        }
+        return null;
+    }
+
+    public KhachHang[] layDanhSach() {
+        KhachHang[] ketQua = new KhachHang[soLuongKhachHang];
+        System.arraycopy(danhSachKhachHang, 0, ketQua, 0, soLuongKhachHang);
+        return ketQua;
+    }
+}
+=== scr/DAO/NhanVienDao.java ===
+package DAO;
+
+import model.NhanVien;
+
+public class NhanVienDAO {
+
+    private NhanVien[] danhSach;
+    private int soLuong;
+
+    public NhanVienDAO() {
+        this.danhSach = new NhanVien[10];
+        this.soLuong = 0;
+    }
+
+    public NhanVien[] layTatCa() {
+        NhanVien[] ketQua = new NhanVien[soLuong];
+        for (int i = 0; i < soLuong; i++) {
+            ketQua[i] = danhSach[i];
+        }
+        return ketQua;
+    }
+
+
+    public boolean them(NhanVien nv) {
+        if (nv == null) {
+            return false;
+        }
+
+        if (nv.getMaNV() == null || nv.getMaNV().trim().isEmpty()) {
+            return false;
+        }
+
+        if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
+            return false;
+        }
+
+        if (timTheoMa(nv.getMaNV()) != null) {
+            return false;
+        }
+
+        if (soLuong == danhSach.length) {
+            moRongMang();
+        }
+
+        danhSach[soLuong] = nv;
+        soLuong++;
+
+        return true;
+    }
+
+    public boolean capNhat(NhanVien nv) {
+        if (nv == null) {
+            return false;
+        }
+
+        if (nv.getMaNV() == null || nv.getMaNV().trim().isEmpty()) {
+            return false;
+        }
+
+        if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
+            return false;
+        }
+
+        String ma = nv.getMaNV().trim();
+
+        for (int i = 0; i < soLuong; i++) {
+            NhanVien nhanVienCu = danhSach[i];
+
+            if (nhanVienCu != null && nhanVienCu.getMaNV() != null
+                    && nhanVienCu.getMaNV().equalsIgnoreCase(ma)) {
+                danhSach[i] = nv;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean xoa(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return false;
+        }
+
+        String maCanXoa = maNV.trim();
+
+        for (int i = 0; i < soLuong; i++) {
+            if (danhSach[i] != null && danhSach[i].getMaNV() != null
+                    && danhSach[i].getMaNV().equalsIgnoreCase(maCanXoa)) {
+
+                for (int j = i; j < soLuong - 1; j++) {
+                    danhSach[j] = danhSach[j + 1];
+                }
+
+                danhSach[soLuong - 1] = null;
+                soLuong--;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public NhanVien timTheoMa(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return null;
+        }
+
+        String maCanTim = maNV.trim();
+
+        for (int i = 0; i < soLuong; i++) {
+            NhanVien nv = danhSach[i];
+
+            if (nv != null && nv.getMaNV() != null
+                    && nv.getMaNV().equalsIgnoreCase(maCanTim)) {
+                return nv;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean kiemTraMaTonTai(String maNV) {
+        return timTheoMa(maNV) != null;
+    }
+
+    public int demSoLuong() {
+        return soLuong;
+    }
+
+    private void moRongMang() {
+        NhanVien[] mangMoi = new NhanVien[danhSach.length * 2];
+        for (int i = 0; i < soLuong; i++) {
+            mangMoi[i] = danhSach[i];
+        }
+        danhSach = mangMoi;
+    }
+}
+=== scr/DAO/PhongDAO.java ===
+
+package DAO;
+
+import model.Phong;
+import model.PhongThuong;
+import model.PhongVIP;
+import model.TinhTrangPhong;
+import Database.DatabaseManager;
+
+import java.io.*;
+import java.math.BigDecimal;
+
+public class PhongDAO {
+
+    private static final String FILE_PATH =
+            DatabaseManager.getDuongDanFile("phong.dat");
+
+    private static final int MAX_PHONG = 100;
+
+    private static Phong[] danhSachPhong = new Phong[MAX_PHONG];
+
+    private static int soLuongPhong = 0;
+
+    // Đọc dữ liệu từ file khi lớp được khởi tạo
+    static {
+        docFile();
+    }
+
+    // =========================
+    // GHI FILE
+    // =========================
+
+    private static boolean ghiFile() {
+
+        File file = new File(FILE_PATH);
+        File folder = file.getParentFile();
+
+        // Tạo thư mục nếu chưa tồn tại
+        if (folder != null && !folder.exists()) {
+            folder.mkdirs();
+        }
+
+        try (DataOutputStream outStream =
+                     new DataOutputStream(
+                             new FileOutputStream(FILE_PATH))) {
+
+            for (int i = 0; i < soLuongPhong; i++) {
+
+                Phong p = danhSachPhong[i];
+
+                if (p instanceof PhongThuong) {
+
+                    outStream.writeUTF("THUONG");
+
+                } else if (p instanceof PhongVIP) {
+
+                    outStream.writeUTF("VIP");
+
+                } else {
+
+                    throw new IOException("Loai phong khong hop le!");
+                }
+
+                // Ghi thông tin chung của phòng
+                outStream.writeUTF(p.getMaPhong());
+                outStream.writeUTF(p.getTenPhong());
+                outStream.writeUTF(p.getLoaiPhong());
+                outStream.writeUTF(p.getGiaPhong().toPlainString());
+                outStream.writeUTF(p.getTinhTrang().name());
+
+                // Ghi thông tin riêng của từng lớp con
+                if (p instanceof PhongThuong) {
+
+                    PhongThuong pt = (PhongThuong) p;
+
+                    outStream.writeUTF(pt.getDichVuThuong());
+
+                } else if (p instanceof PhongVIP) {
+
+                    PhongVIP pv = (PhongVIP) p;
+
+                    outStream.writeUTF(pv.getDichVuVIP());
+                }
+            }
+
+            return true;
+
+        } catch (IOException e) {
+
+            System.out.println("Loi khi ghi file phong: " + e.getMessage());
+
+            return false;
+        }
+    }
+
+    // =========================
+    // ĐỌC FILE
+    // =========================
+
+    private static void docFile() {
+
+        File file = new File(FILE_PATH);
+
+        // Nếu file chưa tồn tại thì chưa có dữ liệu để đọc
+        if (!file.exists()) {
+            return;
+        }
+
+        Phong[] dsTam = new Phong[MAX_PHONG];
+        int dem = 0;
+
+        try (DataInputStream inStream =
+                     new DataInputStream(
+                             new FileInputStream(FILE_PATH))) {
+
+            while (inStream.available() > 0) {
+
+                if (dem >= MAX_PHONG) {
+                    System.out.println("Danh sach phong da day!");
+                    break;
+                }
+
+                // Đọc loại phòng
+                String loai = inStream.readUTF();
+
+                // Đọc thông tin chung
+                String maPhong = inStream.readUTF();
+                String tenPhong = inStream.readUTF();
+                String loaiPhong = inStream.readUTF();
+
+                BigDecimal giaPhong =
+                        new BigDecimal(inStream.readUTF());
+
+                TinhTrangPhong tinhTrang =
+                        TinhTrangPhong.valueOf(inStream.readUTF());
+
+                // Đọc thông tin riêng và tạo đối tượng
+                if (loai.equals("THUONG")) {
+
+                    String dichVuThuong = inStream.readUTF();
+
+                    dsTam[dem] = new PhongThuong(
+                            maPhong,
+                            tenPhong,
+                            loaiPhong,
+                            giaPhong,
+                            tinhTrang,
+                            dichVuThuong
+                    );
+
+                } else if (loai.equals("VIP")) {
+
+                    String dichVuVIP = inStream.readUTF();
+
+                    dsTam[dem] = new PhongVIP(
+                            maPhong,
+                            tenPhong,
+                            loaiPhong,
+                            giaPhong,
+                            tinhTrang,
+                            dichVuVIP
+                    );
+
+                } else {
+
+                    throw new IOException("Loai phong trong file khong hop le!");
+                }
+
+                dem++;
+            }
+
+            // Chỉ cập nhật danh sách sau khi đọc thành công
+            danhSachPhong = dsTam;
+            soLuongPhong = dem;
+
+            System.out.println("Doc file phong thanh cong!");
+
+        } catch (IOException | IllegalArgumentException e) {
+
+            System.out.println("Loi khi doc file phong: " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // THÊM PHÒNG
+    // =========================
+
+    public boolean themPhong(Phong phong) {
+
+        if (phong == null) {
+            System.out.println("Phong khong hop le!");
+            return false;
+        }
+
+        if (soLuongPhong >= MAX_PHONG) {
+            System.out.println("Danh sach phong da day!");
+            return false;
+        }
+
+        if (timPhongTheoMa(phong.getMaPhong()) != null) {
+            System.out.println("Ma phong da ton tai!");
+            return false;
+        }
+
+        danhSachPhong[soLuongPhong] = phong;
+        soLuongPhong++;
+
+        // Nếu ghi file thất bại thì khôi phục mảng
+        if (!ghiFile()) {
+            soLuongPhong--;
+            danhSachPhong[soLuongPhong] = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    // =========================
+    // XÓA PHÒNG
+    // =========================
+
+    public boolean xoaPhong(String maPhong) {
+
+        int viTri = -1;
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
+                viTri = i;
+                break;
+            }
+        }
+
+        if (viTri == -1) {
+            System.out.println("Khong tim thay phong!");
+            return false;
+        }
+
+        // Sao lưu danh sách để khôi phục nếu ghi file thất bại
+        Phong[] backup = danhSachPhong.clone();
+        int soLuongCu = soLuongPhong;
+
+        // Dồn các phần tử phía sau lên trước
+        for (int i = viTri; i < soLuongPhong - 1; i++) {
+            danhSachPhong[i] = danhSachPhong[i + 1];
+        }
+
+        soLuongPhong--;
+        danhSachPhong[soLuongPhong] = null;
+
+        if (!ghiFile()) {
+
+            danhSachPhong = backup;
+            soLuongPhong = soLuongCu;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // =========================
+    // SỬA PHÒNG
+    // =========================
+
+    public boolean suaPhong(String maPhong, Phong phongMoi) {
+
+        if (phongMoi == null) {
+            return false;
+        }
+
+        int viTri = -1;
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
+                viTri = i;
+                break;
+            }
+        }
+
+        if (viTri == -1) {
+            System.out.println("Khong tim thay phong!");
+            return false;
+        }
+
+        // Không cho sửa thành mã phòng đã tồn tại ở vị trí khác
+        Phong phongTrung = timPhongTheoMa(phongMoi.getMaPhong());
+
+        if (phongTrung != null && phongTrung != danhSachPhong[viTri]) {
+            System.out.println("Ma phong moi da ton tai!");
+            return false;
+        }
+
+        // Lưu phòng cũ để khôi phục nếu ghi file thất bại
+        Phong phongCu = danhSachPhong[viTri];
+
+        danhSachPhong[viTri] = phongMoi;
+
+        if (!ghiFile()) {
+
+            danhSachPhong[viTri] = phongCu;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // =========================
+    // TÌM PHÒNG THEO MÃ
+    // =========================
+
+    public Phong timPhongTheoMa(String maPhong) {
+
+        if (maPhong == null) {
+            return null;
+        }
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
+                return danhSachPhong[i];
+            }
+        }
+
+        return null;
+    }
+
+    // =========================
+    // LẤY DANH SÁCH PHÒNG
+    // =========================
+
+    public Phong[] layDanhSachPhong() {
+
+        Phong[] ketQua = new Phong[soLuongPhong];
+
+        for (int i = 0; i < soLuongPhong; i++) {
+            ketQua[i] = danhSachPhong[i];
+        }
+
+        return ketQua;
+    }
+
+    // =========================
+    // ĐẾM SỐ LƯỢNG PHÒNG
+    // =========================
+
+    public int demSoLuongPhong() {
+        return soLuongPhong;
+    }
+
+    // =========================
+    // LẤY DANH SÁCH THEO TÌNH TRẠNG
+    // =========================
+
+    public Phong[] layDanhSachPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
+
+        int dem = 0;
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
+                dem++;
+            }
+        }
+
+        Phong[] ketQua = new Phong[dem];
+
+        int viTri = 0;
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
+                ketQua[viTri] = danhSachPhong[i];
+                viTri++;
+            }
+        }
+
+        return ketQua;
+    }
+
+    // =========================
+    // ĐẾM PHÒNG THEO TÌNH TRẠNG
+    // =========================
+
+    public int demSoLuongPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
+
+        int dem = 0;
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
+                dem++;
+            }
+        }
+
+        return dem;
+    }
+}
+
+=== scr/DAO/TaiKhoanDao.java ===
+package DAO;
+
+import model.TaiKhoan;
+
+public class TaiKhoanDao {
+    private TaiKhoan[] danhSach;
+    private int soLuong; 
+
+    public TaiKhoanDao() {
+        this.danhSach = new TaiKhoan[10];
+        this.soLuong = 0;
+
+        // Tai khoan demo
+        them(new TaiKhoan("admin", "admin123", "NV001", "ADMIN", "HOAT_DONG"));
+    }
+
+    public TaiKhoan dangNhap(String tenDangNhap, String matKhau) {
+        if (tenDangNhap == null || matKhau == null) {
+            return null;
+        }
+        String tenCanTim = tenDangNhap.trim();
+
+        for (int i = 0; i < soLuong; i++) {
+            TaiKhoan tk = danhSach[i];
+            if (tk != null && tk.getTenDangNhap() != null
+                    && tk.getTenDangNhap().equalsIgnoreCase(tenCanTim)
+                    && tk.getMatKhau() != null
+                    && tk.getMatKhau().equals(matKhau)
+                    && "HOAT_DONG".equalsIgnoreCase(tk.getTrangThai())) {
+                return tk;
+            }
+        }
+        return null;
+    }
+
+    public boolean them(TaiKhoan tk) {
+        if (tk == null || tk.getTenDangNhap() == null
+                || tk.getTenDangNhap().trim().isEmpty()
+                || tk.getMatKhau() == null || tk.getMatKhau().isEmpty()) {
+            return false;
+        }
+        if (timTheoTen(tk.getTenDangNhap()) != null) {
+            return false;
+        }
+
+        if (soLuong == danhSach.length) {
+            moRongMang();
+        }
+
+        danhSach[soLuong] = tk;
+        soLuong++;
+        return true;
+    }
+
+    public boolean doiMatKhau(String tenDangNhap, String matKhauMoi) {
+        if (matKhauMoi == null || matKhauMoi.trim().isEmpty()) {
+            return false;
+        }
+        TaiKhoan tk = timTheoTen(tenDangNhap);
+        if (tk == null) {
+            return false;
+        }
+        tk.setMatKhau(matKhauMoi);
+        return true;
+    }
+
+    private TaiKhoan timTheoTen(String ten) {
+        if (ten == null || ten.trim().isEmpty()) {
+            return null;
+        }
+        String tenCanTim = ten.trim();
+        for (int i = 0; i < soLuong; i++) {
+            TaiKhoan tk = danhSach[i];
+            if (tk != null && tk.getTenDangNhap() != null
+                    && tk.getTenDangNhap().equalsIgnoreCase(tenCanTim)) {
+                return tk;
+            }
+        }
+        return null;
+    }
+
+    private void moRongMang() {
+        TaiKhoan[] mangMoi = new TaiKhoan[danhSach.length * 2];
+        for (int i = 0; i < soLuong; i++) {
+            mangMoi[i] = danhSach[i];
+        }
+        danhSach = mangMoi;
+    }
+
+    public TaiKhoan[] layTatCa() {
+        TaiKhoan[] ketQua = new TaiKhoan[soLuong];
+        for (int i = 0; i < soLuong; i++) {
+            ketQua[i] = danhSach[i];
+        }
+        return ketQua;
+    }
+}
+=== scr/DAO/ThanhToanDAO.java ===
+package DAO;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import model.ThanhToan;
+import model.TrangThaiThanhToan;
+
+public class ThanhToanDAO {
+    private static final String FILE_PATH = "DATABASEH/ThanhToan.dat";
+    public static ThanhToan[] danhSachThanhToan = new ThanhToan[100];
+    public static int soLuongThanhToan = 0;
+    static {
+        docFile();
+    }
+
+    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
+        dos.writeUTF(s == null ? "" : s);
+    }
+
+    private static String docChuoi(DataInputStream dis) throws IOException {
+        String s = dis.readUTF();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static void ghiNgay(DataOutputStream dos, LocalDate d) throws IOException {
+        dos.writeLong(d == null ? -1L : d.toEpochDay());
+    }
+
+    private static LocalDate docNgay(DataInputStream dis) throws IOException {
+        long v = dis.readLong();
+        return v == -1L ? null : LocalDate.ofEpochDay(v);
+    }
+
+    private static void docFile() {
+        soLuongThanhToan = 0;
+        Arrays.fill(danhSachThanhToan, null);
+        File f = new File(FILE_PATH);
+        try {
+            if (!f.exists() || f.length() == 0)
+                return;
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
+                int count = dis.readInt();
+                if (count < 0 || count > 100)
+                    throw new IOException("So luong khong hop le");
+                for (int i = 0; i < count; i++) {
+                    String t = docChuoi(dis);
+                    ThanhToan tToan = new ThanhToan(docChuoi(dis), docChuoi(dis), new BigDecimal(dis.readUTF()),
+                            docChuoi(dis), docNgay(dis), t == null ? null : TrangThaiThanhToan.valueOf(t));
+                    if (hopLe(tToan) && timNoiBo(tToan.getMaThanhToan()) == null)
+                        danhSachThanhToan[soLuongThanhToan++] = tToan;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
+        }
+    }
+
+    private static ThanhToan timNoiBo(String ma) {
+        for (int i = 0; i < soLuongThanhToan; i++)
+            if (ma.equals(danhSachThanhToan[i].getMaThanhToan()))
+                return danhSachThanhToan[i];
+        return null;
+    }
+
+    private static boolean ghiFile() {
+        File f = new File(FILE_PATH);
+        if (!f.exists()) {
+            System.err.println("Khong tim thay file: " + FILE_PATH);
+            return false;
+        }
+        try {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
+                dos.writeInt(soLuongThanhToan);
+                for (int i = 0; i < soLuongThanhToan; i++) {
+                    ThanhToan t = danhSachThanhToan[i];
+                    ghiChuoi(dos, t.getMaThanhToan());
+                    ghiChuoi(dos, t.getMaHD());
+                    dos.writeUTF(t.getSoTien().toString());
+                    ghiChuoi(dos, t.getPhuongThuc());
+                    ghiNgay(dos, t.getNgayThanhToan());
+                    ghiChuoi(dos, t.getTrangThai() == null ? null : t.getTrangThai().name());
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean them(ThanhToan t) {
+        if (!hopLe(t) || timTheoMa(t.getMaThanhToan()) != null || soLuongThanhToan >= 100)
+            return false;
+        int old = soLuongThanhToan;
+        danhSachThanhToan[soLuongThanhToan++] = t;
+        if (!ghiFile()) {
+            soLuongThanhToan = old;
+            danhSachThanhToan[old] = null;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean sua(ThanhToan t) {
+        if (!hopLe(t))
+            return false;
+        for (int i = 0; i < soLuongThanhToan; i++)
+            if (danhSachThanhToan[i] != null && t.getMaThanhToan().equals(danhSachThanhToan[i].getMaThanhToan())) {
+                ThanhToan old = danhSachThanhToan[i];
+                danhSachThanhToan[i] = t;
+                if (!ghiFile()) {
+                    danhSachThanhToan[i] = old;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public boolean xoa(String ma) {
+        for (int i = 0; i < soLuongThanhToan; i++)
+            if (danhSachThanhToan[i] != null && ma != null && ma.equals(danhSachThanhToan[i].getMaThanhToan())) {
+                ThanhToan[] old = Arrays.copyOf(danhSachThanhToan, soLuongThanhToan);
+                int n = soLuongThanhToan;
+                System.arraycopy(danhSachThanhToan, i + 1, danhSachThanhToan, i, --soLuongThanhToan - i);
+                danhSachThanhToan[soLuongThanhToan] = null;
+                if (!ghiFile()) {
+                    System.arraycopy(old, 0, danhSachThanhToan, 0, n);
+                    soLuongThanhToan = n;
+                    return false;
+                }
+                return true;
+            }
+        return false;
+    }
+
+    public ThanhToan timTheoMa(String ma) {
+        if (rong(ma))
+            return null;
+        for (int i = 0; i < soLuongThanhToan; i++)
+            if (danhSachThanhToan[i] != null && ma.equals(danhSachThanhToan[i].getMaThanhToan()))
+                return danhSachThanhToan[i];
+        return null;
+    }
+
+    public ThanhToan[] layTheoMaHD(String ma) {
+        ArrayList<ThanhToan> a = new ArrayList<>();
+        for (int i = 0; i < soLuongThanhToan; i++)
+            if (danhSachThanhToan[i] != null && ma != null && ma.equals(danhSachThanhToan[i].getMaHD()))
+                a.add(danhSachThanhToan[i]);
+        return a.toArray(new ThanhToan[0]);
+    }
+
+    public ThanhToan[] layDanhSach() {
+        return Arrays.copyOf(danhSachThanhToan, soLuongThanhToan);
+    }
+
+    private static boolean hopLe(ThanhToan t) {
+        return t != null && !rong(t.getMaThanhToan()) && !rong(t.getMaHD()) && !rong(t.getPhuongThuc())
+                && t.getSoTien() != null && t.getSoTien().signum() > 0;
+    }
+
+    private static boolean rong(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+}
+
+=== scr/Database/.gitkeep ===
+=== scr/Database/DatabaseManager.java ===
+
+package Database;
+
+import java.io.File;
+
+public class DatabaseManager {
+
+    private static final String DATA_FOLDER = "data";
+
+    // Khoi tao thu muc du lieu
+    public static void khoiTaoDatabase() {
+
+        File folder = new File(DATA_FOLDER);
+
+        if (!folder.exists()) {
+
+            if (!folder.mkdirs()) {
+                throw new RuntimeException(
+                    "Khong the tao thu muc data!"
+                );
+            }
+
+            System.out.println("Khoi tao data thanh cong!");
+
+        } else {
+            System.out.println("Thu muc data da ton tai!");
+        }
+    }
+
+    // Lay duong dan file theo ten module
+    public static String getDuongDanFile(String tenFile) {
+
+        return DATA_FOLDER + File.separator + tenFile;
+    }
+}
+
+=== scr/INTERFACE/IHoaDon.java ===
+package INTERFACE;
+
+import model.HoaDon;
+import model.TrangThaiThanhToan;
+
+public interface IHoaDon {
+    boolean themHoaDon(HoaDon hoaDon);
+
+    boolean suaHoaDon(HoaDon hoaDon);
+
+    boolean xoaHoaDon(String maHD);
+
+    HoaDon[] layDanhSachHoaDon();
+
+    boolean capNhatTrangThaiThanhToan(String maHD, TrangThaiThanhToan trangThai);
+}
+
+=== scr/INTERFACE/IKhachHang.java ===
+package INTERFACE;
+
+import model.KhachHang;
+
+public interface IKhachHang {
+    boolean themKhachHang(KhachHang khachHang);
+
+    KhachHang[] layDanhSachKhachHang();
+
+    KhachHang[] layDanhSachKhachHangTheoLoai(String loaiKhach);
+
+    KhachHang timKhachHangTheoMa(String maKH);
+
+    boolean suaKhachHang(KhachHang khachHang);
+
+    boolean xoaKhachHang(String maKH);
+
+    KhachHang[] timKhachHangTheoTen(String hoTen);
+
+    int demSoLuongKhachHang();
+
+    int demSoLuongKhachHangTheoLoai(String loaiKhach);
+}
+=== scr/INTERFACE/IPhong.java ===
+package INTERFACE;
+import model.Phong;
+import model.TinhTrangPhong;
+public interface IPhong{
+
+    boolean themPhong(Phong phong);
+
+    Phong[] layDanhSachPhong();
+
+    Phong[] layDanhSachPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
+
+    Phong timPhongTheoMa(String maPhong);
+
+    boolean suaPhong(Phong phong);
+
+    boolean xoaPhong(String maPhong);
+
+    int demSoLuongPhong();
+
+    int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
+}
+
+=== scr/model/ChiTietDichVu.java ===
+package model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class ChiTietDichVu {
+    private String maDatPhong;
+    private String maDichVu;
+    private LocalDate ngayDatDichVu;
+    private LocalDate ngayNhan;
+    private int soLuong;
+    private BigDecimal donGia;
+    private BigDecimal thanhTien;
+
+    public ChiTietDichVu() {
+    }
+
+    public ChiTietDichVu(String maDatPhong, String maDichVu, LocalDate ngayDatDichVu, LocalDate ngayNhan, int soLuong,
+            BigDecimal donGia) {
+        this.maDatPhong = maDatPhong;
+        this.maDichVu = maDichVu;
+        this.ngayDatDichVu = ngayDatDichVu;
+        this.ngayNhan = ngayNhan;
+        this.soLuong = soLuong;
+        this.donGia = donGia;
+    }
+
+    public String getMaDatPhong() {
+        return maDatPhong;
+    }
+
+    public void setMaDatPhong(String v) {
+        maDatPhong = v;
+    }
+
+    public String getMaDichVu() {
+        return maDichVu;
+    }
+
+    public void setMaDichVu(String v) {
+        maDichVu = v;
+    }
+
+    public LocalDate getNgayDatDichVu() {
+        return ngayDatDichVu;
+    }
+
+    public void setNgayDatDichVu(LocalDate v) {
+        ngayDatDichVu = v;
+    }
+
+    public LocalDate getNgayNhan() {
+        return ngayNhan;
+    }
+
+    public void setNgayNhan(LocalDate v) {
+        ngayNhan = v;
+    }
+
+    public int getSoLuong() {
+        return soLuong;
+    }
+
+    public void setSoLuong(int v) {
+        soLuong = v;
+    }
+
+    public BigDecimal getDonGia() {
+        return donGia;
+    }
+
+    public void setDonGia(BigDecimal v) {
+        donGia = v;
+    }
+
+    public BigDecimal getThanhTien() {
+        return thanhTien;
+    }
+
+    public void setThanhTien(BigDecimal v) {
+        thanhTien = v;
+    }
+
+    @Override
+    public String toString() {
+        return "ChiTietDichVu{maDatPhong='" + maDatPhong + "', maDichVu='" + maDichVu + "', soLuong=" + soLuong
+                + ", donGia=" + donGia + ", thanhTien=" + thanhTien + '}';
+    }
+}
+
+=== scr/model/DatPhong.java ===
+package model;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
+
+public class DatPhong {
+    private String maDatPhong;
+    private String maKhachHang;
+    private String maPhong;
+    private LocalDate ngayDat;
+    private LocalDate ngayNhanPhong;
+    private LocalDate ngayTraPhong;
+    private TrangThaiDatPhong trangThai;
+    private double giaPhongNgay;
+
+    public DatPhong() {
+        this.ngayDat = LocalDate.now();
+        this.trangThai = TrangThaiDatPhong.DA_DAT;
+    }
+
+    public DatPhong(String maDatPhong, String maKhachHang, String maPhong, 
+                    LocalDate ngayNhanPhong, LocalDate ngayTraPhong, double giaPhongNgay) {
+        this.maDatPhong = maDatPhong;
+        this.maKhachHang = maKhachHang;
+        this.maPhong = maPhong;
+        this.ngayDat = LocalDate.now();
+        this.ngayNhanPhong = ngayNhanPhong;
+        this.ngayTraPhong = ngayTraPhong;
+        this.giaPhongNgay = giaPhongNgay;
+        this.trangThai = TrangThaiDatPhong.DA_DAT;
+    }
+
+
+    public String getMaDatPhong() { return maDatPhong; }
+    public void setMaDatPhong(String maDatPhong) { this.maDatPhong = maDatPhong; }
+
+    public String getMaKhachHang() { return maKhachHang; }
+    public void setMaKhachHang(String maKhachHang) { this.maKhachHang = maKhachHang; }
+
+    public String getMaPhong() { return maPhong; }
+    public void setMaPhong(String maPhong) { this.maPhong = maPhong; }
+
+    public LocalDate getNgayDat() { return ngayDat; }
+    public void setNgayDat(LocalDate ngayDat) { this.ngayDat = ngayDat; }
+
+    public LocalDate getNgayNhanPhong() { return ngayNhanPhong; }
+    public void setNgayNhanPhong(LocalDate ngayNhanPhong) { this.ngayNhanPhong = ngayNhanPhong; }
+
+    public LocalDate getNgayTraPhong() { return ngayTraPhong; }
+    public void setNgayTraPhong(LocalDate ngayTraPhong) { this.ngayTraPhong = ngayTraPhong; }
+
+    public TrangThaiDatPhong getTrangThai() { return trangThai; }
+    public void setTrangThai(TrangThaiDatPhong trangThai) { this.trangThai = trangThai; }
+
+    public double getGiaPhongNgay() { return giaPhongNgay; }
+    public void setGiaPhongNgay(double giaPhongNgay) { this.giaPhongNgay = giaPhongNgay; }
+
+
+
+    public long getSoNgayO() {
+        if (ngayNhanPhong == null || ngayTraPhong == null) return 0;
+        long soNgay = ChronoUnit.DAYS.between(ngayNhanPhong, ngayTraPhong);
+        return soNgay > 0 ? soNgay : 1; 
+    }
+
+    public double tinhTienPhong() {
+        return getSoNgayO() * giaPhongNgay;
+    }
+
+    public boolean isNgayHopLe() {
+        if (ngayNhanPhong == null || ngayTraPhong == null) return false;
+        return !ngayTraPhong.isBefore(ngayNhanPhong);
+    }
+
+    public boolean isTrungLich(LocalDate tuNgay, LocalDate denNgay) {
+        if (this.trangThai == TrangThaiDatPhong.DA_HUY || this.trangThai == TrangThaiDatPhong.DA_TRA) {
+            return false;
+        }
+        return this.ngayNhanPhong.isBefore(denNgay) && this.ngayTraPhong.isAfter(tuNgay);
+    }
+
+
+    @Override
+    public String toString() {
+        return "DatPhong{" +
+                "maDatPhong='" + maDatPhong + '\'' +
+                ", maKhachHang='" + maKhachHang + '\'' +
+                ", maPhong='" + maPhong + '\'' +
+                ", ngayDat=" + ngayDat +
+                ", ngayNhanPhong=" + ngayNhanPhong +
+                ", ngayTraPhong=" + ngayTraPhong +
+                ", trangThai=" + (trangThai != null ? trangThai.getTenTrangThai() : "") +
+                ", giaPhongNgay=" + giaPhongNgay +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DatPhong datPhong = (DatPhong) o;
+        return Objects.equals(maDatPhong, datPhong.maDatPhong);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maDatPhong);
+    }
+}
+=== scr/model/DichVu.java ===
+package model;
+
+import java.math.BigDecimal;
+
+public class DichVu {
+    private String maDichVu;
+    private String tenDichVu;
+    private String loaiDichVu;
+    private String donViTinh;
+    private BigDecimal gia;
+    private String trangThai;
+    private String moTa;
+
+    public DichVu() {
+    }
+
+    public DichVu(String maDichVu, String tenDichVu, String loaiDichVu, String donViTinh, BigDecimal gia,
+            String trangThai, String moTa) {
+        this.maDichVu = maDichVu;
+        this.tenDichVu = tenDichVu;
+        this.loaiDichVu = loaiDichVu;
+        this.donViTinh = donViTinh;
+        this.gia = gia;
+        this.trangThai = trangThai;
+        this.moTa = moTa;
+    }
+
+    public String getMaDichVu() {
+        return maDichVu;
+    }
+
+    public void setMaDichVu(String v) {
+        maDichVu = v;
+    }
+
+    public String getTenDichVu() {
+        return tenDichVu;
+    }
+
+    public void setTenDichVu(String v) {
+        tenDichVu = v;
+    }
+
+    public String getLoaiDichVu() {
+        return loaiDichVu;
+    }
+
+    public void setLoaiDichVu(String v) {
+        loaiDichVu = v;
+    }
+
+    public String getDonViTinh() {
+        return donViTinh;
+    }
+
+    public void setDonViTinh(String v) {
+        donViTinh = v;
+    }
+
+    public BigDecimal getGia() {
+        return gia;
+    }
+
+    public void setGia(BigDecimal v) {
+        gia = v;
+    }
+
+    public String getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(String v) {
+        trangThai = v;
+    }
+
+    public String getMoTa() {
+        return moTa;
+    }
+
+    public void setMoTa(String v) {
+        moTa = v;
+    }
+
+    @Override
+    public String toString() {
+        return "DichVu{maDichVu='" + maDichVu + "', tenDichVu='" + tenDichVu + "', loaiDichVu='" + loaiDichVu
+                + "', donViTinh='" + donViTinh + "', gia=" + gia + ", trangThai='" + trangThai + "'}";
+    }
+}
+
+=== scr/model/HoaDon.java ===
+package model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class HoaDon {
+    private String maHD;
+    private String maDatPhong;
+    private LocalDate ngayLap;
+    private LocalDate ngayThanhToan;
+    private BigDecimal tongGia;
+    private BigDecimal giamGia;
+    private BigDecimal thanhTien;
+    private String phuongThucTT;
+    private TrangThaiThanhToan trangThai;
+
+    public HoaDon() {
+    }
+
+    public HoaDon(String maHD, String maDatPhong, LocalDate ngayLap, BigDecimal tongGia, BigDecimal giamGia) {
+        this.maHD = maHD;
+        this.maDatPhong = maDatPhong;
+        this.ngayLap = ngayLap;
+        this.tongGia = tongGia;
+        this.giamGia = giamGia;
+    }
+
+    public String getMaHD() {
+        return maHD;
+    }
+
+    public void setMaHD(String v) {
+        maHD = v;
+    }
+
+    public String getMaDatPhong() {
+        return maDatPhong;
+    }
+
+    public void setMaDatPhong(String v) {
+        maDatPhong = v;
+    }
+
+    public LocalDate getNgayLap() {
+        return ngayLap;
+    }
+
+    public void setNgayLap(LocalDate v) {
+        ngayLap = v;
+    }
+
+    public LocalDate getNgayThanhToan() {
+        return ngayThanhToan;
+    }
+
+    public void setNgayThanhToan(LocalDate v) {
+        ngayThanhToan = v;
+    }
+
+    public BigDecimal getTongGia() {
+        return tongGia;
+    }
+
+    public void setTongGia(BigDecimal v) {
+        tongGia = v;
+    }
+
+    public BigDecimal getGiamGia() {
+        return giamGia;
+    }
+
+    public void setGiamGia(BigDecimal v) {
+        giamGia = v;
+    }
+
+    public BigDecimal getThanhTien() {
+        return thanhTien;
+    }
+
+    public void setThanhTien(BigDecimal v) {
+        thanhTien = v;
+    }
+
+    public String getPhuongThucTT() {
+        return phuongThucTT;
+    }
+
+    public void setPhuongThucTT(String v) {
+        phuongThucTT = v;
+    }
+
+    public TrangThaiThanhToan getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(TrangThaiThanhToan v) {
+        trangThai = v;
+    }
+
+    @Override
+    public String toString() {
+        return "HoaDon{maHD='" + maHD + "', maDatPhong='" + maDatPhong + "', tongGia=" + tongGia + ", giamGia="
+                + giamGia + ", thanhTien=" + thanhTien + ", trangThai=" + trangThai + '}';
+    }
+}
+
+=== scr/model/KhachHang.java ===
+package model;
+import java.time.LocalDate;
+
+public class KhachHang {
+    private String maKH;
+    private String hoTen;
+    private String gioiTinh;
+    private LocalDate ngaySinh;
+    private String diaChi;
+    private String sdt;
+    private String email;
+    private String loaiKhach;
+    private String ghiChu;
+
+
+    public KhachHang(String maKH, String hoTen, String gioiTinh,
+                     LocalDate ngaySinh, String diaChi, String sdt,
+                     String email, String loaiKhach, String ghiChu) {
+        this.maKH = maKH;
+        this.hoTen = hoTen;
+        this.gioiTinh = gioiTinh;
+        this.ngaySinh = ngaySinh;
+        this.diaChi = diaChi;
+        this.sdt = sdt;
+        this.email = email;
+        this.loaiKhach = loaiKhach;
+        this.ghiChu = ghiChu;
+    }
+
+    public String getMaKH() {
+        return maKH;
+    }
+
+    public void setMaKH(String maKH) {
+        this.maKH = maKH;
+    }
+
+    public String getHoTen() {
+        return hoTen;
+    }
+
+    public void setHoTen(String hoTen) {
+        this.hoTen = hoTen;
+    }
+
+    public String getGioiTinh() {
+        return gioiTinh;
+    }
+
+    public void setGioiTinh(String gioiTinh) {
+        this.gioiTinh = gioiTinh;
+    }
+
+    public LocalDate getNgaySinh() {
+        return ngaySinh;
+    }
+
+    public void setNgaySinh(LocalDate ngaySinh) {
+        this.ngaySinh = ngaySinh;
+    }
+
+    public String getDiaChi() {
+        return diaChi;
+    }
+
+    public void setDiaChi(String diaChi) {
+        this.diaChi = diaChi;
+    }
+
+    public String getSdt() {
+        return sdt;
+    }
+
+    public void setSdt(String sdt) {
+        this.sdt = sdt;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getLoaiKhach() {
+        return loaiKhach;
+    }
+
+    public void setLoaiKhach(String loaiKhach) {
+        this.loaiKhach = loaiKhach;
+    }
+
+    public String getGhiChu() {
+        return ghiChu;
+    }
+
+    public void setGhiChu(String ghiChu) {
+        this.ghiChu = ghiChu;
+    }
+    @Override
+    public String toString (){
+        return "maKH: " + maKH +",hoTen: " + hoTen +",gioiTinh :" + gioiTinh +
+                ",ngaySinh: " + ngaySinh + ",diaChi: " + diaChi +",sdt: " + sdt +
+                ",email: " + email +",loaiKhach: " + loaiKhach + ",ghiChu: " + ghiChu; 
+            }     
+}
+=== scr/model/NhanVien.java ===
+package model;
+
+public class NhanVien {
+    private String maNV;
+    private String hoTen;
+    private String gioiTinh;
+    private String ngaySinh; // yyyy-MM-dd
+    private String diaChi;
+    private String soDienThoai;
+    private String chucVu;
+    private double luong;
+    private String trangThai;
+
+    public NhanVien() {
+    }
+
+    public NhanVien(String maNV, String hoTen, String gioiTinh, String ngaySinh,
+                    String diaChi, String soDienThoai, String chucVu,
+                    double luong, String trangThai) {
+        this.maNV = maNV;
+        this.hoTen = hoTen;
+        this.gioiTinh = gioiTinh;
+        this.ngaySinh = ngaySinh;
+        this.diaChi = diaChi;
+        this.soDienThoai = soDienThoai;
+        this.chucVu = chucVu;
+        this.luong = luong;
+        this.trangThai = trangThai;
+    }
+
+    public String getMaNV() { return maNV; }
+    public void setMaNV(String maNV) { this.maNV = maNV; }
+    public String getHoTen() { return hoTen; }
+    public void setHoTen(String hoTen) { this.hoTen = hoTen; }
+    public String getGioiTinh() { return gioiTinh; }
+    public void setGioiTinh(String gioiTinh) { this.gioiTinh = gioiTinh; }
+    public String getNgaySinh() { return ngaySinh; }
+    public void setNgaySinh(String ngaySinh) { this.ngaySinh = ngaySinh; }
+    public String getDiaChi() { return diaChi; }
+    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
+    public String getSoDienThoai() { return soDienThoai; }
+    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai; }
+    public String getChucVu() { return chucVu; }
+    public void setChucVu(String chucVu) { this.chucVu = chucVu; }
+    public double getLuong() { return luong; }
+    public void setLuong(double luong) { this.luong = luong; }
+    public String getTrangThai() { return trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+
+    @Override
+    public String toString() {
+        return String.format("%-10s | %-24s | %-8s | %-12s | %-16s | %-16s | %-14s | %,12.0f | %-12s",
+                maNV, hoTen, gioiTinh, ngaySinh, diaChi, soDienThoai, chucVu, luong, trangThai);
+    }
+}
+
+=== scr/model/Phong.java ===
+
+package model;
+
+import java.math.BigDecimal;
+
+public abstract class Phong {
+
+    private String maPhong;
+    private String tenPhong;
+    private String loaiPhong;
+    private BigDecimal giaPhong;
+    private TinhTrangPhong tinhTrang;
+
+    public Phong(String maPhong, String tenPhong,
+                 String loaiPhong, BigDecimal giaPhong,
+                 TinhTrangPhong tinhTrang) {
+
+        this.maPhong = maPhong;
+        this.tenPhong = tenPhong;
+        this.loaiPhong = loaiPhong;
+        this.giaPhong = giaPhong;
+        this.tinhTrang = tinhTrang;
+    }
+    public void setMaPhong(String maPhong) {
+    this.maPhong = maPhong;
+}
+
+    public String getMaPhong() {
+        return maPhong;
+    }
+
+    public String getTenPhong() {
+        return tenPhong;
+    }
+
+    public String getLoaiPhong() {
+        return loaiPhong;
+    }
+
+    public BigDecimal getGiaPhong() {
+        return giaPhong;
+    }
+
+    public TinhTrangPhong getTinhTrang() {
+        return tinhTrang;
+    }
+
+    public void setTenPhong(String tenPhong) {
+        this.tenPhong = tenPhong;
+    }
+
+    public void setGiaPhong(BigDecimal giaPhong) {
+        this.giaPhong = giaPhong;
+    }
+
+    public void setTinhTrang(TinhTrangPhong tinhTrang) {
+        this.tinhTrang = tinhTrang;
+    }
+
+    @Override
+    public String toString() {
+        return "Ma phong: " + maPhong +
+                " | Ten phong: " + tenPhong +
+                " | Loai phong: " + loaiPhong +
+                " | Gia phong: " + giaPhong +
+                " | Tinh trang: " + tinhTrang;
+    }
+}
+
+=== scr/model/PhongThuong.java ===
+
+package model;
+
+import java.math.BigDecimal;
+
+public class PhongThuong extends Phong {
+
+    private String dichVuThuong;
+
+    public PhongThuong(String maPhong, String tenPhong,
+                       String loaiPhong, BigDecimal giaPhong,
+                       TinhTrangPhong tinhTrang,
+                       String dichVuThuong) {
+
+        super(maPhong, tenPhong, loaiPhong,
+              giaPhong, tinhTrang);
+
+        this.dichVuThuong = dichVuThuong;
+    }
+
+    public String getDichVuThuong() {
+        return dichVuThuong;
+    }
+
+    public void setDichVuThuong(String dichVuThuong) {
+        this.dichVuThuong = dichVuThuong;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() +
+                " | Dich vu thuong: " + dichVuThuong;
+    }
+}
+
+=== scr/model/PhongVIP.java ===
+
+package model;
+
+import java.math.BigDecimal;
+
+public class PhongVIP extends Phong {
+
+    private String dichVuVIP;
+
+    public PhongVIP(String maPhong, String tenPhong,
+                    String loaiPhong, BigDecimal giaPhong,
+                    TinhTrangPhong tinhTrang,
+                    String dichVuVIP) {
+
+        super(maPhong, tenPhong, loaiPhong,
+              giaPhong, tinhTrang);
+
+        this.dichVuVIP = dichVuVIP;
+    }
+
+    public String getDichVuVIP() {
+        return dichVuVIP;
+    }
+
+    public void setDichVuVIP(String dichVuVIP) {
+        this.dichVuVIP = dichVuVIP;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() +
+                " | Dich vu VIP: " + dichVuVIP;
+    }
+}
+
+=== scr/model/TaiKhoan.java ===
+package model;
+public class TaiKhoan {
+    private String tenDangNhap;
+    private String matKhau;
+    private String maNV;
+    private String vaiTro;
+    private String trangThai;
+
+    public TaiKhoan() {
+    }
+
+    public TaiKhoan(String tenDangNhap, String matKhau, String maNV,
+                    String vaiTro, String trangThai) {
+        this.tenDangNhap = tenDangNhap;
+        this.matKhau = matKhau;
+        this.maNV = maNV;
+        this.vaiTro = vaiTro;
+        this.trangThai = trangThai;
+    }
+
+    public String getTenDangNhap() { return tenDangNhap; }
+    public void setTenDangNhap(String tenDangNhap) { this.tenDangNhap = tenDangNhap; }
+    public String getMatKhau() { return matKhau; }
+    public void setMatKhau(String matKhau) { this.matKhau = matKhau; }
+    public String getMaNV() { return maNV; }
+    public void setMaNV(String maNV) { this.maNV = maNV; }
+    public String getVaiTro() { return vaiTro; }
+    public void setVaiTro(String vaiTro) { this.vaiTro = vaiTro; }
+    public String getTrangThai() { return trangThai; }
+    public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
+}
+=== scr/model/ThanhToan.java ===
+package model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public class ThanhToan {
+    private String maThanhToan;
+    private String maHD;
+    private BigDecimal soTien;
+    private String phuongThuc;
+    private LocalDate ngayThanhToan;
+    private TrangThaiThanhToan trangThai;
+
+    public ThanhToan() {
+    }
+
+    public ThanhToan(String maThanhToan, String maHD, BigDecimal soTien, String phuongThuc, LocalDate ngayThanhToan,
+            TrangThaiThanhToan trangThai) {
+        this.maThanhToan = maThanhToan;
+        this.maHD = maHD;
+        this.soTien = soTien;
+        this.phuongThuc = phuongThuc;
+        this.ngayThanhToan = ngayThanhToan;
+        this.trangThai = trangThai;
+    }
+
+    public String getMaThanhToan() {
+        return maThanhToan;
+    }
+
+    public void setMaThanhToan(String v) {
+        maThanhToan = v;
+    }
+
+    public String getMaHD() {
+        return maHD;
+    }
+
+    public void setMaHD(String v) {
+        maHD = v;
+    }
+
+    public BigDecimal getSoTien() {
+        return soTien;
+    }
+
+    public void setSoTien(BigDecimal v) {
+        soTien = v;
+    }
+
+    public String getPhuongThuc() {
+        return phuongThuc;
+    }
+
+    public void setPhuongThuc(String v) {
+        phuongThuc = v;
+    }
+
+    public LocalDate getNgayThanhToan() {
+        return ngayThanhToan;
+    }
+
+    public void setNgayThanhToan(LocalDate v) {
+        ngayThanhToan = v;
+    }
+
+    public TrangThaiThanhToan getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(TrangThaiThanhToan v) {
+        trangThai = v;
+    }
+
+    @Override
+    public String toString() {
+        return "ThanhToan{maThanhToan='" + maThanhToan + "', maHD='" + maHD + "', soTien=" + soTien + ", phuongThuc='"
+                + phuongThuc + "', ngayThanhToan=" + ngayThanhToan + ", trangThai=" + trangThai + '}';
+    }
+}
+
+=== scr/model/ThongKe.java ===
+package model;
+/** Menu thong ke tam thoi. So lieu se duoc tich hop sau khi nhom thong nhat database. */
+public class ThongKe {
+    public void baoCaoDoanhThu() {
+        System.out.println("\n=== DOANH THU THEO THANG ===");
+        System.out.println("Chua co du lieu: cho tich hop database chung cua nhom.");
+    }
+    public void thongKePhong() {
+        System.out.println("\n=== THONG KE PHONG ===");
+        System.out.println("Chua co du lieu: cho tich hop database chung cua nhom.");
+    }
+    public void thongKeKhachHang() {
+        System.out.println("\n=== THONG KE KHACH HANG ===");
+        System.out.println("Chua co du lieu: cho tich hop database chung cua nhom.");
+    }
+    public void thongKeDichVu() {
+        System.out.println("\n=== THONG KE DICH VU ===");
+        System.out.println("Chua co du lieu: cho tich hop database chung cua nhom.");
+    }
+    public void hienThiMenu() {
+        System.out.println("\n===== BAO CAO - THONG KE =====");
+        System.out.println("1. Doanh thu theo thang");
+        System.out.println("2. Thong ke phong");
+        System.out.println("3. Thong ke khach hang");
+        System.out.println("4. Thong ke dich vu");
+        System.out.println("0. Quay lai");
+    }
+}
+
+=== scr/model/TinhTrangPhong.java ===
+package model;
+public enum TinhTrangPhong{
+    TRONG,
+    DANG_SU_DUNG
+    ,DANG_BAO_TRI
+}
+
+=== scr/model/TrangThaiDatPhong.java ===
+package model;
+public enum TrangThaiDatPhong {
+    DA_DAT("Đã đặt trước"),
+    DANG_SU_DUNG("Đang sử dụng"),
+    DA_TRA("Đã trả phòng"),
+    DA_HUY("Đã hủy");
+
+    private final String tenTrangThai;
+
+    TrangThaiDatPhong(String tenTrangThai) {
+        this.tenTrangThai = tenTrangThai;
+    }
+
+    public String getTenTrangThai() {
+        return tenTrangThai;
+    }
+
+    @Override
+    public String toString() {
+        return this.tenTrangThai;
+    }
+}
+=== scr/model/TrangThaiThanhToan.java ===
+package model;
+
+public enum TrangThaiThanhToan {
+    CHUA_THANH_TOAN, DA_THANH_TOAN
+}
+
+=== scr/service/.gitkeep ===
+=== scr/service/QLDatPhong.java ===
+package service;
+
+import DAO.DatPhongDAO;
+import model.DatPhong;
+import model.TrangThaiDatPhong;
+
+public class QLDatPhong {
+    private DatPhongDAO datPhongDAO = new DatPhongDAO();
+
+    public boolean taoDatPhong(DatPhong dp) {
+        if (dp == null || !dp.isNgayHopLe()) {
+            System.out.println("Lỗi: Ngày nhận hoặc ngày trả phòng không hợp lệ!");
+            return false;
+        }
+        // Kiểm tra phòng có trống trong lịch đặt không
+        if (!datPhongDAO.kiemTraPhongTrong(dp.getMaPhong(), dp.getNgayNhanPhong(), dp.getNgayTraPhong())) {
+            System.out.println("Lỗi: Phòng " + dp.getMaPhong() + " đã có người đặt trong thời gian này!");
+            return false;
+        }
+
+        boolean kq = datPhongDAO.them(dp);
+        if (kq) System.out.println("Đặt phòng thành công! Tổng tiền dự kiến: " + dp.tinhTienPhong());
+        else System.out.println("Đặt phòng thất bại (Trùng mã phiếu hoặc đầy danh sách)!");
+        return kq;
+    }
+
+    public boolean huyDatPhong(String maDatPhong) {
+        DatPhong dp = datPhongDAO.timTheoMa(maDatPhong);
+        if (dp == null) {
+            System.out.println("Không tìm thấy mã đặt phòng!");
+            return false;
+        }
+        dp.setTrangThai(TrangThaiDatPhong.DA_HUY);
+        System.out.println("Đã hủy đặt phòng thành công!");
+        return true;
+    }
+
+    public DatPhong timDatPhong(String maDatPhong) {
+        return datPhongDAO.timTheoMa(maDatPhong);
+    }
+
+    public DatPhong[] layTatCa() {
+        return datPhongDAO.layDanhSach();
+    }
+}
+=== scr/service/QLDichVu.java ===
+package service;
+
+import DAO.ChiTietDichVuDAO;
+import DAO.DatPhongDAO;
+import DAO.DichVuDAO;
+import DAO.HoaDonDAO;
+import java.math.BigDecimal;
+import model.ChiTietDichVu;
+import model.DichVu;
+import model.DatPhong;
+import model.TrangThaiDatPhong;
+
+public class QLDichVu {
+    private final DichVuDAO dichVuDAO = new DichVuDAO();
+    private final ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
+    private final DatPhongDAO datPhongDAO = new DatPhongDAO();
+    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
+
+    public boolean themDichVu(DichVu d) {
+        return dichVuDAO.them(d);
+    }
+
+    public boolean suaDichVu(DichVu d) {
+        return dichVuDAO.sua(d);
+    }
+
+    public boolean xoaDichVu(String ma) {
+        if (chiTietDAO.kiemTraDichVuDangSuDung(ma)) {
+            System.out.println("Khong the xoa dich vu dang duoc su dung.");
+            return false;
+        }
+        return dichVuDAO.xoa(ma);
+    }
+
+    public DichVu[] layDanhSachDichVu() {
+        return dichVuDAO.layDanhSach();
+    }
+
+    public DichVu timDichVuTheoMa(String ma) {
+        return dichVuDAO.timTheoMa(ma);
+    }
+
+    public DichVu[] timDichVu(String key) {
+        return dichVuDAO.timKiem(key);
+    }
+
+    public String layTenDichVu(String ma) {
+        DichVu d = timDichVuTheoMa(ma);
+        return d == null ? "Dich vu da ngung" : d.getTenDichVu();
+    }
+
+    private boolean datPhongChuaChot(String ma) {
+        DatPhong dp = datPhongDAO.timTheoMa(ma);
+        return dp != null && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY && hoaDonDAO.timTheoMaDatPhong(ma) == null;
+    }
+
+    public boolean themChiTiet(ChiTietDichVu c) {
+        if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
+            return false;
+        }
+        DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());
+        if (d == null || "NGUNG_HOAT_DONG".equals(d.getTrangThai())) {
+            return false;
+        }
+        c.setDonGia(d.getGia());
+        return chiTietDAO.them(c);
+    }
+
+    public boolean suaChiTiet(ChiTietDichVu c) {
+        if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
+            return false;
+        }
+        DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());
+        if (d == null) {
+            return false;
+        }
+        c.setDonGia(d.getGia());
+        return chiTietDAO.sua(c);
+    }
+
+    public boolean xoaChiTiet(String dp, String dv) {
+        return datPhongChuaChot(dp) && chiTietDAO.xoa(dp, dv);
+    }
+
+    public ChiTietDichVu timChiTiet(String dp, String dv) {
+        return chiTietDAO.timTheoMa(dp, dv);
+    }
+
+    public ChiTietDichVu[] layDanhSachChiTiet() {
+        return chiTietDAO.layDanhSach();
+    }
+
+    public ChiTietDichVu[] layChiTietTheoDatPhong(String dp) {
+        return chiTietDAO.layTheoMaDatPhong(dp);
+    }
+
+    public BigDecimal tinhTongTienDichVu(String dp) {
+        return chiTietDAO.tinhTongTienTheoDatPhong(dp);
+    }
+}
+
+=== scr/service/QLHoaDon.java ===
+package service;
+
+import DAO.ChiTietDichVuDAO;
+import DAO.DatPhongDAO;
+import DAO.HoaDonDAO;
+import INTERFACE.IHoaDon;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import model.DatPhong;
+import model.HoaDon;
+import model.TrangThaiDatPhong;
+import model.TrangThaiThanhToan;
+
+public class QLHoaDon implements IHoaDon {
+    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private final DatPhongDAO datPhongDAO = new DatPhongDAO();
+    private final ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
+
+    public boolean themHoaDon(HoaDon h) {
+        return hoaDonDAO.them(h);
+    }
+
+    public boolean suaHoaDon(HoaDon h) {
+        return hoaDonDAO.sua(h);
+    }
+
+    public boolean xoaHoaDon(String ma) {
+        return hoaDonDAO.xoa(ma);
+    }
+
+    public HoaDon[] layDanhSachHoaDon() {
+        return hoaDonDAO.layDanhSach();
+    }
+
+    public boolean capNhatTrangThaiThanhToan(String ma, TrangThaiThanhToan t) {
+        LocalDate ngayThanhToan = t == TrangThaiThanhToan.DA_THANH_TOAN ? LocalDate.now() : null;
+        return hoaDonDAO.capNhatTrangThai(ma, t, null, ngayThanhToan);
+    }
+
+    public HoaDon timHoaDon(String ma) {
+        return hoaDonDAO.timTheoMa(ma);
+    }
+
+    public boolean daCoHoaDon(String dp) {
+        return hoaDonDAO.timTheoMaDatPhong(dp) != null;
+    }
+
+    public BigDecimal tinhTienPhongTrongHoaDon(HoaDon h) {
+        if (h == null || h.getTongGia() == null) {
+            return BigDecimal.ZERO;
+        }
+        return h.getTongGia().subtract(chiTietDAO.tinhTongTienTheoDatPhong(h.getMaDatPhong()));
+    }
+
+    public HoaDon lapHoaDonTuDatPhong(String maHD, String maDP, BigDecimal giamGia) {
+        DatPhong dp = datPhongDAO.timTheoMa(maDP);
+        if (dp == null || dp.getTrangThai() == TrangThaiDatPhong.DA_HUY || daCoHoaDon(maDP) || giamGia == null
+                || giamGia.signum() < 0) {
+            return null;
+        }
+        BigDecimal phong = BigDecimal.valueOf(dp.tinhTienPhong());
+        BigDecimal tong = phong.add(chiTietDAO.tinhTongTienTheoDatPhong(maDP));
+        if (giamGia.compareTo(tong) > 0) {
+            return null;
+        }
+        HoaDon h = new HoaDon(maHD, maDP, LocalDate.now(), tong, giamGia);
+        return themHoaDon(h) ? h : null;
+    }
+}
+
+=== scr/service/QLKhachHang.java ===
+package service;
+
+import DAO.KhachHangDAO;
+import INTERFACE.IKhachHang;
+import model.KhachHang;
+
+public class QLKhachHang implements IKhachHang {
+    private KhachHangDAO khachHangDAO;
+
+    public QLKhachHang() {
+        this.khachHangDAO = new KhachHangDAO();
+    }
+
+    @Override
+    public boolean themKhachHang(KhachHang khachHang) {
+        return khachHangDAO.them(khachHang);
+    }
+
+    @Override
+    public KhachHang[] layDanhSachKhachHang() {
+        return khachHangDAO.layDanhSach();
+    }
+
+    @Override
+    public KhachHang[] layDanhSachKhachHangTheoLoai(String loaiKhach) {
+        KhachHang[] tatCa = khachHangDAO.layDanhSach();
+        int count = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+                count++;
+            }
+        }
+        KhachHang[] ketQua = new KhachHang[count];
+        int index = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+                ketQua[index++] = kh;
+            }
+        }
+        return ketQua;
+    }
+
+    @Override
+    public KhachHang timKhachHangTheoMa(String maKH) {
+        return khachHangDAO.timTheoMa(maKH);
+    }
+
+    @Override
+    public boolean suaKhachHang(KhachHang khachHang) {
+        return khachHangDAO.sua(khachHang);
+    }
+
+    @Override
+    public boolean xoaKhachHang(String maKH) {
+        return khachHangDAO.xoa(maKH);
+    }
+
+    @Override
+    public KhachHang[] timKhachHangTheoTen(String hoTen) {
+        KhachHang[] tatCa = khachHangDAO.layDanhSach();
+        int count = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+                count++;
+            }
+        }
+        KhachHang[] ketQua = new KhachHang[count];
+        int index = 0;
+        for (KhachHang kh : tatCa) {
+            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+                ketQua[index++] = kh;
+            }
+        }
+        return ketQua;
+    }
+
+    @Override
+    public int demSoLuongKhachHang() {
+        return KhachHangDAO.soLuongKhachHang;
+    }
+
+    @Override
+    public int demSoLuongKhachHangTheoLoai(String loaiKhach) {
+        return layDanhSachKhachHangTheoLoai(loaiKhach).length;
+    }
+}
+=== scr/service/QLNhanVien.java ===
+package service;
+
+import dao.nhanvienDAO;
+import model.nhanvien;
+import java.util.Arrays;
+
+public class QLNhanVien {
+    private nhanvien[] dsNhanVien;
+    private int soLuong;
+    private nhanvienDAO nvDAO;
+
+    public QLNhanVien() {
+        this.nvDAO = new nhanvienDAO();
+        // Giả sử nvDAO có hàm đọc danh sách từ file trả về mảng nhanvien[]
+        nhanvien[] data = nvDAO.docFile(); 
+        if (data != null) {
+            this.dsNhanVien = data;
+            this.soLuong = data.length;
+        } else {
+            this.dsNhanVien = new nhanvien[0];
+            this.soLuong = 0;
+        }
+    }
+
+    public nhanvien[] getDanhSach() {
+        return Arrays.copyOf(dsNhanVien, soLuong);
+    }
+
+    public nhanvien timTheoMa(String maNV) {
+        for (int i = 0; i < soLuong; i++) {
+            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
+                return dsNhanVien[i];
+            }
+        }
+        return null;
+    }
+
+    public boolean them(nhanvien nv) {
+        if (timTheoMa(nv.getMaNV()) != null) {
+            return false; // Trùng mã nhân viên
+        }
+        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong + 1);
+        dsNhanVien[soLuong] = nv;
+        soLuong++;
+        nvDAO.ghiFile(dsNhanVien);
+        return true;
+    }
+
+    public boolean sua(nhanvien nvMoi) {
+        for (int i = 0; i < soLuong; i++) {
+            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(nvMoi.getMaNV())) {
+                dsNhanVien[i] = nvMoi;
+                nvDAO.ghiFile(dsNhanVien);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean xoa(String maNV) {
+        int index = -1;
+        for (int i = 0; i < soLuong; i++) {
+            if (dsNhanVien[i].getMaNV().equalsIgnoreCase(maNV)) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) return false;
+
+        for (int i = index; i < soLuong - 1; i++) {
+            dsNhanVien[i] = dsNhanVien[i + 1];
+        }
+        soLuong--;
+        dsNhanVien = Arrays.copyOf(dsNhanVien, soLuong);
+        nvDAO.ghiFile(dsNhanVien);
+        return true;
+    }
+}
+=== scr/service/QLPhong.java ===
+
+package service;
+
+import INTERFACE.IPhong;
+import DAO.PhongDAO;
+import model.Phong;
+import model.TinhTrangPhong;
+
+import java.math.BigDecimal;
+
+public class QLPhong implements IPhong {
+
+    private PhongDAO phongDAO;
+
+    public QLPhong() {
+        phongDAO = new PhongDAO();
+    }
+
+    // =========================
+    // CHUẨN HÓA MÃ PHÒNG
+    // =========================
+
+    private String chuanHoaMaPhong(String maPhong) {
+        if (maPhong == null) {
+            return null;
+        }
+
+        return maPhong.trim().toUpperCase();
+    }
+
+    // =========================
+    // KIỂM TRA THÔNG TIN PHÒNG
+    // =========================
+
+    private boolean kiemTraThongTinPhong(Phong phong) {
+
+        if (phong == null) {
+            System.out.println("Thong tin phong khong hop le!");
+            return false;
+        }
+
+        if (phong.getMaPhong() == null ||
+            phong.getMaPhong().trim().isEmpty()) {
+
+            System.out.println("Ma phong khong duoc de trong!");
+            return false;
+        }
+
+        if (phong.getTenPhong() == null ||
+            phong.getTenPhong().trim().isEmpty()) {
+
+            System.out.println("Ten phong khong duoc de trong!");
+            return false;
+        }
+
+        if (phong.getGiaPhong() == null ||
+            phong.getGiaPhong().compareTo(BigDecimal.ZERO) <= 0) {
+
+            System.out.println("Gia phong phai lon hon 0!");
+            return false;
+        }
+
+        if (phong.getTinhTrang() == null) {
+            System.out.println("Tinh trang phong khong hop le!");
+            return false;
+        }
+
+        return true;
+    }
+
+    // =========================
+    // THÊM PHÒNG
+    // =========================
+
+    @Override
+    public boolean themPhong(Phong phong) {
+
+        if (!kiemTraThongTinPhong(phong)) {
+            return false;
+        }
+
+        // Chuẩn hóa mã phòng trước khi kiểm tra trùng
+        String maPhong = chuanHoaMaPhong(phong.getMaPhong());
+
+        // Gán mã đã chuẩn hóa vào đối tượng
+        phong.setMaPhong(maPhong);
+
+        // Kiểm tra mã phòng đã tồn tại chưa
+        if (phongDAO.timPhongTheoMa(maPhong) != null) {
+            System.out.println("Ma phong da ton tai!");
+            return false;
+        }
+
+        return phongDAO.themPhong(phong);
+    }
+
+    // =========================
+    // LẤY DANH SÁCH PHÒNG
+    // =========================
+
+    @Override
+    public Phong[] layDanhSachPhong() {
+        return phongDAO.layDanhSachPhong();
+    }
+
+    // =========================
+    // LẤY DANH SÁCH THEO TÌNH TRẠNG
+    // =========================
+
+    @Override
+    public Phong[] layDanhSachPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
+
+        if (tinhTrang == null) {
+            System.out.println("Tinh trang khong hop le!");
+            return new Phong[0];
+        }
+
+        return phongDAO.layDanhSachPhongTheoTinhTrang(tinhTrang);
+    }
+
+    // =========================
+    // TÌM PHÒNG THEO MÃ
+    // =========================
+
+    @Override
+    public Phong timPhongTheoMa(String maPhong) {
+
+        maPhong = chuanHoaMaPhong(maPhong);
+
+        if (maPhong == null || maPhong.isEmpty()) {
+            System.out.println("Ma phong khong hop le!");
+            return null;
+        }
+
+        return phongDAO.timPhongTheoMa(maPhong);
+    }
+
+    // =========================
+    // SỬA PHÒNG
+    // Không cho phép thay đổi mã phòng
+    // =========================
+
+    @Override
+    public boolean suaPhong(Phong phong) {
+
+        if (!kiemTraThongTinPhong(phong)) {
+            return false;
+        }
+
+        // Chuẩn hóa mã phòng
+        String maPhong = chuanHoaMaPhong(phong.getMaPhong());
+
+        // Tìm phòng cũ bằng mã phòng
+        Phong phongCu = phongDAO.timPhongTheoMa(maPhong);
+
+        if (phongCu == null) {
+            System.out.println("Khong tim thay phong!");
+            return false;
+        }
+
+        // Giữ nguyên mã phòng cũ
+        phong.setMaPhong(phongCu.getMaPhong());
+
+        // Cập nhật thông tin phòng
+        return phongDAO.suaPhong(
+                phongCu.getMaPhong(),
+                phong
+        );
+    }
+
+    // =========================
+    // XÓA PHÒNG
+    // =========================
+
+    @Override
+    public boolean xoaPhong(String maPhong) {
+
+        maPhong = chuanHoaMaPhong(maPhong);
+
+        if (maPhong == null || maPhong.isEmpty()) {
+            System.out.println("Ma phong khong hop le!");
+            return false;
+        }
+
+        if (phongDAO.timPhongTheoMa(maPhong) == null) {
+            System.out.println("Phong khong ton tai!");
+            return false;
+        }
+
+        return phongDAO.xoaPhong(maPhong);
+    }
+
+    // =========================
+    // ĐẾM SỐ LƯỢNG PHÒNG
+    // =========================
+
+    @Override
+    public int demSoLuongPhong() {
+        return phongDAO.demSoLuongPhong();
+    }
+
+    // =========================
+    // ĐẾM PHÒNG THEO TÌNH TRẠNG
+    // =========================
+
+    @Override
+    public int demSoLuongPhongTheoTinhTrang(
+            TinhTrangPhong tinhTrang) {
+
+        if (tinhTrang == null) {
+            return 0;
+        }
+
+        return phongDAO.demSoLuongPhongTheoTinhTrang(tinhTrang);
+    }
+}
+
+=== scr/service/QLTaiKhoan.java ===
+package service;
+
+import dao.TaiKhoanDAO;
+import model.TaiKhoan;
+import java.util.Arrays;
+
+public class QLTaiKhoan {
+    private TaiKhoan[] dsTaiKhoan;
+    private int soLuong;
+    private TaiKhoanDAO tkDAO;
+
+    public QLTaiKhoan() {
+        this.tkDAO = new TaiKhoanDAO();
+        TaiKhoan[] data = tkDAO.docFile();
+        if (data != null) {
+            this.dsTaiKhoan = data;
+            this.soLuong = data.length;
+        } else {
+            this.dsTaiKhoan = new TaiKhoan[0];
+            this.soLuong = 0;
+        }
+    }
+
+    // Trả về đối tượng TaiKhoan nếu đăng nhập thành công để HeThongUI phân quyền
+    public TaiKhoan kiemTraDangNhap(String tenDangNhap, String matKhau) {
+        for (int i = 0; i < soLuong; i++) {
+            if (dsTaiKhoan[i].getTenDangNhap().equals(tenDangNhap) && 
+                dsTaiKhoan[i].getMatKhau().equals(matKhau)) {
+                return dsTaiKhoan[i];
+            }
+        }
+        return null;
+    }
+
+    public TaiKhoan timTheoTenDN(String tenDangNhap) {
+        for (int i = 0; i < soLuong; i++) {
+            if (dsTaiKhoan[i].getTenDangNhap().equalsIgnoreCase(tenDangNhap)) {
+                return dsTaiKhoan[i];
+            }
+        }
+        return null;
+    }
+
+    public boolean them(TaiKhoan tk) {
+        if (timTheoTenDN(tk.getTenDangNhap()) != null) {
+            return false;
+        }
+        dsTaiKhoan = Arrays.copyOf(dsTaiKhoan, soLuong + 1);
+        dsTaiKhoan[soLuong] = tk;
+        soLuong++;
+        tkDAO.ghiFile(dsTaiKhoan);
+        return true;
+    }
+
+    public boolean doiMatKhau(String tenDangNhap, String matKhauMoi) {
+        TaiKhoan tk = timTheoTenDN(tenDangNhap);
+        if (tk != null) {
+            tk.setMatKhau(matKhauMoi);
+            tkDAO.ghiFile(dsTaiKhoan);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean xoa(String tenDangNhap) {
+        int index = -1;
+        for (int i = 0; i < soLuong; i++) {
+            if (dsTaiKhoan[i].getTenDangNhap().equalsIgnoreCase(tenDangNhap)) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) return false;
+
+        for (int i = index; i < soLuong - 1; i++) {
+            dsTaiKhoan[i] = dsTaiKhoan[i + 1];
+        }
+        soLuong--;
+        dsTaiKhoan = Arrays.copyOf(dsTaiKhoan, soLuong);
+        tkDAO.ghiFile(dsTaiKhoan);
+        return true;
+    }
+
+    public TaiKhoan[] getDanhSach() {
+        return Arrays.copyOf(dsTaiKhoan, soLuong);
+    }
+}
+=== scr/service/QLThanhToan.java ===
+package service;
+
+import DAO.HoaDonDAO;
+import DAO.ThanhToanDAO;
+import java.time.LocalDate;
+import model.HoaDon;
+import model.ThanhToan;
+import model.TrangThaiThanhToan;
+
+public class QLThanhToan {
+    private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
+    private final ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
+
+    public boolean thanhToan(String maHD, String maThanhToan, String phuongThuc) {
+        HoaDon h = hoaDonDAO.timTheoMa(maHD);
+        if (h == null || h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN || h.getThanhTien() == null) {
+            return false;
+        }
+        LocalDate ngay = LocalDate.now();
+        ThanhToan t = new ThanhToan(maThanhToan, maHD, h.getThanhTien(), phuongThuc, ngay,
+                TrangThaiThanhToan.DA_THANH_TOAN);
+        if (!thanhToanDAO.them(t)) {
+            return false;
+        }
+        return hoaDonDAO.capNhatTrangThai(maHD, TrangThaiThanhToan.DA_THANH_TOAN, phuongThuc, ngay);
+    }
+
+    public ThanhToan[] layDanhSachThanhToan() {
+        return thanhToanDAO.layDanhSach();
+    }
+
+    public ThanhToan timThanhToan(String ma) {
+        return thanhToanDAO.timTheoMa(ma);
+    }
+
+    public ThanhToan[] layThanhToanTheoHoaDon(String ma) {
+        return thanhToanDAO.layTheoMaHD(ma);
+    }
+}
+
+=== scr/service/QLThongKe.java ===
+package service;
+
+public class QLThongKe {
+    private QLThanhToan qlThanhToan;
+    private QLPhong qlPhong;
+    private QLKhachHang qlKhachHang;
+    private QLDichVu qlDichVu;
+
+    public QLThongKe(QLThanhToan qlThanhToan, QLPhong qlPhong, QLKhachHang qlKhachHang, QLDichVu qlDichVu) {
+        this.qlThanhToan = qlThanhToan;
+        this.qlPhong = qlPhong;
+        this.qlKhachHang = qlKhachHang;
+        this.qlDichVu = qlDichVu;
+    }
+
+    // Tổng hợp doanh thu từ danh sách hóa đơn thanh toán
+    public double tinhTongDoanhThu() {
+        double tong = 0;
+        // Gọi phương thức lấy danh sách hóa đơn từ QLThanhToan của thành viên trong nhóm
+        var dsHoaDon = qlThanhToan.getDanhSach(); 
+        if (dsHoaDon != null) {
+            for (var hd : dsHoaDon) {
+                if (hd != null) {
+                    tong += hd.getTongTien();
+                }
+            }
+        }
+        return tong;
+    }
+
+    // Thống kê số lượng phòng theo trạng thái (VD: "Trống", "Đang thuê", "Bảo trì")
+    public int demPhongTheoTrangThai(String trangThai) {
+        int count = 0;
+        var dsPhong = qlPhong.getDanhSach();
+        if (dsPhong != null) {
+            for (var p : dsPhong) {
+                if (p != null && p.getTrangThai().equalsIgnoreCase(trangThai)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int tongSoKhachHang() {
+        var dsKH = qlKhachHang.getDanhSach();
+        return dsKH != null ? dsKH.length : 0;
+    }
+}
+=== scr/ui/.gitkeep ===
+=== scr/ui/DatPhongUI.java ===
+package ui;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Scanner;
+import model.DatPhong;
+import service.QLDatPhong;
+
+public class DatPhongUI {
+    private Scanner scanner;
+    private QLDatPhong qlDatPhong;
+    private DateTimeFormatter dateFormatter;
+
+    public DatPhongUI() {
+        this.scanner = new Scanner(System.in);
+        this.qlDatPhong = new QLDatPhong();
+        this.dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    }
+
+    public void menuDatPhong() {
+        int choice = -1;
+        do {
+            System.out.println("\n===== QUẢN LÝ ĐẶT PHÒNG =====");
+            System.out.println("1. Tạo phiếu đặt phòng mới");
+            System.out.println("2. Xem danh sách phiếu đặt phòng");
+            System.out.println("3. Tìm kiếm phiếu đặt phòng theo mã");
+            System.out.println("4. Hủy phiếu đặt phòng");
+            System.out.println("0. Quay lại");
+            System.out.print("Chọn chức năng: ");
+
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui lòng nhập một số hợp lệ!");
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    taoDatPhongMoi();
+                    break;
+                case 2:
+                    hienThiDanhSach();
+                    break;
+                case 3:
+                    timKiemDatPhong();
+                    break;
+                case 4:
+                    huyDatPhong();
+                    break;
+                case 0:
+                    System.out.println("Thoát quản lý đặt phòng.");
+                    break;
+                default:
+                    System.out.println("Lựa chọn không hợp lệ!");
+            }
+        } while (choice != 0);
+    }
+
+    private void taoDatPhongMoi() {
+        System.out.println("\n--- TẠO PHIẾU ĐẶT PHÒNG MỚI ---");
+        System.out.print("Nhập mã đặt phòng (VD: DP01): ");
+        String maDatPhong = scanner.nextLine();
+
+        System.out.print("Nhập mã khách hàng: ");
+        String maKhachHang = scanner.nextLine();
+
+        System.out.print("Nhập mã phòng: ");
+        String maPhong = scanner.nextLine();
+
+        System.out.print("Nhập giá phòng/ngày: ");
+        double giaPhong;
+        try {
+            giaPhong = Double.parseDouble(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Lỗi: Giá phòng phải là số!");
+            return;
+        }
+
+        LocalDate ngayNhan = nhapNgay("Nhập ngày nhận phòng (yyyy-MM-dd): ");
+        if (ngayNhan == null) return;
+
+        LocalDate ngayTra = nhapNgay("Nhập ngày trả phòng (yyyy-MM-dd): ");
+        if (ngayTra == null) return;
+
+        
+        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, maPhong, ngayNhan, ngayTra, giaPhong);
+        qlDatPhong.taoDatPhong(dp);
+    }
+
+    private void hienThiDanhSach() {
+        System.out.println("\n--- DANH SÁCH PHIẾU ĐẶT PHÒNG ---");
+        DatPhong[] danhSach = qlDatPhong.layTatCa();
+        
+        boolean coDuLieu = false;
+        if (danhSach != null) {
+            for (DatPhong dp : danhSach) {
+                if (dp != null) {
+                    System.out.println(dp.toString());
+                    coDuLieu = true;
+                }
+            }
+        }
+        
+        if (!coDuLieu) {
+            System.out.println("Chưa có phiếu đặt phòng nào.");
+        }
+    }
+
+    private void timKiemDatPhong() {
+        System.out.print("\nNhập mã đặt phòng cần tìm: ");
+        String ma = scanner.nextLine();
+
+        DatPhong dp = qlDatPhong.timDatPhong(ma);
+        if (dp != null) {
+            System.out.println("Thông tin phiếu đặt:");
+            System.out.println(dp.toString());
+        } else {
+            System.out.println("Không tìm thấy mã đặt phòng: " + ma);
+        }
+    }
+
+    private void huyDatPhong() {
+        System.out.print("\nNhập mã đặt phòng cần hủy: ");
+        String ma = scanner.nextLine();
+        qlDatPhong.huyDatPhong(ma);
+    }
+
+    private LocalDate nhapNgay(String thongBao) {
+        System.out.print(thongBao);
+        String input = scanner.nextLine();
+        try {
+            return LocalDate.parse(input, dateFormatter);
+        } catch (DateTimeParseException e) {
+            System.out.println("Lỗi: Sai định dạng ngày (yêu cầu yyyy-MM-dd)!");
+            return null;
+        }
+    }
+}
+=== scr/ui/HeThongUI.java ===
+package ui;
+
+import java.util.Scanner;
+
+public class HeThongUI {
+
+    public HeThongUI() {
+        this.scanner = new Scanner(System.in);
+    }
+
+    public boolean dangNhap() {
+        System.out.println("=== ĐĂNG NHẬP HỆ THỐNG KHÁCH SẠN ===");
+        System.out.print("Tên đăng nhập: ");
+        String username = scanner.nextLine();
+        System.out.print("Mật khẩu: ");
+        String password = scanner.nextLine();
+
+        boolean dangNhapThanhCong = true; // Thay bằng: taiKhoanHienTai != null;
+        
+        if (dangNhapThanhCong) {
+            System.out.println("Đăng nhập thành công!");
+        } else {
+            System.out.println("Sai tên đăng nhập hoặc mật khẩu.");
+        }
+        return dangNhapThanhCong;
+    }
+
+    // 2. Menu chính dành cho Quản lý (Gom Nhân viên & Thống kê)
+    public void menuQuanLyHeThong() {
+        int choice = -1;
+        do {
+            System.out.println("\n=== QUẢN LÝ HỆ THỐNG & NHÂN SỰ ===");
+            System.out.println("1. Quản lý Nhân viên (Thêm/Sửa/Xóa/Tìm kiếm)");
+            System.out.println("2. Quản lý Tài khoản (Cấp quyền/Khóa tài khoản)");
+            System.out.println("3. Xem Báo cáo Thống kê");
+            System.out.println("0. Quay lại Menu chính / Đăng xuất");
+            System.out.print("Chọn chức năng: ");
+            
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui lòng nhập số hợp lệ.");
+                continue;
+            }
+
+            switch (choice) {
+                case 1 -> menuNhanVien();
+                case 2 -> System.out.println("Đang mở chức năng Quản lý Tài khoản...");
+                // Gọi hàm xử lý Tài khoản
+                case 3 -> System.out.println("Đang mở chức năng Thống kê...");
+                // Gọi hàm hiển thị Thống kê
+                case 0 -> System.out.println("Đang thoát chức năng Quản trị...");
+                default -> System.out.println("Lựa chọn không hợp lệ.");
+            }
+        } while (choice != 0);
+    }
+
+    // 3. Sub-menu cho module Nhân Viên
+    private void menuNhanVien() {
+        System.out.println("\n--- QUẢN LÝ NHÂN VIÊN ---");
+        System.out.println("1. Thêm nhân viên mới");
+        System.out.println("2. Xem danh sách nhân viên");
+        System.out.println("3. Cập nhật thông tin nhân viên");
+        // Gọi các hàm tương ứng từ NhanVienDAO
+        System.out.println("(Các chức năng đang được xây dựng...)");
+    }
+}
+=== scr/ui/KhachHangUI.java ===
+package ui;
+
+import INTERFACE.IKhachHang;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.Scanner;
+import model.KhachHang;
+import service.QLKhachHang;
+
+public class KhachHangUI {
+    private final Scanner scanner;
+    private final IKhachHang qlKhachHang;
+
+    public KhachHangUI() {
+        this.scanner = new Scanner(System.in);
+        this.qlKhachHang = new QLKhachHang();
+    }
+
+    public void menuKhachHang() {
+        int choice = -1;
+        do {
+            System.out.println("\n=== QUAN LY KHACH HANG ===");
+            System.out.println("1. Them khach hang");
+            System.out.println("2. Hien thi danh sach khach hang");
+            System.out.println("3. Tim khach hang theo ma");
+            System.out.println("4. Tim khach hang theo ten");
+            System.out.println("5. Loc khach hang theo loai");
+            System.out.println("6. Sua thong tin khach hang");
+            System.out.println("7. Xoa khach hang");
+            System.out.println("8. Thong ke so luong khach hang");
+            System.out.println("0. Quay lai");
+            System.out.print("Nhap lua chon: ");
+
+            try {
+                choice = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so hop le!");
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    themKhachHang();
+                    break;
+                case 2:
+                    hienThiDanhSach(qlKhachHang.layDanhSachKhachHang());
+                    break;
+                case 3:
+                    timTheoMa();
+                    break;
+                case 4:
+                    timTheoTen();
+                    break;
+                case 5:
+                    locTheoLoai();
+                    break;
+                case 6:
+                    suaKhachHang();
+                    break;
+                case 7:
+                    xoaKhachHang();
+                    break;
+                case 8:
+                    thongKe();
+                    break;
+                case 0:
+                    System.out.println("Quay lai menu chinh...");
+                    break;
+                default:
+                    System.out.println("Lua chon khong hop le!");
+            }
+        } while (choice != 0);
+    }
+
+    private void themKhachHang() {
+        System.out.println("\n--- THEM KHACH HANG MOI ---");
+        String maKH = nhapChuoi("Nhap ma KH: ");
+        String hoTen = nhapChuoi("Nhap ho ten: ");
+        String gioiTinh = nhapChuoi("Nhap gioi tinh (Nam/Nu): ");
+
+        LocalDate ngaySinh = null;
+        while (ngaySinh == null) {
+            try {
+                String nsStr = nhapChuoi("Nhap ngay sinh (yyyy-MM-dd): ");
+                ngaySinh = LocalDate.parse(nsStr);
+            } catch (DateTimeParseException e) {
+                System.out.println("Sai dinh dang ngay (VD: 2000-05-20). Nhap lai!");
+            }
+        }
+
+        String diaChi = nhapChuoi("Nhap dia chi: ");
+        String sdt = nhapChuoi("Nhap so dien thoai: ");
+        String email = nhapChuoi("Nhap email: ");
+        String loaiKhach = nhapChuoi("Nhap loai khach (Thuong/VIP): ");
+        System.out.print("Nhap ghi chu (Enter de bo qua): ");
+        String ghiChu = scanner.nextLine().trim();
+
+        KhachHang kh = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
+        if (qlKhachHang.themKhachHang(kh)) {
+            System.out.println("Them khach hang thanh cong!");
+        } else {
+            System.out.println("Them khach hang that bai (Trung ma hoac danh sach day)!");
+        }
+    }
+
+    private void hienThiDanhSach(KhachHang[] danhSach) {
+        System.out.println("\n--- DANH SACH KHACH HANG ---");
+        if (danhSach == null || danhSach.length == 0) {
+            System.out.println("Danh sach khach hang trong!");
+            return;
+        }
+        System.out.printf("%-10s %-22s %-10s %-12s %-15s %-12s%n",
+                "Ma KH", "Ho Ten", "Gioi Tinh", "Ngay Sinh", "SDT", "Loai Khach");
+        System.out.println("--------------------------------------------------------------------------------------");
+        for (KhachHang kh : danhSach) {
+            if (kh != null) {
+                System.out.printf("%-10s %-22s %-10s %-12s %-15s %-12s%n",
+                        kh.getMaKH(),
+                        kh.getHoTen(),
+                        kh.getGioiTinh(),
+                        kh.getNgaySinh(),
+                        kh.getSdt(),
+                        kh.getLoaiKhach());
+            }
+        }
+    }
+
+    private void timTheoMa() {
+        String maKH = nhapChuoi("Nhap ma KH can tim: ");
+        KhachHang kh = qlKhachHang.timKhachHangTheoMa(maKH);
+        if (kh != null) {
+            hienThiDanhSach(new KhachHang[]{kh});
+        } else {
+            System.out.println("Khong tim thay khach hang co ma: " + maKH);
+        }
+    }
+
+    private void timTheoTen() {
+        String ten = nhapChuoi("Nhap ten khach hang can tim: ");
+        KhachHang[] ketQua = qlKhachHang.timKhachHangTheoTen(ten);
+        hienThiDanhSach(ketQua);
+    }
+
+    private void locTheoLoai() {
+        String loai = nhapChuoi("Nhap loai khach (Thuong/VIP): ");
+        KhachHang[] ketQua = qlKhachHang.layDanhSachKhachHangTheoLoai(loai);
+        hienThiDanhSach(ketQua);
+    }
+
+    private void suaKhachHang() {
+        String maKH = nhapChuoi("Nhap ma KH can sua: ");
+        if (qlKhachHang.timKhachHangTheoMa(maKH) == null) {
+            System.out.println("Khong tim thay ma khach hang!");
+            return;
+        }
+
+        String hoTen = nhapChuoi("Nhap ho ten moi: ");
+        String gioiTinh = nhapChuoi("Nhap gioi tinh moi: ");
+
+        LocalDate ngaySinh = null;
+        while (ngaySinh == null) {
+            try {
+                ngaySinh = LocalDate.parse(nhapChuoi("Nhap ngay sinh moi (yyyy-MM-dd): "));
+            } catch (DateTimeParseException e) {
+                System.out.println("Sai dinh dang ngay! Nhap lai.");
+            }
+        }
+
+        String diaChi = nhapChuoi("Nhap dia chi moi: ");
+        String sdt = nhapChuoi("Nhap SDT moi: ");
+        String email = nhapChuoi("Nhap email moi: ");
+        String loaiKhach = nhapChuoi("Nhap loai khach moi: ");
+        System.out.print("Nhap ghi chu moi: ");
+        String ghiChu = scanner.nextLine().trim();
+
+        KhachHang khMoi = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
+        if (qlKhachHang.suaKhachHang(khMoi)) {
+            System.out.println("Cap nhat thong tin khach hang thanh cong!");
+        } else {
+            System.out.println("Cap nhat that bai!");
+        }
+    }
+
+    private void xoaKhachHang() {
+        String maKH = nhapChuoi("Nhap ma KH can xoa: ");
+        if (qlKhachHang.xoaKhachHang(maKH)) {
+            System.out.println("Xoa khach hang thanh cong!");
+        } else {
+            System.out.println("Khong tim thay ma khach hang de xoa!");
+        }
+    }
+
+    private void thongKe() {
+        System.out.println("\n--- THONG KE KHACH HANG ---");
+        System.out.println("Tong so khach hang: " + qlKhachHang.demSoLuongKhachHang());
+        String loai = nhapChuoi("Nhap loai khach muon dem (Thuong/VIP): ");
+        System.out.println("So luong khach loai " + loai + ": " + qlKhachHang.demSoLuongKhachHangTheoLoai(loai));
+    }
+
+    private String nhapChuoi(String thongBao) {
+        while (true) {
+            System.out.print(thongBao);
+            String input = scanner.nextLine().trim();
+            if (!input.isEmpty()) {
+                return input;
+            }
+            System.out.println("Khong duoc de trong! Vui long nhap lai.");
+        }
+    }
+}
+=== scr/ui/PhongUI.java ===
+
+package ui;
+
+import java.math.BigDecimal;
+import java.util.Scanner;
+
+import model.Phong;
+import model.PhongThuong;
+import model.PhongVIP;
+import model.TinhTrangPhong;
+
+import INTERFACE.IPhong;
+import service.QLPhong;
+
+public class PhongUI {
+
+    private final Scanner sc = new Scanner(System.in);
+    private final IPhong qlPhong;
+
+    public PhongUI() {
+        qlPhong = new QLPhong();
+    }
+
+    // ================= MENU PHONG =================
+
+    public void menuPhong() {
+        int chon;
+
+        do {
+            System.out.println("\n======================================");
+            System.out.println("       QUAN LY PHONG KHACH SAN");
+            System.out.println("======================================");
+            System.out.println("1. Them phong");
+            System.out.println("2. Hien thi danh sach phong");
+            System.out.println("3. Tim phong theo ma");
+            System.out.println("4. Tim phong theo tinh trang");
+            System.out.println("5. Sua thong tin phong");
+            System.out.println("6. Xoa phong");
+            System.out.println("7. Dem tong so phong");
+            System.out.println("8. Thong ke phong theo tinh trang");
+            System.out.println("0. Thoat");
+            System.out.println("======================================");
+
+            chon = nhapSoNguyen("Nhap lua chon: ");
+
+            switch (chon) {
+                case 1:
+                    themPhong();
+                    break;
+
+                case 2:
+                    hienThiDanhSachPhong();
+                    break;
+
+                case 3:
+                    timPhongTheoMa();
+                    break;
+
+                case 4:
+                    timPhongTheoTinhTrang();
+                    break;
+
+                case 5:
+                    suaPhong();
+                    break;
+
+                case 6:
+                    xoaPhong();
+                    break;
+
+                case 7:
+                    demTongSoPhong();
+                    break;
+
+                case 8:
+                    thongKePhongTheoTinhTrang();
+                    break;
+
+                case 0:
+                    System.out.println("Thoat quan ly phong!");
+                    break;
+
+                default:
+                    System.out.println("Lua chon khong hop le!");
+            }
+
+        } while (chon != 0);
+    }
+
+    // ================= NHAP DU LIEU =================
+
+    private String nhapChuoi(String thongBao) {
+        String ketQua;
+
+        do {
+            System.out.print(thongBao);
+            ketQua = sc.nextLine().trim();
+
+            if (ketQua.isEmpty()) {
+                System.out.println("Khong duoc de trong!");
+            }
+
+        } while (ketQua.isEmpty());
+
+        return ketQua;
+    }
+
+    private int nhapSoNguyen(String thongBao) {
+        while (true) {
+            try {
+                System.out.print(thongBao);
+                return Integer.parseInt(sc.nextLine().trim());
+
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen!");
+            }
+        }
+    }
+
+    private BigDecimal nhapGiaPhong() {
+        while (true) {
+            try {
+                System.out.print("Nhap gia phong: ");
+
+                BigDecimal gia = new BigDecimal(sc.nextLine().trim());
+
+                if (gia.compareTo(BigDecimal.ZERO) > 0) {
+                    return gia;
+                }
+
+                System.out.println("Gia phong phai lon hon 0!");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Gia phong khong hop le!");
+            }
+        }
+    }
+
+    // ================= NHAP TINH TRANG =================
+
+    private TinhTrangPhong nhapTinhTrang() {
+        while (true) {
+            System.out.println("\n--- TINH TRANG PHONG ---");
+            System.out.println("1. TRONG");
+            System.out.println("2. DANG_SU_DUNG");
+            System.out.println("3. DANG_BAO_TRI");
+
+            int chon = nhapSoNguyen("Chon tinh trang: ");
+
+            switch (chon) {
+                case 1:
+                    return TinhTrangPhong.TRONG;
+
+                case 2:
+                    return TinhTrangPhong.DANG_SU_DUNG;
+
+                case 3:
+                    return TinhTrangPhong.DANG_BAO_TRI;
+
+                default:
+                    System.out.println("Lua chon khong hop le!");
+            }
+        }
+    }
+
+    // ================= NHAP LOAI PHONG =================
+
+    private int nhapLoaiPhong() {
+        while (true) {
+            System.out.println("\n--- LOAI PHONG ---");
+            System.out.println("1. Phong thuong");
+            System.out.println("2. Phong VIP");
+
+            int chon = nhapSoNguyen("Chon loai phong: ");
+
+            if (chon == 1 || chon == 2) {
+                return chon;
+            }
+
+            System.out.println("Lua chon khong hop le!");
+        }
+    }
+
+    // ================= TAO DOI TUONG PHONG =================
+
+    private Phong taoPhong(
+            int loaiPhong,
+            String maPhong,
+            String tenPhong,
+            BigDecimal giaPhong,
+            TinhTrangPhong tinhTrang,
+            String dichVu) {
+
+        if (loaiPhong == 1) {
+            return new PhongThuong(
+                    maPhong,
+                    tenPhong,
+                    "Thuong",
+                    giaPhong,
+                    tinhTrang,
+                    dichVu);
+        }
+
+        return new PhongVIP(
+                maPhong,
+                tenPhong,
+                "VIP",
+                giaPhong,
+                tinhTrang,
+                dichVu);
+    }
+
+    // ================= LAY LOAI PHONG =================
+
+    private int layLoaiPhong(Phong phong) {
+        if (phong instanceof PhongVIP) {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    // ================= LAY DICH VU PHONG =================
+
+    private String layDichVu(Phong phong) {
+
+        if (phong instanceof PhongVIP) {
+            PhongVIP vip = (PhongVIP) phong;
+            return vip.getDichVuVIP();
+        }
+
+        PhongThuong thuong = (PhongThuong) phong;
+        return thuong.getDichVuThuong();
+    }
+
+    // ================= THEM PHONG =================
+
+    public void themPhong() {
+        System.out.println("\n========== THEM PHONG ==========");
+
+        String maPhong = nhapChuoi("Nhap ma phong: ");
+
+        // Kiem tra ma phong da ton tai
+        if (qlPhong.timPhongTheoMa(maPhong) != null) {
+            System.out.println("Ma phong da ton tai!");
+            return;
+        }
+
+        String tenPhong = nhapChuoi("Nhap ten phong: ");
+
+        int loaiPhong = nhapLoaiPhong();
+
+        BigDecimal giaPhong = nhapGiaPhong();
+
+        TinhTrangPhong tinhTrang = nhapTinhTrang();
+
+        String dichVu = nhapChuoi("Nhap dich vu phong: ");
+
+        Phong phong = taoPhong(
+                loaiPhong,
+                maPhong,
+                tenPhong,
+                giaPhong,
+                tinhTrang,
+                dichVu);
+
+        if (qlPhong.themPhong(phong)) {
+            System.out.println("Them phong thanh cong!");
+        } else {
+            System.out.println("Them phong that bai!");
+        }
+    }
+
+    // ================= HIEN THI DANH SACH =================
+
+    public void hienThiDanhSachPhong() {
+        System.out.println("\n========== DANH SACH PHONG ==========");
+
+        Phong[] dsPhong = qlPhong.layDanhSachPhong();
+
+        if (dsPhong.length == 0) {
+            System.out.println("Danh sach phong trong!");
+            return;
+        }
+
+        inTieuDeBang();
+
+        for (int i = 0; i < dsPhong.length; i++) {
+            inThongTinPhong(i + 1, dsPhong[i]);
+        }
+
+        System.out.println("================================================================================================");
+        System.out.println("Tong so phong: " + dsPhong.length);
+    }
+
+    // ================= IN TIEU DE BANG =================
+
+    private void inTieuDeBang() {
+        System.out.println(
+                "------------------------------------------------------------------------------------------------");
+
+        System.out.printf(
+                "%-5s %-12s %-18s %-12s %-18s %-18s %-20s%n",
+                "STT",
+                "Ma phong",
+                "Ten phong",
+                "Loai phong",
+                "Gia phong",
+                "Tinh trang",
+                "Dich vu");
+
+        System.out.println(
+                "------------------------------------------------------------------------------------------------");
+    }
+
+    // ================= IN THONG TIN PHONG =================
+
+    private void inThongTinPhong(int stt, Phong phong) {
+
+        String loaiPhong = phong instanceof PhongVIP
+                ? "VIP"
+                : "Thuong";
+
+        String dichVu = layDichVu(phong);
+
+        System.out.printf(
+                "%-5d %-12s %-18s %-12s %-18s %-18s %-20s%n",
+                stt,
+                phong.getMaPhong(),
+                phong.getTenPhong(),
+                loaiPhong,
+                phong.getGiaPhong().toPlainString(),
+                phong.getTinhTrang(),
+                dichVu);
+    }
+
+    // ================= TIM PHONG THEO MA =================
+
+    public void timPhongTheoMa() {
+        System.out.println("\n========== TIM PHONG THEO MA ==========");
+
+        String maPhong = nhapChuoi("Nhap ma phong can tim: ");
+
+        Phong phong = qlPhong.timPhongTheoMa(maPhong);
+
+        if (phong == null) {
+            System.out.println("Khong tim thay phong!");
+            return;
+        }
+
+        inTieuDeBang();
+        inThongTinPhong(1, phong);
+
+        System.out.println(
+                "------------------------------------------------------------------------------------------------");
+    }
+
+    // ================= TIM PHONG THEO TINH TRANG =================
+
+    public void timPhongTheoTinhTrang() {
+        System.out.println("\n========== TIM PHONG THEO TINH TRANG ==========");
+
+        TinhTrangPhong tinhTrang = nhapTinhTrang();
+
+        Phong[] dsPhong =
+                qlPhong.layDanhSachPhongTheoTinhTrang(tinhTrang);
+
+        if (dsPhong.length == 0) {
+            System.out.println("Khong co phong nao co tinh trang nay!");
+            return;
+        }
+
+        inTieuDeBang();
+
+        for (int i = 0; i < dsPhong.length; i++) {
+            inThongTinPhong(i + 1, dsPhong[i]);
+        }
+
+        System.out.println(
+                "------------------------------------------------------------------------------------------------");
+
+        System.out.println("So phong tim thay: " + dsPhong.length);
+    }
+
+    // ================= SUA THONG TIN PHONG =================
+
+    public void suaPhong() {
+        System.out.println("\n========== SUA THONG TIN PHONG ==========");
+
+        String maPhong = nhapChuoi("Nhap ma phong can sua: ");
+
+        Phong phongCu = qlPhong.timPhongTheoMa(maPhong);
+
+        if (phongCu == null) {
+            System.out.println("Khong tim thay phong!");
+            return;
+        }
+
+        System.out.println("\nThong tin phong hien tai:");
+
+        inTieuDeBang();
+        inThongTinPhong(1, phongCu);
+
+        System.out.println("\nNhap thong tin moi:");
+
+        String tenPhong = nhapChuoi("Nhap ten phong moi: ");
+
+        BigDecimal giaPhong = nhapGiaPhong();
+
+        TinhTrangPhong tinhTrang = nhapTinhTrang();
+
+        // Giu nguyen loai phong cu
+        int loaiPhong = layLoaiPhong(phongCu);
+
+        // Giu nguyen dich vu cu
+        String dichVu = layDichVu(phongCu);
+
+        Phong phongMoi = taoPhong(
+                loaiPhong,
+                phongCu.getMaPhong(),
+                tenPhong,
+                giaPhong,
+                tinhTrang,
+                dichVu);
+
+        if (qlPhong.suaPhong(phongMoi)) {
+            System.out.println("Cap nhat phong thanh cong!");
+        } else {
+            System.out.println("Cap nhat phong that bai!");
+        }
+    }
+
+    // ================= XOA PHONG =================
+
+    public void xoaPhong() {
+        System.out.println("\n========== XOA PHONG ==========");
+
+        String maPhong = nhapChuoi("Nhap ma phong can xoa: ");
+
+        Phong phong = qlPhong.timPhongTheoMa(maPhong);
+
+        if (phong == null) {
+            System.out.println("Khong tim thay phong!");
+            return;
+        }
+
+        System.out.println("\nThong tin phong can xoa:");
+
+        inTieuDeBang();
+        inThongTinPhong(1, phong);
+
+        System.out.print("\nBan co chac chan muon xoa? (Y/N): ");
+
+        String xacNhan = sc.nextLine().trim();
+
+        if (xacNhan.equalsIgnoreCase("Y")) {
+
+            if (qlPhong.xoaPhong(maPhong)) {
+                System.out.println("Xoa phong thanh cong!");
+            } else {
+                System.out.println("Xoa phong that bai!");
+            }
+
+        } else {
+            System.out.println("Da huy thao tac xoa!");
+        }
+    }
+
+    // ================= DEM TONG SO PHONG =================
+
+    public void demTongSoPhong() {
+
+        int soLuong = qlPhong.demSoLuongPhong();
+
+        System.out.println("\n========== THONG KE PHONG ==========");
+
+        System.out.println("Tong so phong hien co: " + soLuong);
+    }
+
+    // ================= THONG KE THEO TINH TRANG =================
+
+    public void thongKePhongTheoTinhTrang() {
+
+        System.out.println("\n========== THONG KE THEO TINH TRANG ==========");
+
+        for (TinhTrangPhong tinhTrang : TinhTrangPhong.values()) {
+
+            int soLuong =
+                    qlPhong.demSoLuongPhongTheoTinhTrang(tinhTrang);
+
+            System.out.println(
+                    tinhTrang + ": " + soLuong + " phong");
+        }
+
+        System.out.println("--------------------------------------");
+
+        System.out.println(
+                "Tong so phong: " + qlPhong.demSoLuongPhong());
+    }
+}
+
+=== scr/ui/ThanhToanUI.java ===
+package ui;
+
+import INTERFACE.IHoaDon;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Scanner;
+import model.ChiTietDichVu;
+import model.DichVu;
+import model.HoaDon;
+import model.ThanhToan;
+import model.TrangThaiThanhToan;
+import service.QLDichVu;
+import service.QLHoaDon;
+import service.QLThanhToan;
+
+public class ThanhToanUI {
+    private final Scanner sc = new Scanner(System.in);
+    private final IHoaDon qlThanhToan = new QLHoaDon();
+    private final QLHoaDon qlHoaDon = (QLHoaDon) qlThanhToan;
+    private final QLThanhToan qlThanhToanService = new QLThanhToan();
+    private final QLDichVu qlDichVu = new QLDichVu();
+
+    public void menuThanhToan() {
+        int chon;
+        do {
+            System.out.println("\n==============================================");
+            System.out.println(" QUAN LY DICH VU, HOA DON VA THANH TOAN");
+            System.out.println("==============================================");
+            System.out.println("NHOM 1 - DANH MUC DICH VU");
+            System.out.println(" 1. Xem danh sach dich vu");
+            System.out.println(" 2. Them dich vu");
+            System.out.println(" 3. Sua dich vu");
+            System.out.println(" 4. Xoa dich vu");
+            System.out.println(" 5. Tim dich vu theo ma/ten");
+            System.out.println("NHOM 2 - DICH VU SU DUNG THEO PHIEU DAT PHONG");
+            System.out.println(" 6. Them dich vu da su dung");
+            System.out.println(" 7. Sua so luong dich vu da goi");
+            System.out.println(" 8. Xoa dich vu da goi nham");
+            System.out.println(" 9. Xem chi tiet dich vu theo dat phong");
+            System.out.println("10. Xem toan bo chi tiet dich vu");
+            System.out.println("NHOM 3 - HOA DON VA THANH TOAN");
+            System.out.println("11. Lap hoa don tu dong tu dat phong");
+            System.out.println("12. Them hoa don");
+            System.out.println("13. Thanh toan hoa don");
+            System.out.println("14. Xem danh sach hoa don");
+            System.out.println("15. Tim hoa don va in phieu chi tiet");
+            System.out.println("16. Sua thong tin hoa don");
+            System.out.println("17. Xoa hoa don");
+            System.out.println("18. Xem lich su giao dich");
+            System.out.println(" 0. Quay lai");
+            chon = nhapSoNguyen("Nhap lua chon: ");
+            switch (chon) {
+            case 1:
+                hienThiDichVu(qlDichVu.layDanhSachDichVu());
+                break;
+            case 2:
+                themDichVu();
+                break;
+            case 3:
+                suaDichVu();
+                break;
+            case 4:
+                xoaDichVu();
+                break;
+            case 5:
+                timDichVu();
+                break;
+            case 6:
+                themChiTiet();
+                break;
+            case 7:
+                suaChiTiet();
+                break;
+            case 8:
+                xoaChiTiet();
+                break;
+            case 9:
+                xemChiTietTheoDatPhong();
+                break;
+            case 10:
+                inDanhSachChiTiet(qlDichVu.layDanhSachChiTiet());
+                break;
+            case 11:
+                lapHoaDonTuDatPhong();
+                break;
+            case 12:
+                themHoaDon();
+                break;
+            case 13:
+                thanhToanHoaDon();
+                break;
+            case 14:
+                hienThiDanhSachHoaDon();
+                break;
+            case 15:
+                timVaInHoaDon();
+                break;
+            case 16:
+                suaHoaDon();
+                break;
+            case 17:
+                xoaHoaDon();
+                break;
+            case 18:
+                xemLichSuThanhToan();
+                break;
+            case 0:
+                System.out.println("Quay lai menu truoc...");
+                break;
+            default:
+                System.out.println("Lua chon khong hop le!");
+            }
+        } while (chon != 0);
+    }
+
+    private void themDichVu() {
+        System.out.println("\n--- THEM DICH VU ---");
+        String ma = nhapChuoi("Ma dich vu: ");
+        String ten = nhapChuoi("Ten dich vu: ");
+        String loai = nhapChuoi("Loai dich vu: ");
+        String donVi = nhapChuoi("Don vi tinh: ");
+        BigDecimal gia = nhapTien("Gia dich vu: ", false);
+        System.out.println("1. DANG_HOAT_DONG  2. NGUNG_HOAT_DONG");
+        int chonTrangThai = nhapLuaChon("Chon trang thai: ", 1, 2);
+        String trangThai = chonTrangThai == 1 ? "DANG_HOAT_DONG" : "NGUNG_HOAT_DONG";
+        String moTa = nhapChuoiChoPhepTrong("Mo ta (Enter de bo qua): ");
+        DichVu dv = new DichVu(ma, ten, loai, donVi, gia, trangThai, moTa);
+        System.out.println(qlDichVu.themDichVu(dv) ? "Them dich vu thanh cong!" : "Them dich vu that bai!");
+    }
+
+    private void suaDichVu() {
+        String ma = nhapChuoi("Ma dich vu can sua: ");
+        DichVu cu = qlDichVu.timDichVuTheoMa(ma);
+        if (cu == null) {
+            System.out.println("Khong tim thay dich vu!");
+            return;
+        }
+        String ten = nhapChuoi("Ten moi: ");
+        String loai = nhapChuoi("Loai moi: ");
+        String donVi = nhapChuoi("Don vi tinh moi: ");
+        BigDecimal gia = nhapTien("Gia moi: ", false);
+        System.out.println("1. DANG_HOAT_DONG  2. NGUNG_HOAT_DONG");
+        int chonTrangThai = nhapLuaChon("Chon trang thai: ", 1, 2);
+        String trangThai = chonTrangThai == 1 ? "DANG_HOAT_DONG" : "NGUNG_HOAT_DONG";
+        String moTa = nhapChuoiChoPhepTrong("Mo ta moi (Enter de bo qua): ");
+        DichVu dv = new DichVu(ma, ten, loai, donVi, gia, trangThai, moTa);
+        System.out.println(qlDichVu.suaDichVu(dv) ? "Cap nhat dich vu thanh cong!" : "Cap nhat dich vu that bai!");
+    }
+
+    private void xoaDichVu() {
+        String ma = nhapChuoi("Ma dich vu can xoa: ");
+        System.out.println(qlDichVu.xoaDichVu(ma) ? "Xoa dich vu thanh cong!" : "Xoa dich vu that bai!");
+    }
+
+    private void timDichVu() {
+        String tuKhoa = nhapChuoi("Nhap ma hoac ten dich vu: ");
+        hienThiDichVu(qlDichVu.timDichVu(tuKhoa));
+    }
+
+    private void hienThiDichVu(DichVu[] ds) {
+        System.out.println("\n--- DANH SACH DICH VU ---");
+        if (ds == null || ds.length == 0) {
+            System.out.println("Danh sach dich vu trong!");
+            return;
+        }
+        System.out.printf("%-5s %-12s %-24s %-16s %-12s %-16s %-20s%n", "STT", "Ma DV", "Ten dich vu", "Loai", "Don vi",
+                "Gia", "Trang thai");
+        System.out.println("---------------------------------------------------------------"
+                + "--------------------------------------------------------");
+        int stt = 0;
+        for (DichVu dv : ds) {
+            if (dv != null) {
+                System.out.printf("%-5d %-12s %-24s %-16s %-12s %-16s %-20s%n", ++stt, safe(dv.getMaDichVu()),
+                        safe(dv.getTenDichVu()), safe(dv.getLoaiDichVu()), safe(dv.getDonViTinh()), tien(dv.getGia()),
+                        safe(dv.getTrangThai()));
+            }
+        }
+    }
+
+    private void themChiTiet() {
+        String maDP = nhapChuoi("Ma dat phong: ");
+        String maDV = nhapChuoi("Ma dich vu: ");
+        int soLuong = nhapSoDuong("So luong: ");
+        ChiTietDichVu ct = new ChiTietDichVu(maDP, maDV, LocalDate.now(), LocalDate.now(), soLuong, BigDecimal.ZERO);
+        System.out.println(qlDichVu.themChiTiet(ct) ? "Ghi nhan dich vu thanh cong!" : "Ghi nhan dich vu that bai!");
+    }
+
+    private void suaChiTiet() {
+        String maDP = nhapChuoi("Ma dat phong: ");
+        String maDV = nhapChuoi("Ma dich vu can sua: ");
+        ChiTietDichVu cu = qlDichVu.timChiTiet(maDP, maDV);
+        if (cu == null) {
+            System.out.println("Khong tim thay chi tiet dich vu!");
+            return;
+        }
+        cu.setSoLuong(nhapSoDuong("So luong moi: "));
+        System.out.println(qlDichVu.suaChiTiet(cu) ? "Cap nhat chi tiet thanh cong!" : "Cap nhat chi tiet that bai!");
+    }
+
+    private void xoaChiTiet() {
+        String maDP = nhapChuoi("Ma dat phong: ");
+        String maDV = nhapChuoi("Ma dich vu can xoa: ");
+        System.out.println(qlDichVu.xoaChiTiet(maDP, maDV) ? "Xoa chi tiet thanh cong!" : "Xoa chi tiet that bai!");
+    }
+
+    private void xemChiTietTheoDatPhong() {
+        String maDP = nhapChuoi("Ma dat phong: ");
+        inDanhSachChiTiet(qlDichVu.layChiTietTheoDatPhong(maDP));
+        System.out.println("Tong tien dich vu: " + tien(qlDichVu.tinhTongTienDichVu(maDP)));
+    }
+
+    private void inDanhSachChiTiet(ChiTietDichVu[] ds) {
+        System.out.println("\n--- CHI TIET DICH VU DA SU DUNG ---");
+        if (ds == null || ds.length == 0) {
+            System.out.println("Khong co chi tiet dich vu.");
+            return;
+        }
+        System.out.printf("%-5s %-14s %-12s %-24s %-12s %-14s %-14s %-16s%n", "STT", "Ma dat phong", "Ma DV",
+                "Ten dich vu", "So luong", "Don gia", "Thanh tien", "Ngay dat DV");
+        System.out.println("---------------------------------------------------------------"
+                + "------------------------------------------------------------");
+        int stt = 0;
+        for (ChiTietDichVu ct : ds) {
+            if (ct != null) {
+                System.out.printf("%-5d %-14s %-12s %-24s %-12d %-14s %-14s %-16s%n", ++stt, safe(ct.getMaDatPhong()),
+                        safe(ct.getMaDichVu()), safe(qlDichVu.layTenDichVu(ct.getMaDichVu())), ct.getSoLuong(),
+                        tien(ct.getDonGia()), tien(ct.getThanhTien()), ct.getNgayDatDichVu());
+            }
+        }
+    }
+
+    private void lapHoaDonTuDatPhong() {
+        String maHD = nhapChuoi("Ma hoa don: ");
+        String maDP = nhapChuoi("Ma dat phong: ");
+        BigDecimal giamGia = nhapTien("Giam gia: ", true);
+        HoaDon hd = qlHoaDon.lapHoaDonTuDatPhong(maHD, maDP, giamGia);
+        if (hd == null) {
+            System.out.println("Lap hoa don that bai!");
+            return;
+        }
+        System.out.println("Lap hoa don thanh cong!");
+        inPhieuHoaDon(hd);
+    }
+
+    private void themHoaDon() {
+        String maHD = nhapChuoi("Ma hoa don: ");
+        String maDP = nhapChuoi("Ma dat phong: ");
+        if (qlHoaDon.daCoHoaDon(maDP)) {
+            System.out.println("Dat phong nay da co hoa don!");
+            return;
+        }
+        BigDecimal tongGia = nhapTien("Tong gia: ", true);
+        BigDecimal giamGia = nhapTien("Giam gia: ", true);
+        if (giamGia.compareTo(tongGia) > 0) {
+            System.out.println("Giam gia khong duoc lon hon tong gia.");
+            return;
+        }
+        HoaDon hd = new HoaDon(maHD, maDP, LocalDate.now(), tongGia, giamGia);
+        System.out.println(qlThanhToan.themHoaDon(hd) ? "Them hoa don thanh cong!" : "Them hoa don that bai!");
+    }
+
+    private void thanhToanHoaDon() {
+        String maHD = nhapChuoi("Ma hoa don can thanh toan: ");
+        HoaDon hd = qlHoaDon.timHoaDon(maHD);
+        if (hd == null) {
+            System.out.println("Khong tim thay hoa don!");
+            return;
+        }
+        System.out.println("1. Tien mat  2. Chuyen khoan  3. The");
+        int chon = nhapLuaChon("Chon phuong thuc: ", 1, 3);
+        String phuongThuc = chon == 1 ? "Tien mat" : chon == 2 ? "Chuyen khoan" : "The";
+        String maGD = nhapChuoi("Ma giao dich: ");
+        System.out.println(qlThanhToanService.thanhToan(maHD, maGD, phuongThuc) ? "Thanh toan thanh cong!"
+                : "Thanh toan that bai!");
+    }
+
+    private void hienThiDanhSachHoaDon() {
+        HoaDon[] ds = qlThanhToan.layDanhSachHoaDon();
+        System.out.println("\n--- DANH SACH HOA DON ---");
+        if (ds == null || ds.length == 0) {
+            System.out.println("Danh sach hoa don trong!");
+            return;
+        }
+        System.out.printf("%-5s %-14s %-14s %-14s %-14s %-14s %-20s%n", "STT", "Ma HD", "Ma dat phong", "Tong gia",
+                "Giam gia", "Thanh tien", "Trang thai");
+        System.out.println("---------------------------------------------------------------"
+                + "-----------------------------------------");
+        int stt = 0;
+        for (HoaDon hd : ds) {
+            if (hd != null) {
+                inDongHoaDon(++stt, hd);
+            }
+        }
+    }
+
+    private void inDongHoaDon(int stt, HoaDon hd) {
+        System.out.printf("%-5d %-14s %-14s %-14s %-14s %-14s %-20s%n", stt, safe(hd.getMaHD()),
+                safe(hd.getMaDatPhong()), tien(hd.getTongGia()), tien(hd.getGiamGia()), tien(hd.getThanhTien()),
+                hd.getTrangThai());
+    }
+
+    private void timVaInHoaDon() {
+        String maHD = nhapChuoi("Ma hoa don can tim: ");
+        HoaDon hd = qlHoaDon.timHoaDon(maHD);
+        if (hd == null) {
+            System.out.println("Khong tim thay hoa don!");
+            return;
+        }
+        inPhieuHoaDon(hd);
+    }
+
+    private void inPhieuHoaDon(HoaDon hd) {
+        System.out.println("\n================ PHIEU HOA DON ================");
+        System.out.println("Ma hoa don: " + safe(hd.getMaHD()));
+        System.out.println("Ma dat phong: " + safe(hd.getMaDatPhong()));
+        System.out.println("Ngay lap: " + hd.getNgayLap());
+        ChiTietDichVu[] ds = qlDichVu.layChiTietTheoDatPhong(hd.getMaDatPhong());
+        inDanhSachChiTiet(ds);
+        BigDecimal tienDichVu = qlDichVu.tinhTongTienDichVu(hd.getMaDatPhong());
+        BigDecimal tongGia = hd.getTongGia() == null ? BigDecimal.ZERO : hd.getTongGia();
+        BigDecimal giamGia = hd.getGiamGia() == null ? BigDecimal.ZERO : hd.getGiamGia();
+        BigDecimal tienPhong = qlHoaDon.tinhTienPhongTrongHoaDon(hd);
+        System.out.println("Tien phong: " + tien(tienPhong));
+        System.out.println("Tien dich vu: " + tien(tienDichVu));
+        System.out.println("Tong gia: " + tien(tongGia));
+        System.out.println("Giam gia: " + tien(giamGia));
+        System.out.println("Thanh tien: " + tien(hd.getThanhTien()));
+        System.out.println("Trang thai: " + hd.getTrangThai());
+        System.out.println("================================================");
+    }
+
+    private void suaHoaDon() {
+        String maHD = nhapChuoi("Ma hoa don can sua: ");
+        HoaDon cu = qlHoaDon.timHoaDon(maHD);
+        if (cu == null) {
+            System.out.println("Khong tim thay hoa don!");
+            return;
+        }
+        if (cu.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) {
+            System.out.println("Khong the sua hoa don da thanh toan.");
+            return;
+        }
+        BigDecimal tongGia = nhapTien("Tong gia moi: ", true);
+        BigDecimal giamGia = nhapTien("Giam gia moi: ", true);
+        if (giamGia.compareTo(tongGia) > 0) {
+            System.out.println("Giam gia phai nam trong khoang 0 den tong gia.");
+            return;
+        }
+        cu.setTongGia(tongGia);
+        cu.setGiamGia(giamGia);
+        System.out.println(qlThanhToan.suaHoaDon(cu) ? "Cap nhat hoa don thanh cong!" : "Cap nhat hoa don that bai!");
+    }
+
+    private void xoaHoaDon() {
+        String maHD = nhapChuoi("Ma hoa don can xoa: ");
+        HoaDon hd = qlHoaDon.timHoaDon(maHD);
+        if (hd == null) {
+            System.out.println("Khong tim thay hoa don!");
+            return;
+        }
+        if (hd.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN) {
+            System.out.println("Khong the xoa hoa don da thanh toan.");
+            return;
+        }
+        System.out.println(qlThanhToan.xoaHoaDon(maHD) ? "Xoa hoa don thanh cong!" : "Xoa hoa don that bai!");
+    }
+
+    private void xemLichSuThanhToan() {
+        ThanhToan[] ds = qlThanhToanService.layDanhSachThanhToan();
+        System.out.println("\n--- LICH SU GIAO DICH ---");
+        if (ds == null || ds.length == 0) {
+            System.out.println("Chua co giao dich.");
+            return;
+        }
+        System.out.printf("%-5s %-16s %-14s %-16s %-18s %-16s %-20s%n", "STT", "Ma giao dich", "Ma HD", "So tien",
+                "Phuong thuc", "Ngay thanh toan", "Trang thai");
+        System.out.println("---------------------------------------------------------------"
+                + "------------------------------------------------------------");
+        int stt = 0;
+        for (ThanhToan gd : ds) {
+            if (gd != null) {
+                System.out.printf("%-5d %-16s %-14s %-16s %-18s %-16s %-20s%n", ++stt, safe(gd.getMaThanhToan()),
+                        safe(gd.getMaHD()), tien(gd.getSoTien()), safe(gd.getPhuongThuc()), gd.getNgayThanhToan(),
+                        gd.getTrangThai());
+            }
+        }
+    }
+
+    private String nhapChuoi(String thongBao) {
+        while (true) {
+            System.out.print(thongBao);
+            String s = sc.nextLine().trim();
+            if (!s.isEmpty()) {
+                return s;
+            }
+            System.out.println("Khong duoc de trong!");
+        }
+    }
+
+    private String nhapChuoiChoPhepTrong(String thongBao) {
+        System.out.print(thongBao);
+        return sc.nextLine().trim();
+    }
+
+    private int nhapSoNguyen(String thongBao) {
+        while (true) {
+            try {
+                System.out.print(thongBao);
+                return Integer.parseInt(sc.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Vui long nhap so nguyen!");
+            }
+        }
+    }
+
+    private int nhapSoDuong(String thongBao) {
+        while (true) {
+            int n = nhapSoNguyen(thongBao);
+            if (n > 0) {
+                return n;
+            }
+            System.out.println("Gia tri phai lon hon 0!");
+        }
+    }
+
+    private int nhapLuaChon(String thongBao, int min, int max) {
+        while (true) {
+            int n = nhapSoNguyen(thongBao);
+            if (n >= min && n <= max) {
+                return n;
+            }
+            System.out.println("Lua chon khong hop le!");
+        }
+    }
+
+    private BigDecimal nhapTien(String thongBao, boolean choPhepKhong) {
+        while (true) {
+            try {
+                System.out.print(thongBao);
+                BigDecimal tien = new BigDecimal(sc.nextLine().trim());
+                if (choPhepKhong ? tien.signum() >= 0 : tien.signum() > 0) {
+                    return tien;
+                }
+                System.out.println(choPhepKhong ? "Gia tri khong duoc am!" : "Gia tri phai lon hon 0!");
+            } catch (NumberFormatException e) {
+                System.out.println("So tien khong hop le!");
+            }
+        }
+    }
+
+    private String tien(BigDecimal giaTri) {
+        return giaTri == null ? "0" : giaTri.toPlainString();
+    }
+
+    private String safe(Object giaTri) {
+        return giaTri == null ? "" : giaTri.toString();
+    }
+}
+
+=== scRr/test/java/.gitkeep ===
+=== scRr/test/java/README.md ===
+làm thì anh em để file vào các phần liên quan
+
+- DAO sẽ là nơi ae làm các phương thức liên quan đến tìm ,thêm, xóa, sửa,...
+
+- model là nơi ae mk để các file cơ bản và các file kế thừa như là phòng, phòng thường, phòng vip,...
+
+- service là nơi ae mk để các file quản lý các kiểu như quản ký phòng, quản lý nhân viên, khách hàng,...
+
+- ui là phần giao diện xuất ra hay là nơi ae mk viêt hàm xuất
+
+- util là các phương thức dùng chung như là kiểm tra tiền hợp lệ(tiền phải dương),...
+  And tôi có tạo cho ae thêm phần test src/test/java ấy
+
+- y/c thêm 1 interface cho 1 class thực thi,1 biến static, 1 abstract
+
+ĐỒ RIÊNG CỦA THẰNG LỎ TRƯỞNG NHÓM
+
+- tìm hiểu đọc ghi file text java read, write,
+
