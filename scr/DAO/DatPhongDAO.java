@@ -1,13 +1,16 @@
 package DAO;
 
+import java.time.LocalDate;
 import model.DatPhong;
 import model.TrangThaiDatPhong;
-import java.time.LocalDate;
 
 
 public class DatPhongDAO {
     public static DatPhong[] danhSachDatPhong = new DatPhong[100];
     public static int soLuongDatPhong = 0;
+
+    public static DatPhong[] danhSachDaXoa = new DatPhong[100];
+    public static int soLuongDaXoa = 0;
 
     public boolean them(DatPhong datPhong) {
         if (datPhong == null || datPhong.getMaDatPhong() == null 
@@ -34,6 +37,10 @@ public class DatPhongDAO {
     public boolean xoa(String maDatPhong) {
         for (int i = 0; i < soLuongDatPhong; i++) {
             if (danhSachDatPhong[i].getMaDatPhong().equals(maDatPhong)) {
+                if (soLuongDaXoa < danhSachDaXoa.length) {
+                    danhSachDaXoa[soLuongDaXoa] = danhSachDatPhong[i];
+                    soLuongDaXoa++;
+                }
                 System.arraycopy(danhSachDatPhong, i + 1, danhSachDatPhong, i, soLuongDatPhong - i - 1);
                 danhSachDatPhong[--soLuongDatPhong] = null;
                 return true;
@@ -51,16 +58,16 @@ public class DatPhongDAO {
         return null;
     }
 
-    /** Kiểm tra xem phòng có trống trong khoảng thời gian dự định đặt hay không */
+    
     public boolean kiemTraPhongTrong(String maPhong, LocalDate ngayNhan, LocalDate ngayTra) {
         for (int i = 0; i < soLuongDatPhong; i++) {
             DatPhong dp = danhSachDatPhong[i];
-            // Chỉ kiểm tra các phòng trùng mã và phiếu đặt chưa bị hủy hoặc trả phòng
+            
             if (dp.getMaPhong().equalsIgnoreCase(maPhong) &&
                 dp.getTrangThai() != TrangThaiDatPhong.DA_HUY &&
                 dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
                 
-                // Nếu khoảng thời gian bị chồng lấp -> Phòng không trống
+                
                 if (dp.isTrungLich(ngayNhan, ngayTra)) {
                     return false;
                 }
@@ -72,6 +79,32 @@ public class DatPhongDAO {
     public DatPhong[] layDanhSach() {
         DatPhong[] ketQua = new DatPhong[soLuongDatPhong];
         System.arraycopy(danhSachDatPhong, 0, ketQua, 0, soLuongDatPhong);
+        return ketQua;
+    }
+    
+    public boolean khoiPhuc(String maDatPhong) {
+        for (int i = 0; i < soLuongDaXoa; i++) {
+            if (danhSachDaXoa[i].getMaDatPhong().equals(maDatPhong)) {
+                if (soLuongDatPhong >= danhSachDatPhong.length) {
+                    return false; // Danh sách chính đã đầy
+                }
+                
+                danhSachDatPhong[soLuongDatPhong] = danhSachDaXoa[i];
+                soLuongDatPhong++;
+
+                
+                System.arraycopy(danhSachDaXoa, i + 1, danhSachDaXoa, i, soLuongDaXoa - i - 1);
+                danhSachDaXoa[--soLuongDaXoa] = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    public DatPhong[] layDanhSachDaXoa() {
+        DatPhong[] ketQua = new DatPhong[soLuongDaXoa];
+        System.arraycopy(danhSachDaXoa, 0, ketQua, 0, soLuongDaXoa);
         return ketQua;
     }
 }
