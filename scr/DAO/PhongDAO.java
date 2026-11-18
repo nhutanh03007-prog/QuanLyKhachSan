@@ -9,19 +9,25 @@ import Database.DatabaseManager;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 
 public class PhongDAO {
 
     private static final String FILE_PATH =
             DatabaseManager.getDuongDanFile("phong.dat");
 
+    private static final String FILE_TEMP =
+            FILE_PATH + ".tmp";
+
     private static final int MAX_PHONG = 100;
 
-    private static Phong[] danhSachPhong = new Phong[MAX_PHONG];
+    private static Phong[] danhSachPhong = new Phong[10];
 
     private static int soLuongPhong = 0;
 
-    // Đọc dữ liệu từ file khi lớp được khởi tạo
     static {
         docFile();
     }
@@ -35,60 +41,91 @@ public class PhongDAO {
         File file = new File(FILE_PATH);
         File folder = file.getParentFile();
 
-        // Tạo thư mục nếu chưa tồn tại
         if (folder != null && !folder.exists()) {
-            folder.mkdirs();
+            if (!folder.mkdirs()) {
+                System.out.println("Khong tao duoc thu muc!");
+                return false;
+            }
         }
 
-        try (DataOutputStream outStream =
-                     new DataOutputStream(
-                             new FileOutputStream(FILE_PATH))) {
+        try (DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(
+                        new FileOutputStream(FILE_TEMP)))) {
 
             for (int i = 0; i < soLuongPhong; i++) {
 
                 Phong p = danhSachPhong[i];
 
-                if (p instanceof PhongThuong) {
+                if (p == null) {
+                    throw new IOException("Du lieu phong bi null!");
+                }
 
-                    outStream.writeUTF("THUONG");
+                // Ghi loại đối tượng
+                if (p instanceof PhongThuong) {
+                    out.writeUTF("THUONG");
 
                 } else if (p instanceof PhongVIP) {
-
-                    outStream.writeUTF("VIP");
+                    out.writeUTF("VIP");
 
                 } else {
-
                     throw new IOException("Loai phong khong hop le!");
                 }
 
-                // Ghi thông tin chung của phòng
-                outStream.writeUTF(p.getMaPhong());
-                outStream.writeUTF(p.getTenPhong());
-                outStream.writeUTF(p.getLoaiPhong());
-                outStream.writeUTF(p.getGiaPhong().toPlainString());
-                outStream.writeUTF(p.getTinhTrang().name());
+                // Ghi thông tin chung
+                out.writeUTF(p.getMaPhong());
+                out.writeUTF(p.getTenPhong());
+                out.writeUTF(p.getLoaiPhong());
+                out.writeUTF(p.getGiaPhong().toPlainString());
+                out.writeUTF(p.getTinhTrang().name());
 
-                // Ghi thông tin riêng của từng lớp con
+                // Ghi thông tin riêng
                 if (p instanceof PhongThuong) {
 
                     PhongThuong pt = (PhongThuong) p;
+                    out.writeUTF(pt.getDichVuThuong());
 
-                    outStream.writeUTF(pt.getDichVuThuong());
-
-                } else if (p instanceof PhongVIP) {
+                } else {
 
                     PhongVIP pv = (PhongVIP) p;
-
-                    outStream.writeUTF(pv.getDichVuVIP());
+                    out.writeUTF(pv.getDichVuVIP());
                 }
+            }
+
+        } catch (IOException | RuntimeException e) {
+
+            System.out.println("Loi ghi file: " + e.getMessage());
+            return false;
+        }
+
+        // Chỉ thay file chính sau khi ghi file tạm thành công
+        try {
+
+            Path fileTam = Path.of(FILE_TEMP);
+            Path fileChinh = Path.of(FILE_PATH);
+
+            try {
+                Files.move(
+                        fileTam,
+                        fileChinh,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE
+                );
+
+            } catch (IOException e) {
+
+                // Nếu hệ thống không hỗ trợ ATOMIC_MOVE
+                Files.move(
+                        fileTam,
+                        fileChinh,
+                        StandardCopyOption.REPLACE_EXISTING
+                );
             }
 
             return true;
 
         } catch (IOException e) {
 
-            System.out.println("Loi khi ghi file phong: " + e.getMessage());
-
+            System.out.println("Loi thay file: " + e.getMessage());
             return false;
         }
     }
@@ -101,75 +138,99 @@ public class PhongDAO {
 
         File file = new File(FILE_PATH);
 
-        // Nếu file chưa tồn tại thì chưa có dữ liệu để đọc
         if (!file.exists()) {
             return;
         }
 
-        Phong[] dsTam = new Phong[MAX_PHONG];
+        Phong[] dsTam = new Phong[10];
         int dem = 0;
 
-        try (DataInputStream inStream =
-                     new DataInputStream(
-                             new FileInputStream(FILE_PATH))) {
+        try (DataInputStream in = new DataInputStream(
+                new BufferedInputStream(
+                        new FileInputStream(FILE_PATH)))) {
 
-            while (inStream.available() > 0) {
+            while (true) {
 
-                if (dem >= MAX_PHONG) {
-                    System.out.println("Danh sach phong da day!");
+                String loai;
+
+                try {
+                    loai = in.readUTF();
+                } catch (EOFException e) {
+                    // Đã đọc hết file
                     break;
                 }
 
-                // Đọc loại phòng
-                String loai = inStream.readUTF();
-
-                // Đọc thông tin chung
-                String maPhong = inStream.readUTF();
-                String tenPhong = inStream.readUTF();
-                String loaiPhong = inStream.readUTF();
+                String maPhong = in.readUTF();
+                String tenPhong = in.readUTF();
+                String loaiPhong = in.readUTF();
 
                 BigDecimal giaPhong =
-                        new BigDecimal(inStream.readUTF());
+                        new BigDecimal(in.readUTF());
 
                 TinhTrangPhong tinhTrang =
-                        TinhTrangPhong.valueOf(inStream.readUTF());
+                        TinhTrangPhong.valueOf(in.readUTF());
 
-                // Đọc thông tin riêng và tạo đối tượng
+                Phong phong;
+
                 if (loai.equals("THUONG")) {
 
-                    String dichVuThuong = inStream.readUTF();
+                    String dichVu =
+                            in.readUTF();
 
-                    dsTam[dem] = new PhongThuong(
+                    phong = new PhongThuong(
                             maPhong,
                             tenPhong,
                             loaiPhong,
                             giaPhong,
                             tinhTrang,
-                            dichVuThuong
+                            dichVu
                     );
 
                 } else if (loai.equals("VIP")) {
 
-                    String dichVuVIP = inStream.readUTF();
+                    String dichVu =
+                            in.readUTF();
 
-                    dsTam[dem] = new PhongVIP(
+                    phong = new PhongVIP(
                             maPhong,
                             tenPhong,
                             loaiPhong,
                             giaPhong,
                             tinhTrang,
-                            dichVuVIP
+                            dichVu
                     );
 
                 } else {
 
-                    throw new IOException("Loai phong trong file khong hop le!");
+                    throw new IOException(
+                            "Loai phong khong hop le: " + loai
+                    );
                 }
 
-                dem++;
+                if (dem >= MAX_PHONG) {
+                    throw new IOException(
+                            "So luong phong vuot gioi han!"
+                    );
+                }
+
+                // Mở rộng mảng tạm khi cần
+                if (dem >= dsTam.length) {
+
+                    int kichThuocMoi = Math.min(
+                            dsTam.length * 2,
+                            MAX_PHONG
+                    );
+
+                    dsTam = Arrays.copyOf(
+                            dsTam,
+                            kichThuocMoi
+                    );
+                }
+
+                dsTam[dem++] = phong;
             }
 
-            // Chỉ cập nhật danh sách sau khi đọc thành công
+            // Chỉ cập nhật dữ liệu khi đọc thành công
             danhSachPhong = dsTam;
             soLuongPhong = dem;
 
@@ -177,8 +238,34 @@ public class PhongDAO {
 
         } catch (IOException | IllegalArgumentException e) {
 
-            System.out.println("Loi khi doc file phong: " + e.getMessage());
+            System.out.println(
+                    "Loi doc file phong: " + e.getMessage()
+            );
         }
+    }
+
+    // =========================
+    // TÌM PHÒNG THEO MÃ
+    // =========================
+
+    public Phong timPhongTheoMa(String maPhong) {
+
+        if (maPhong == null) {
+            return null;
+        }
+
+        maPhong = maPhong.trim();
+
+        for (int i = 0; i < soLuongPhong; i++) {
+
+            if (danhSachPhong[i].getMaPhong()
+                    .equalsIgnoreCase(maPhong)) {
+
+                return danhSachPhong[i];
+            }
+        }
+
+        return null;
     }
 
     // =========================
@@ -188,7 +275,6 @@ public class PhongDAO {
     public boolean themPhong(Phong phong) {
 
         if (phong == null) {
-            System.out.println("Phong khong hop le!");
             return false;
         }
 
@@ -202,13 +288,29 @@ public class PhongDAO {
             return false;
         }
 
+        // Mở rộng mảng nếu đầy
+        if (soLuongPhong >= danhSachPhong.length) {
+
+            int kichThuocMoi = Math.min(
+                    danhSachPhong.length * 2,
+                    MAX_PHONG
+            );
+
+            danhSachPhong = Arrays.copyOf(
+                    danhSachPhong,
+                    kichThuocMoi
+            );
+        }
+
         danhSachPhong[soLuongPhong] = phong;
         soLuongPhong++;
 
-        // Nếu ghi file thất bại thì khôi phục mảng
         if (!ghiFile()) {
+
             soLuongPhong--;
+
             danhSachPhong[soLuongPhong] = null;
+
             return false;
         }
 
@@ -225,7 +327,9 @@ public class PhongDAO {
 
         for (int i = 0; i < soLuongPhong; i++) {
 
-            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
+            if (danhSachPhong[i].getMaPhong()
+                    .equalsIgnoreCase(maPhong)) {
+
                 viTri = i;
                 break;
             }
@@ -236,16 +340,19 @@ public class PhongDAO {
             return false;
         }
 
-        // Sao lưu danh sách để khôi phục nếu ghi file thất bại
         Phong[] backup = danhSachPhong.clone();
         int soLuongCu = soLuongPhong;
 
-        // Dồn các phần tử phía sau lên trước
-        for (int i = viTri; i < soLuongPhong - 1; i++) {
-            danhSachPhong[i] = danhSachPhong[i + 1];
-        }
+        System.arraycopy(
+                danhSachPhong,
+                viTri + 1,
+                danhSachPhong,
+                viTri,
+                soLuongPhong - viTri - 1
+        );
 
         soLuongPhong--;
+
         danhSachPhong[soLuongPhong] = null;
 
         if (!ghiFile()) {
@@ -263,9 +370,11 @@ public class PhongDAO {
     // SỬA PHÒNG
     // =========================
 
-    public boolean suaPhong(String maPhong, Phong phongMoi) {
+    public boolean suaPhong(
+            String maPhong,
+            Phong phongMoi) {
 
-        if (phongMoi == null) {
+        if (maPhong == null || phongMoi == null) {
             return false;
         }
 
@@ -273,7 +382,9 @@ public class PhongDAO {
 
         for (int i = 0; i < soLuongPhong; i++) {
 
-            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
+            if (danhSachPhong[i].getMaPhong()
+                    .equalsIgnoreCase(maPhong)) {
+
                 viTri = i;
                 break;
             }
@@ -284,15 +395,16 @@ public class PhongDAO {
             return false;
         }
 
-        // Không cho sửa thành mã phòng đã tồn tại ở vị trí khác
-        Phong phongTrung = timPhongTheoMa(phongMoi.getMaPhong());
+        Phong phongTrung =
+                timPhongTheoMa(phongMoi.getMaPhong());
 
-        if (phongTrung != null && phongTrung != danhSachPhong[viTri]) {
-            System.out.println("Ma phong moi da ton tai!");
+        if (phongTrung != null
+                && phongTrung != danhSachPhong[viTri]) {
+
+            System.out.println("Ma phong da ton tai!");
             return false;
         }
 
-        // Lưu phòng cũ để khôi phục nếu ghi file thất bại
         Phong phongCu = danhSachPhong[viTri];
 
         danhSachPhong[viTri] = phongMoi;
@@ -308,42 +420,19 @@ public class PhongDAO {
     }
 
     // =========================
-    // TÌM PHÒNG THEO MÃ
-    // =========================
-
-    public Phong timPhongTheoMa(String maPhong) {
-
-        if (maPhong == null) {
-            return null;
-        }
-
-        for (int i = 0; i < soLuongPhong; i++) {
-
-            if (danhSachPhong[i].getMaPhong().equalsIgnoreCase(maPhong)) {
-                return danhSachPhong[i];
-            }
-        }
-
-        return null;
-    }
-
-    // =========================
     // LẤY DANH SÁCH PHÒNG
     // =========================
 
     public Phong[] layDanhSachPhong() {
 
-        Phong[] ketQua = new Phong[soLuongPhong];
-
-        for (int i = 0; i < soLuongPhong; i++) {
-            ketQua[i] = danhSachPhong[i];
-        }
-
-        return ketQua;
+        return Arrays.copyOf(
+                danhSachPhong,
+                soLuongPhong
+        );
     }
 
     // =========================
-    // ĐẾM SỐ LƯỢNG PHÒNG
+    // ĐẾM SỐ LƯỢNG
     // =========================
 
     public int demSoLuongPhong() {
@@ -357,14 +446,11 @@ public class PhongDAO {
     public Phong[] layDanhSachPhongTheoTinhTrang(
             TinhTrangPhong tinhTrang) {
 
-        int dem = 0;
-
-        for (int i = 0; i < soLuongPhong; i++) {
-
-            if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
-                dem++;
-            }
+        if (tinhTrang == null) {
+            return new Phong[0];
         }
+
+        int dem = demSoLuongPhongTheoTinhTrang(tinhTrang);
 
         Phong[] ketQua = new Phong[dem];
 
@@ -373,8 +459,7 @@ public class PhongDAO {
         for (int i = 0; i < soLuongPhong; i++) {
 
             if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
-                ketQua[viTri] = danhSachPhong[i];
-                viTri++;
+                ketQua[viTri++] = danhSachPhong[i];
             }
         }
 
@@ -382,11 +467,15 @@ public class PhongDAO {
     }
 
     // =========================
-    // ĐẾM PHÒNG THEO TÌNH TRẠNG
+    // ĐẾM THEO TÌNH TRẠNG
     // =========================
 
     public int demSoLuongPhongTheoTinhTrang(
             TinhTrangPhong tinhTrang) {
+
+        if (tinhTrang == null) {
+            return 0;
+        }
 
         int dem = 0;
 
