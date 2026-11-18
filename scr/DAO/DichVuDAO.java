@@ -1,73 +1,20 @@
 package DAO;
-
-import model.DichVu;
 import java.math.BigDecimal;
-
-/** DAO lưu dịch vụ bằng mảng có sức chứa cố định. */
+import java.util.ArrayList;
+import java.util.List;
+import model.DichVu;
 public class DichVuDAO {
-    public static DichVu[] danhSachDichVu = new DichVu[100];
-    public static int soLuongDichVu = 0;
-
-    public DichVuDAO() {
-        if (soLuongDichVu == 0) {
-            them(new DichVu("DV01", "Massage thư giãn", "Làm đẹp", "1h30p", new BigDecimal("499000"), "DANG_HOAT_DONG", "Massage toàn thân"));
-            them(new DichVu("DV02", "Giặt ủi", "Vệ sinh", "Lần", new BigDecimal("69000"), "DANG_HOAT_DONG", "Giặt sấy quần áo trong ngày"));
-            them(new DichVu("DV03", "Đồ uống các loại", "Ăn uống", "Ly/Lon", new BigDecimal("25000"), "DANG_HOAT_DONG", "Đồng giá các loại nước giải khát"));
-            them(new DichVu("DV04", "Vệ sinh phòng (Thêm)", "Vệ sinh", "Lần", new BigDecimal("100000"), "DANG_HOAT_DONG", "Yêu cầu dọn dẹp ngoài giờ"));
-        }
-    }
-
-    public boolean them(DichVu dichVu) {
-        if (dichVu == null || dichVu.getMaDichVu() == null || dichVu.getMaDichVu().trim().isEmpty()
-                || timTheoMa(dichVu.getMaDichVu()) != null
-                || soLuongDichVu == danhSachDichVu.length) return false;
-        danhSachDichVu[soLuongDichVu] = dichVu;
-        soLuongDichVu++;
-        return true;
-    }
-
-    public boolean sua(DichVu dichVu) {
-        if (dichVu == null || dichVu.getMaDichVu() == null || dichVu.getMaDichVu().trim().isEmpty()) return false;
-        for (int i = 0; i < soLuongDichVu; i++) {
-            if (danhSachDichVu[i] != null && dichVu.getMaDichVu().equals(danhSachDichVu[i].getMaDichVu())) {
-                danhSachDichVu[i] = dichVu;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean xoa(String maDichVu) {
-        if (maDichVu == null || maDichVu.trim().isEmpty()) return false;
-        for (int i = 0; i < soLuongDichVu; i++) {
-            if (danhSachDichVu[i] != null && maDichVu.equals(danhSachDichVu[i].getMaDichVu())) {
-               System.arraycopy(danhSachDichVu, i + 1, danhSachDichVu, i,
-                        soLuongDichVu - i - 1);
-                danhSachDichVu[--soLuongDichVu] = null;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public DichVu timTheoMa(String maDichVu) {
-        if (maDichVu == null || maDichVu.trim().isEmpty()) return null;
-        for (int i = 0; i < soLuongDichVu; i++) {
-            if (danhSachDichVu[i] != null && maDichVu.equals(danhSachDichVu[i].getMaDichVu())) return danhSachDichVu[i];
-        }
-        return null;
-    }
-    public DichVu[] timTheoTen(String tuKhoa) {
-        if (tuKhoa == null || tuKhoa.trim().isEmpty()) return new DichVu[0];
-        java.util.List<DichVu> ketQua = new java.util.ArrayList<>();
-        for (int i=0;i<soLuongDichVu;i++) if (danhSachDichVu[i] != null && danhSachDichVu[i].getTenDichVu()!=null && danhSachDichVu[i].getTenDichVu().toLowerCase().contains(tuKhoa.trim().toLowerCase())) ketQua.add(danhSachDichVu[i]);
-        return ketQua.toArray(new DichVu[0]);
-    }
-
-    /** Trả về mảng chỉ có các phần tử đang được sử dụng. */
-    public DichVu[] layDanhSach() {
-        DichVu[] ketQua = new DichVu[soLuongDichVu];
-       System.arraycopy(danhSachDichVu, 0, ketQua, 0, soLuongDichVu);
-        return ketQua;
-    }
+ public static DichVu[] danhSachDichVu=new DichVu[100]; public static int soLuongDichVu=0;
+ public DichVuDAO() {}
+ public boolean kiemTraTenDichVuKhongRong(String s){return !rong(s);}
+ public boolean kiemTraSoTienKhongAm(BigDecimal n){return n!=null&&n.signum()>=0;}
+ private boolean hopLe(DichVu d){return d!=null&&!rong(d.getMaDichVu())&&!rong(d.getTenDichVu())&&!rong(d.getLoaiDichVu())&&!rong(d.getDonViTinh())&&d.getGia()!=null&&d.getGia().signum()>0;}
+ public boolean them(DichVu d){if(!hopLe(d)||timTheoMa(d.getMaDichVu())!=null||soLuongDichVu>=100)return false;danhSachDichVu[soLuongDichVu++]=d;return true;}
+ public boolean sua(DichVu d){if(!hopLe(d))return false;for(int i=0;i<soLuongDichVu;i++)if(danhSachDichVu[i]!=null&&d.getMaDichVu().equals(danhSachDichVu[i].getMaDichVu())){danhSachDichVu[i]=d;return true;}return false;}
+ public boolean xoa(String ma){for(int i=0;i<soLuongDichVu;i++)if(danhSachDichVu[i]!=null&&ma!=null&&ma.equals(danhSachDichVu[i].getMaDichVu())){System.arraycopy(danhSachDichVu,i+1,danhSachDichVu,i,--soLuongDichVu-i);danhSachDichVu[soLuongDichVu]=null;return true;}return false;}
+ public DichVu timTheoMa(String ma){if(rong(ma))return null;for(int i=0;i<soLuongDichVu;i++)if(danhSachDichVu[i]!=null&&ma.equals(danhSachDichVu[i].getMaDichVu()))return danhSachDichVu[i];return null;}
+ public DichVu[] timKiem(String key){List<DichVu> out=new ArrayList<>();if(!rong(key))for(int i=0;i<soLuongDichVu;i++){DichVu d=danhSachDichVu[i];if(d!=null&&((d.getMaDichVu()!=null&&d.getMaDichVu().toLowerCase().contains(key.trim().toLowerCase()))||(d.getTenDichVu()!=null&&d.getTenDichVu().toLowerCase().contains(key.trim().toLowerCase()))))out.add(d);}return out.toArray(new DichVu[0]);}
+ public DichVu[] timTheoTen(String key){return timKiem(key);}
+ public DichVu[] layDanhSach(){return java.util.Arrays.copyOf(danhSachDichVu,soLuongDichVu);}
+ private boolean rong(String s){return s==null||s.trim().isEmpty();}
 }

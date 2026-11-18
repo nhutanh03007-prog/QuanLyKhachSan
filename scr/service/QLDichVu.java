@@ -1,63 +1,15 @@
 package service;
-
-import DAO.ChiTietDichVuDAO;
-import DAO.DatPhongDAO;
-import DAO.DichVuDAO;
-import model.ChiTietDichVu;
-import model.DatPhong;
-import model.DichVu;
-import model.TrangThaiDatPhong;
+import DAO.*;
 import java.math.BigDecimal;
-
+import model.*;
 public class QLDichVu {
-    private DichVuDAO dichVuDAO = new DichVuDAO();
-    private ChiTietDichVuDAO chiTietDAO = new ChiTietDichVuDAO();
-    private DatPhongDAO datPhongDAO = new DatPhongDAO();
-
-    public boolean themDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.them(dichVu); }
-    public boolean suaDichVu(DichVu dichVu) { return dichVu != null && dichVu.getTenDichVu() != null && !dichVu.getTenDichVu().trim().isEmpty() && dichVu.getGia() != null && dichVu.getGia().compareTo(BigDecimal.ZERO) > 0 && dichVuDAO.sua(dichVu); }
-    public boolean xoaDichVu(String maDichVu) { return dichVuDAO.xoa(maDichVu); }
-    public DichVu[] layDanhSachDichVu() { return dichVuDAO.layDanhSach(); }
-
-    public boolean themChiTiet(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0
-                || chiTiet.getMaDatPhong() == null || chiTiet.getMaDatPhong().trim().isEmpty()
-                || chiTiet.getMaDichVu() == null || chiTiet.getMaDichVu().trim().isEmpty()) return false;
-        DatPhong dp = datPhongDAO.timTheoMa(chiTiet.getMaDatPhong());
-        if (dp == null || dp.getTrangThai() == TrangThaiDatPhong.DA_HUY
-                || dp.getTrangThai() == TrangThaiDatPhong.DA_TRA) return false;
-        DichVu dichVu = dichVuDAO.timTheoMa(chiTiet.getMaDichVu());
-        if (dichVu == null || "NGUNG_HOAT_DONG".equals(dichVu.getTrangThai())) return false;
-        chiTiet.setDonGia(dichVu.getGia());
-        chiTiet.tinhThanhTien();
-        return chiTietDAO.them(chiTiet);
-    }
-
-    public boolean suaChiTiet(ChiTietDichVu chiTiet) {
-        if (chiTiet == null || chiTiet.getSoLuong() <= 0 || chiTiet.getMaDichVu() == null) return false;
-        DichVu dichVu = dichVuDAO.timTheoMa(chiTiet.getMaDichVu());
-        if (dichVu == null) return false;
-        chiTiet.setDonGia(dichVu.getGia());
-        chiTiet.tinhThanhTien();
-        return chiTietDAO.sua(chiTiet);
-    }
-
-    public boolean xoaChiTiet(String maDatPhong, String maDichVu) {
-        return chiTietDAO.xoa(maDatPhong, maDichVu);
-    }
-
-    public ChiTietDichVu[] layDanhSachChiTiet() { return chiTietDAO.layDanhSach(); }
-
-    public ChiTietDichVu[] layChiTietTheoDatPhong(String maDatPhong) {
-        return chiTietDAO.layTheoMaDatPhong(maDatPhong);
-    }
-
-    public BigDecimal tinhTongTienDichVu(String maDatPhong) {
-        BigDecimal tongTien = BigDecimal.ZERO;
-        for (ChiTietDichVu chiTiet : chiTietDAO.layTheoMaDatPhong(maDatPhong)) {
-            chiTiet.tinhThanhTien();
-            tongTien = tongTien.add(chiTiet.getThanhTien());
-        }
-        return tongTien;
-    }
+ private final DichVuDAO dichVuDAO=new DichVuDAO(); private final ChiTietDichVuDAO chiTietDAO=new ChiTietDichVuDAO(); private final DatPhongDAO datPhongDAO=new DatPhongDAO(); private final HoaDonDAO hoaDonDAO=new HoaDonDAO();
+ public boolean themDichVu(DichVu d){return dichVuDAO.them(d);} public boolean suaDichVu(DichVu d){return dichVuDAO.sua(d);}
+ public boolean xoaDichVu(String ma){if(chiTietDAO.kiemTraDichVuDangSuDung(ma)){System.out.println("Khong the xoa dich vu dang duoc su dung.");return false;}return dichVuDAO.xoa(ma);}
+ public DichVu[] layDanhSachDichVu(){return dichVuDAO.layDanhSach();} public DichVu timDichVuTheoMa(String ma){return dichVuDAO.timTheoMa(ma);} public DichVu[] timDichVu(String key){return dichVuDAO.timKiem(key);} public String layTenDichVu(String ma){DichVu d=timDichVuTheoMa(ma);return d==null?"Dich vu da ngung":d.getTenDichVu();}
+ private boolean datPhongChuaChot(String ma){DatPhong dp=datPhongDAO.timTheoMa(ma);return dp!=null&&dp.getTrangThai()!=TrangThaiDatPhong.DA_HUY&&hoaDonDAO.timTheoMaDatPhong(ma)==null;}
+ public boolean themChiTiet(ChiTietDichVu c){if(c==null||!datPhongChuaChot(c.getMaDatPhong()))return false;DichVu d=dichVuDAO.timTheoMa(c.getMaDichVu());if(d==null||"NGUNG_HOAT_DONG".equals(d.getTrangThai()))return false;c.setDonGia(d.getGia());return chiTietDAO.them(c);}
+ public boolean suaChiTiet(ChiTietDichVu c){if(c==null||!datPhongChuaChot(c.getMaDatPhong()))return false;DichVu d=dichVuDAO.timTheoMa(c.getMaDichVu());if(d==null)return false;c.setDonGia(d.getGia());return chiTietDAO.sua(c);}
+ public boolean xoaChiTiet(String dp,String dv){return datPhongChuaChot(dp)&&chiTietDAO.xoa(dp,dv);}
+ public ChiTietDichVu timChiTiet(String dp,String dv){return chiTietDAO.timTheoMa(dp,dv);} public ChiTietDichVu[] layDanhSachChiTiet(){return chiTietDAO.layDanhSach();} public ChiTietDichVu[] layChiTietTheoDatPhong(String dp){return chiTietDAO.layTheoMaDatPhong(dp);} public BigDecimal tinhTongTienDichVu(String dp){return chiTietDAO.tinhTongTienTheoDatPhong(dp);}
 }

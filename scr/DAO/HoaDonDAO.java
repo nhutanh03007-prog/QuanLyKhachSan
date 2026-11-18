@@ -1,60 +1,18 @@
 package DAO;
-
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import model.HoaDon;
-
-/** DAO quản lý hóa đơn bằng mảng. */
+import model.TrangThaiThanhToan;
 public class HoaDonDAO {
-    public static HoaDon[] danhSachHoaDon = new HoaDon[100];
-    public static int soLuongHoaDon = 0;
-
-    public boolean them(HoaDon hoaDon) {
-        if (hoaDon == null || rong(hoaDon.getMaHD())
-                || timTheoMa(hoaDon.getMaHD()) != null
-                || soLuongHoaDon == danhSachHoaDon.length) return false;
-        danhSachHoaDon[soLuongHoaDon++] = hoaDon;
-        return true;
-    }
-
-    public boolean sua(HoaDon hoaDon) {
-        if (hoaDon == null || rong(hoaDon.getMaHD())) return false;
-        for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i] != null && hoaDon.getMaHD().equals(danhSachHoaDon[i].getMaHD())) {
-                danhSachHoaDon[i] = hoaDon;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean xoa(String maHD) {
-        if (rong(maHD)) return false;
-        for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i] != null && maHD.equals(danhSachHoaDon[i].getMaHD())) {
-                 System.arraycopy(danhSachHoaDon, i + 1, danhSachHoaDon, i,
-                        soLuongHoaDon - i - 1);
-                danhSachHoaDon[--soLuongHoaDon] = null;
-                return true;
-            }
-        }
-        return false;
-    }
-    public HoaDon timTheoMa(String maHD) {
-        if (rong(maHD)) return null;
-        for (int i = 0; i < soLuongHoaDon; i++) {
-            if (danhSachHoaDon[i] != null && maHD.equals(danhSachHoaDon[i].getMaHD())) return danhSachHoaDon[i];
-        }
-        return null;
-    }
-    public HoaDon timTheoMaDatPhong(String maDatPhong) {
-        if (rong(maDatPhong)) return null;
-        for (int i=0;i<soLuongHoaDon;i++) if (danhSachHoaDon[i]!=null && maDatPhong.equals(danhSachHoaDon[i].getMaDatPhong())) return danhSachHoaDon[i];
-        return null;
-    }
-    private boolean rong(String s) { return s == null || s.trim().isEmpty(); }
-
-    public HoaDon[] layDanhSach() {
-        HoaDon[] ketQua = new HoaDon[soLuongHoaDon];
-        System.arraycopy(danhSachHoaDon, 0, ketQua, 0, soLuongHoaDon);
-        return ketQua;
-    }
+ public static HoaDon[] danhSachHoaDon=new HoaDon[100]; public static int soLuongHoaDon=0;
+ public boolean them(HoaDon h){if(!hopLe(h)||timTheoMa(h.getMaHD())!=null||timTheoMaDatPhong(h.getMaDatPhong())!=null||soLuongHoaDon>=100)return false;if(h.getNgayLap()==null)h.setNgayLap(LocalDate.now());if(h.getTrangThai()==null)h.setTrangThai(TrangThaiThanhToan.CHUA_THANH_TOAN);h.setThanhTien(tinhThanhTien(h));danhSachHoaDon[soLuongHoaDon++]=h;return true;}
+ public boolean sua(HoaDon h){if(!hopLe(h))return false;for(int i=0;i<soLuongHoaDon;i++)if(danhSachHoaDon[i]!=null&&h.getMaHD().equals(danhSachHoaDon[i].getMaHD())){if(danhSachHoaDon[i].getTrangThai()==TrangThaiThanhToan.DA_THANH_TOAN)return false;h.setThanhTien(tinhThanhTien(h));danhSachHoaDon[i]=h;return true;}return false;}
+ public boolean xoa(String ma){for(int i=0;i<soLuongHoaDon;i++)if(danhSachHoaDon[i]!=null&&ma!=null&&ma.equals(danhSachHoaDon[i].getMaHD())){if(danhSachHoaDon[i].getTrangThai()==TrangThaiThanhToan.DA_THANH_TOAN)return false;System.arraycopy(danhSachHoaDon,i+1,danhSachHoaDon,i,soLuongHoaDon-i-1);danhSachHoaDon[--soLuongHoaDon]=null;return true;}return false;}
+ public BigDecimal tinhThanhTien(HoaDon h){return h==null||h.getTongGia()==null||h.getGiamGia()==null?BigDecimal.ZERO:h.getTongGia().subtract(h.getGiamGia());}
+ private boolean hopLe(HoaDon h){return h!=null&&!rong(h.getMaHD())&&!rong(h.getMaDatPhong())&&h.getTongGia()!=null&&h.getGiamGia()!=null&&h.getTongGia().signum()>=0&&h.getGiamGia().signum()>=0&&h.getGiamGia().compareTo(h.getTongGia())<=0;}
+ public boolean capNhatTrangThai(String ma,TrangThaiThanhToan t,String p,LocalDate d){HoaDon h=timTheoMa(ma);if(h==null||t==null)return false;h.setTrangThai(t);h.setPhuongThucTT(p);h.setNgayThanhToan(d);return true;}
+ public HoaDon timTheoMa(String ma){if(rong(ma))return null;for(int i=0;i<soLuongHoaDon;i++)if(danhSachHoaDon[i]!=null&&ma.equals(danhSachHoaDon[i].getMaHD()))return danhSachHoaDon[i];return null;}
+ public HoaDon timTheoMaDatPhong(String dp){if(rong(dp))return null;for(int i=0;i<soLuongHoaDon;i++)if(danhSachHoaDon[i]!=null&&dp.equals(danhSachHoaDon[i].getMaDatPhong()))return danhSachHoaDon[i];return null;}
+ public HoaDon[] layDanhSach(){return java.util.Arrays.copyOf(danhSachHoaDon,soLuongHoaDon);}
+ private boolean rong(String s){return s==null||s.trim().isEmpty();}
 }
