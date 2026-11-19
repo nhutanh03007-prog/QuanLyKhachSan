@@ -1,36 +1,21 @@
-import javax.annotation.processing.SupportedSourceVersion;
-import javax.lang.model.SourceVersion;
 import ui.HeThongUI;
 import ui.PhongUI;
-@SupportedSourceVersion(SourceVersion.RELEASE_27)
-    public class MAINNE {
-
-        public static void main(String[] args) {
-
-            PhongUI phongUI = new PhongUI();
-
-            phongUI.menuPhong();
-        }
 
 public class MAINNE {
     public static void main(String[] args) {
-        // Khởi tạo giao diện quản lý hệ thống của bạn
         HeThongUI heThongUI = new HeThongUI();
-        
+
         // 1. Yêu cầu đăng nhập đầu tiên
         boolean isLogged = heThongUI.dangNhap();
-        
-        // 2. Nếu đăng nhập thành công thì mới chia nhánh menu
-        if (isLogged) {
-            // Sau này bạn sẽ lấy quyền thực tế từ tài khoản đăng nhập
-            // Ví dụ: String role = heThongUI.getTaiKhoanHienTai().getQuyen();
-            String role = "ADMIN"; // Tạm thời gán cứng để test
 
-            if (role.equals("ADMIN")) {
-                // Mở menu Quản lý Nhân viên & Thống kê của bạn
-                heThongUI.menuQuanLyHeThong(); 
-            } else if (role.equals("NHAN_VIEN")) {
-                // Chỗ này sau sẽ khởi tạo PhongUI
+        // 2. Nếu đăng nhập thành công thì chia nhánh menu theo quyền
+        if (isLogged) {
+            // Tạm thời gán cứng "ADMIN" để test (hoặc lấy từ heThongUI nếu đã thêm getter)
+            String role = "ADMIN";
+
+            if (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("QuanLy")) {
+                heThongUI.menuQuanLyHeThong();
+            } else {
                 System.out.println("Chuyển hướng sang giao diện Lễ tân / Phòng...");
                 PhongUI phongUI = new PhongUI();
                 phongUI.menuPhong();

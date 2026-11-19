@@ -1,15 +1,13 @@
 
 package ui;
 
+import INTERFACE.IPhong;
 import java.math.BigDecimal;
 import java.util.Scanner;
-
 import model.Phong;
 import model.PhongThuong;
 import model.PhongVIP;
 import model.TinhTrangPhong;
-
-import INTERFACE.IPhong;
 import service.QLPhong;
 
 public class PhongUI {
@@ -44,44 +42,25 @@ public class PhongUI {
             chon = nhapSoNguyen("Nhap lua chon: ");
 
             switch (chon) {
-                case 1:
-                    themPhong();
-                    break;
+                case 1 -> themPhong();
 
-                case 2:
-                    hienThiDanhSachPhong();
-                    break;
+                case 2 -> hienThiDanhSachPhong();
 
-                case 3:
-                    timPhongTheoMa();
-                    break;
+                case 3 -> timPhongTheoMa();
 
-                case 4:
-                    timPhongTheoTinhTrang();
-                    break;
+                case 4 -> timPhongTheoTinhTrang();
 
-                case 5:
-                    suaPhong();
-                    break;
+                case 5 -> suaPhong();
 
-                case 6:
-                    xoaPhong();
-                    break;
+                case 6 -> xoaPhong();
 
-                case 7:
-                    demTongSoPhong();
-                    break;
+                case 7 -> demTongSoPhong();
 
-                case 8:
-                    thongKePhongTheoTinhTrang();
-                    break;
+                case 8 -> thongKePhongTheoTinhTrang();
 
-                case 0:
-                    System.out.println("Thoat quan ly phong!");
-                    break;
+                case 0 -> System.out.println("Thoat quan ly phong!");
 
-                default:
-                    System.out.println("Lua chon khong hop le!");
+                default -> System.out.println("Lua chon khong hop le!");
             }
 
         } while (chon != 0);
@@ -197,8 +176,7 @@ public class PhongUI {
 
     private String layDichVu(Phong phong) {
 
-        if (phong instanceof PhongVIP) {
-            PhongVIP vip = (PhongVIP) phong;
+        if (phong instanceof PhongVIP vip) {
             return vip.getDichVuVIP();
         }
 
@@ -480,14 +458,16 @@ public class PhongUI {
         int chon = nhapSoNguyen("Chon tinh trang: ");
 
         switch (chon) {
-            case 1:
+            case 1 -> {
                 return TinhTrangPhong.TRONG;
-            case 2:
+            }
+            case 2 -> {
                 return TinhTrangPhong.DANG_SU_DUNG;
-            case 3:
+            }
+            case 3 -> {
                 return TinhTrangPhong.DANG_BAO_TRI;
-            default:
-                System.out.println("Lua chon khong hop le! Vui long nhap lai.");
+            }
+            default -> System.out.println("Lua chon khong hop le! Vui long nhap lai.");
         }
     }
 }
