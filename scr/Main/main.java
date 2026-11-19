@@ -1,16 +1,17 @@
 package Main;
+import Database.DatabaseManager;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 import ui.HeThongUI;
 import ui.PhongUI;
-import Database.DatabaseManager;
-
-import java.util.Scanner;
 
 public class main {
 
-    private static final Scanner sc = new Scanner(System.in);
-
+    private static final Scanner sc = new Scanner(System.in, StandardCharsets.UTF_8);
     public static void main(String[] args) {
 
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
         // 1. Khoi tao thu muc du lieu
         DatabaseManager.khoiTaoDatabase();
 
