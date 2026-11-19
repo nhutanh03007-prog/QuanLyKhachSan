@@ -3,7 +3,7 @@ package DAO;
 import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
 import model.ThanhToan;
 import model.TrangThaiThanhToan;
 
@@ -11,6 +11,7 @@ public class ThanhToanDAO {
     private static final String FILE_PATH = "DATABASEH/ThanhToan.dat";
     public static ThanhToan[] danhSachThanhToan = new ThanhToan[100];
     public static int soLuongThanhToan = 0;
+
     static {
         docFile();
     }
@@ -42,8 +43,11 @@ public class ThanhToanDAO {
                 return;
             try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
                 int count = dis.readInt();
-                if (count < 0 || count > 100)
+                if (count < 0)
                     throw new IOException("So luong khong hop le");
+                if (count > danhSachThanhToan.length) {
+                    danhSachThanhToan = Arrays.copyOf(danhSachThanhToan, count * 2);
+                }
                 for (int i = 0; i < count; i++) {
                     String t = docChuoi(dis);
                     ThanhToan tToan = new ThanhToan(docChuoi(dis), docChuoi(dis), new BigDecimal(dis.readUTF()),
@@ -52,7 +56,7 @@ public class ThanhToanDAO {
                         danhSachThanhToan[soLuongThanhToan++] = tToan;
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
         }
     }
@@ -84,15 +88,18 @@ public class ThanhToanDAO {
                 }
             }
             return true;
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
             return false;
         }
     }
 
     public boolean them(ThanhToan t) {
-        if (!hopLe(t) || timTheoMa(t.getMaThanhToan()) != null || soLuongThanhToan >= 100)
+        if (!hopLe(t) || timTheoMa(t.getMaThanhToan()) != null)
             return false;
+        if (soLuongThanhToan >= danhSachThanhToan.length) {
+            danhSachThanhToan = Arrays.copyOf(danhSachThanhToan, danhSachThanhToan.length * 2);
+        }
         int old = soLuongThanhToan;
         danhSachThanhToan[soLuongThanhToan++] = t;
         if (!ghiFile()) {
@@ -146,11 +153,17 @@ public class ThanhToanDAO {
     }
 
     public ThanhToan[] layTheoMaHD(String ma) {
-        ArrayList<ThanhToan> a = new ArrayList<>();
-        for (int i = 0; i < soLuongThanhToan; i++)
-            if (danhSachThanhToan[i] != null && ma != null && ma.equals(danhSachThanhToan[i].getMaHD()))
-                a.add(danhSachThanhToan[i]);
-        return a.toArray(new ThanhToan[0]);
+        if (rong(ma)) {
+            return new ThanhToan[0];
+        }
+        ThanhToan[] ketQuaTam = new ThanhToan[soLuongThanhToan];
+        int dem = 0;
+        for (int i = 0; i < soLuongThanhToan; i++) {
+            if (danhSachThanhToan[i] != null && ma.equals(danhSachThanhToan[i].getMaHD())) {
+                ketQuaTam[dem++] = danhSachThanhToan[i];
+            }
+        }
+        return Arrays.copyOf(ketQuaTam, dem);
     }
 
     public ThanhToan[] layDanhSach() {
