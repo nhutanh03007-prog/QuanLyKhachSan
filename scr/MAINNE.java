@@ -1,6 +1,9 @@
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import ui.HeThongUI;
 import ui.PhongUI;
-    public class Main {
+@SupportedSourceVersion(SourceVersion.RELEASE_27)
+    public class MAINNE {
 
         public static void main(String[] args) {
 
@@ -8,9 +11,8 @@ import ui.PhongUI;
 
             phongUI.menuPhong();
         }
-    }
 
-public class MAINNE{
+public class MAINNE {
     public static void main(String[] args) {
         // Khởi tạo giao diện quản lý hệ thống của bạn
         HeThongUI heThongUI = new HeThongUI();

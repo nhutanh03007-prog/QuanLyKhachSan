@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import model.TaiKhoan;
 
-public class TaiKhoanDAO {
+public final class TaiKhoanDAO {
 
     private static final String FILE_PATH =
             DatabaseManager.getDuongDanFile("taiKhoan.dat");
@@ -264,9 +264,7 @@ public class TaiKhoanDAO {
 
         TaiKhoan[] ketQua = new TaiKhoan[soLuong];
 
-        for (int i = 0; i < soLuong; i++) {
-            ketQua[i] = danhSach[i];
-        }
+        System.arraycopy(danhSach, 0, ketQua, 0, soLuong);
 
         return ketQua;
     }
@@ -279,9 +277,7 @@ public class TaiKhoanDAO {
 
         TaiKhoan[] mangMoi = new TaiKhoan[danhSach.length * 2];
 
-        for (int i = 0; i < soLuong; i++) {
-            mangMoi[i] = danhSach[i];
-        }
+        System.arraycopy(danhSach, 0, mangMoi, 0, soLuong);
 
         danhSach = mangMoi;
     }
