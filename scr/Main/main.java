@@ -3,12 +3,13 @@ import Database.DatabaseManager;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
-import ui.HeThongUI;
+import ui.HeThongUI; 
 import ui.PhongUI;
 
 public class main {
 
     private static final Scanner sc = new Scanner(System.in, StandardCharsets.UTF_8);
+
     public static void main(String[] args) {
 
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
@@ -32,24 +33,16 @@ public class main {
         // 5. Chuyen den menu theo quyen
         switch (role) {
 
-            case "ADMIN":
-                menuAdmin(heThongUI);
-                break;
+            case "ADMIN" -> menuAdmin(heThongUI);
 
-            case "NHAN_VIEN":
-                menuNhanVien();
-                break;
+            case "NHAN_VIEN" -> menuNhanVien();
 
-            default:
-                System.out.println("Quyen khong hop le!");
+            default -> System.out.println("Quyen khong hop le!");
         }
 
         System.out.println("Ket thuc chuong trinh.");
     }
 
-    // =============================
-    // MENU ADMIN
-    // =============================
     private static void menuAdmin(HeThongUI heThongUI) {
 
         int chon;
@@ -65,26 +58,19 @@ public class main {
 
             switch (chon) {
 
-                case 1:
-                    heThongUI.menuQuanLyHeThong();
-                    break;
+                case 1 -> heThongUI.menuQuanLyHeThong();
 
-                case 2:
+                case 2 -> {
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
-                    break;
+                }
 
-                case 0:
-                    System.out.println("Dang xuat ADMIN...");
-                    break;
+                case 0 -> System.out.println("Dang xuat ADMIN...");
             }
 
         } while (chon != 0);
     }
 
-    // =============================
-    // MENU NHAN VIEN
-    // =============================
     private static void menuNhanVien() {
 
         int chon;
@@ -99,22 +85,17 @@ public class main {
 
             switch (chon) {
 
-                case 1:
+                case 1 -> {
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
-                    break;
+                }
 
-                case 0:
-                    System.out.println("Dang xuat...");
-                    break;
+                case 0 -> System.out.println("Dang xuat...");
             }
 
         } while (chon != 0);
     }
 
-    // =============================
-    // NHAP LUA CHON MENU
-    // =============================
     private static int nhapLuaChon(int min, int max) {
 
         int chon;
