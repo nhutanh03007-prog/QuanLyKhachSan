@@ -1,6 +1,6 @@
 package model;
 public enum TinhTrangPhong{
-    TRONG("Trống"),
+    TRONG("Trng"),
     DANG_SU_DUNG("Đang sử dụng"),
     DANG_BAO_TRI("Đang bảo trì");   
 
@@ -15,5 +15,6 @@ public enum TinhTrangPhong{
     @Override
     public String toString() {
         return this.tenTinhTrang;
+
     }
 }

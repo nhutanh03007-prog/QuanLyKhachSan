@@ -142,7 +142,6 @@ public class PhongUI {
             BigDecimal giaPhong,
             TinhTrangPhong tinhTrang,
             String dichVu) {
-
         if (loaiPhong == 1) {
             return new PhongThuong(
                     maPhong,
@@ -203,7 +202,7 @@ public class PhongUI {
 
         BigDecimal giaPhong = nhapGiaPhong();
 
-        TinhTrangPhong tinhTrang = nhapTinhTrang();
+        TinhTrangPhong tinhTrang = TinhTrangPhong.TRONG; // Khi thêm phòng mới, mặc định tình trạng là TRONG
 
         String dichVu = nhapChuoi("Nhap dich vu phong: ");
 

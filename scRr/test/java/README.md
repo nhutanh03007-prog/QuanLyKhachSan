@@ -16,3 +16,10 @@ làm thì anh em để file vào các phần liên quan
 ĐỒ RIÊNG CỦA THẰNG LỎ TRƯỞNG NHÓM
 
 - tìm hiểu đọc ghi file text java read, write,
+
+Một số lưu ý ôn thi lý thuyết:
+- Hàm thiết lập mặt định là public nhưng vẫn có thể có hàm thiết lập private, static.
+- Đa hình thuộc tính ko có đa hình. VD: lớp cha có x là 100 và lớp con có x là 500 thì có đa hình.
+- Interface và Abtract class khác nhau.Và Interface có đa hình.
+Topic tuần 11
+Giao tiếp cơ bản, Viết email,Tổng kết rebort 6 thói quen trong tuần qua.

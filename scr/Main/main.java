@@ -1,4 +1,6 @@
 package Main;
+import ui.HeThongUI;
+import ui.PhongUI;
 import Database.DatabaseManager;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -51,10 +53,14 @@ public class main {
             System.out.println("\n========== MENU ADMIN ==========");
             System.out.println("1. Quan ly he thong");
             System.out.println("2. Quan ly phong");
+            System.out.println("3. Quan ly khach hang");
+            System.out.println("4. Quan ly dat phong");
+            System.out.println("5. Quan ly thanh toan");
+            System.out.println("6. Quan ly thong ke");
             System.out.println("0. Dang xuat");
             System.out.println("==============================");
 
-            chon = nhapLuaChon(0, 2);
+            chon = nhapLuaChon(0, 6);
 
             switch (chon) {
 
@@ -63,7 +69,7 @@ public class main {
                 case 2 -> {
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
-                }
+                    break;
 
                 case 0 -> System.out.println("Dang xuat ADMIN...");
             }
@@ -77,20 +83,25 @@ public class main {
 
         do {
             System.out.println("\n======= MENU NHAN VIEN =======");
-            System.out.println("1. Quan ly phong");
+            System.out.println("1. Quan ly khach hang");
+            System.out.println("2. Quan ly dat phong");
+            System.out.println("3. Quan ly thanh toan");
+            System.out.println("4. Quan ly thong ke");
             System.out.println("0. Dang xuat");
             System.out.println("==============================");
 
-            chon = nhapLuaChon(0, 1);
+            chon = nhapLuaChon(0, 4);
 
             switch (chon) {
 
-                case 1 -> {
+                case 1:
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
-                }
+                    break;
 
-                case 0 -> System.out.println("Dang xuat...");
+                case 0:
+                    System.out.println("Dang xuat...");
+                    break;
             }
 
         } while (chon != 0);

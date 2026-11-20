@@ -110,7 +110,7 @@ public class QLPhong implements IPhong {
     @Override
     public Phong[] layDanhSachPhongTheoTinhTrang(
             TinhTrangPhong tinhTrang) {
-
+        
         if (tinhTrang == null) {
             System.out.println("Tinh trang khong hop le!");
             return new Phong[0];
