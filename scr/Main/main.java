@@ -70,6 +70,7 @@ public class main {
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
                     break;
+                }
 
                 case 0 -> System.out.println("Dang xuat ADMIN...");
             }
