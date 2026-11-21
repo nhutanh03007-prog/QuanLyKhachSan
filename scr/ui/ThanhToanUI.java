@@ -50,65 +50,26 @@ public class ThanhToanUI {
             System.out.println(" 0. Quay lai");
             chon = nhapSoNguyen("Nhap lua chon: ");
             switch (chon) {
-            case 1:
-                hienThiDichVu(qlDichVu.layDanhSachDichVu());
-                break;
-            case 2:
-                themDichVu();
-                break;
-            case 3:
-                suaDichVu();
-                break;
-            case 4:
-                xoaDichVu();
-                break;
-            case 5:
-                timDichVu();
-                break;
-            case 6:
-                themChiTiet();
-                break;
-            case 7:
-                suaChiTiet();
-                break;
-            case 8:
-                xoaChiTiet();
-                break;
-            case 9:
-                xemChiTietTheoDatPhong();
-                break;
-            case 10:
-                inDanhSachChiTiet(qlDichVu.layDanhSachChiTiet());
-                break;
-            case 11:
-                lapHoaDonTuDatPhong();
-                break;
-            case 12:
-                themHoaDon();
-                break;
-            case 13:
-                thanhToanHoaDon();
-                break;
-            case 14:
-                hienThiDanhSachHoaDon();
-                break;
-            case 15:
-                timVaInHoaDon();
-                break;
-            case 16:
-                suaHoaDon();
-                break;
-            case 17:
-                xoaHoaDon();
-                break;
-            case 18:
-                xemLichSuThanhToan();
-                break;
-            case 0:
-                System.out.println("Quay lai menu truoc...");
-                break;
-            default:
-                System.out.println("Lua chon khong hop le!");
+            case 1 -> hienThiDichVu(qlDichVu.layDanhSachDichVu());
+            case 2 -> themDichVu();
+            case 3 -> suaDichVu();
+            case 4 -> xoaDichVu();
+            case 5 -> timDichVu();
+            case 6 -> themChiTiet();
+            case 7 -> suaChiTiet();
+            case 8 -> xoaChiTiet();
+            case 9 -> xemChiTietTheoDatPhong();
+            case 10 -> inDanhSachChiTiet(qlDichVu.layDanhSachChiTiet());
+            case 11 -> lapHoaDonTuDatPhong();
+            case 12 -> themHoaDon();
+            case 13 -> thanhToanHoaDon();
+            case 14 -> hienThiDanhSachHoaDon();
+            case 15 -> timVaInHoaDon();
+            case 16 -> suaHoaDon();
+            case 17 -> xoaHoaDon();
+            case 18 -> xemLichSuThanhToan();
+            case 0 -> System.out.println("Quay lai menu truoc...");
+            default -> System.out.println("Lua chon khong hop le!");
             }
         } while (chon != 0);
     }
