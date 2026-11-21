@@ -1,12 +1,12 @@
 package Main;
-import ui.HeThongUI;
-import ui.PhongUI;
 import Database.DatabaseManager;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import ui.DatPhongUI;
+import ui.HeThongUI;
 import ui.KhachHangUI;
+import ui.PhongUI;
 import ui.ThanhToanUI;
 import ui.ThongKeUI;
 
@@ -117,26 +117,24 @@ public class main {
 
             switch (chon) {
 
-                case 1:
+                case 1 -> {
                     KhachHangUI khachHangUI = new KhachHangUI();
                     khachHangUI.menuKhachHang();
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     DatPhongUI datPhongUI = new DatPhongUI();
                     datPhongUI.menuDatPhong();
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     ThanhToanUI thanhToanUI = new ThanhToanUI();
                     thanhToanUI.menuThanhToan();
-                    break;
-                case 4:
+                }
+                case 4 -> {
                     ThongKeUI thongKeUI = new ThongKeUI();
                     thongKeUI.menuThongKe();
-                    break; 
+                } 
 
-                case 0:
-                    System.out.println("Dang xuat...");
-                    break;
+                case 0 -> System.out.println("Dang xuat...");
             }
 
         } while (chon != 0);
