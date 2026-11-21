@@ -1,8 +1,8 @@
 package model;
 public enum TinhTrangPhong{
-    TRONG("Trng"),
-    DANG_SU_DUNG("Đang sử dụng"),
-    DANG_BAO_TRI("Đang bảo trì");   
+    TRONG("Trong"),
+    DANG_SU_DUNG("Dang su dung"),
+    DANG_BAO_TRI("Dang bao tri");   
 
     private final String tenTinhTrang;
 

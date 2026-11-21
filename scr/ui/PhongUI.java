@@ -1,9 +1,15 @@
 
 package ui;
 
+
+import DAO.DichVuDAO;
 import INTERFACE.IPhong;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+
+import model.DichVu;
 import model.Phong;
 import model.PhongThuong;
 import model.PhongVIP;
@@ -12,6 +18,7 @@ import service.QLPhong;
 
 public class PhongUI {
 
+    private static final DichVuDAO dichVuDAO = new DichVuDAO();
     private final Scanner sc = new Scanner(System.in);
     private final IPhong qlPhong;
 
@@ -170,18 +177,104 @@ public class PhongUI {
 
         return 1;
     }
+    // ================= LAY DICH VU =================
 
-    // ================= LAY DICH VU PHONG =================
-
-    private String layDichVu(Phong phong) {
+private String layDichVu(Phong phong) {
 
         if (phong instanceof PhongVIP vip) {
             return vip.getDichVuVIP();
         }
-
+        
         PhongThuong thuong = (PhongThuong) phong;
         return thuong.getDichVuThuong();
     }
+
+    // ================= CHON DICH VU PHONG =================
+
+    
+private String chonNhieuDichVu() {
+
+    DichVu[] dsDichVu = dichVuDAO.layDanhSach();
+
+    if (dsDichVu.length == 0) {
+        System.out.println("Chua co dich vu nao!");
+        return "";
+    }
+
+    String[] dsMaDichVu = new String[dsDichVu.length];
+    int soLuongChon = 0;
+
+    while (true) {
+
+        System.out.println("\n========== DANH SACH DICH VU ==========");
+
+        for (int i = 0; i < dsDichVu.length; i++) {
+
+            System.out.printf(
+                "%d. %s - %s - %s VND - %s%n",
+                i + 1,
+                dsDichVu[i].getMaDichVu(),
+                dsDichVu[i].getTenDichVu(),
+                dsDichVu[i].getGia(),
+                dsDichVu[i].getTrangThai()
+            );
+        }
+
+        System.out.println("0. Hoan tat");
+
+        int chon = nhapSoNguyen("Chon dich vu: ");
+
+        if (chon == 0) {
+            break;
+        }
+
+        if (chon < 1 || chon > dsDichVu.length) {
+            System.out.println("Lua chon khong hop le!");
+            continue;
+        }
+
+        DichVu dv = dsDichVu[chon - 1];
+
+        if (dv.getTrangThai() == null
+                || !dv.getTrangThai().equalsIgnoreCase("Hoat dong")) {
+            System.out.println("Dich vu khong hoat dong!");
+            continue;
+        }
+
+        boolean daChon = false;
+
+        for (int i = 0; i < soLuongChon; i++) {
+            if (dsMaDichVu[i].equals(dv.getMaDichVu())) {
+                daChon = true;
+                break;
+            }
+        }
+
+        if (daChon) {
+            System.out.println("Dich vu da duoc chon!");
+            continue;
+        }
+
+        dsMaDichVu[soLuongChon] = dv.getMaDichVu();
+        soLuongChon++;
+
+        System.out.println("Da chon: " + dv.getTenDichVu());
+    }
+
+    String ketQua = "";
+
+    for (int i = 0; i < soLuongChon; i++) {
+
+        if (i > 0) {
+            ketQua += ",";
+        }
+
+        ketQua += dsMaDichVu[i];
+    }
+
+    return ketQua;
+}
+
 
     // ================= THEM PHONG =================
 
@@ -204,7 +297,7 @@ public class PhongUI {
 
         TinhTrangPhong tinhTrang = TinhTrangPhong.TRONG; // Khi thêm phòng mới, mặc định tình trạng là TRONG
 
-        String dichVu = nhapChuoi("Nhap dich vu phong: ");
+        String dichVu = chonNhieuDichVu();
 
         Phong phong = taoPhong(
                 loaiPhong,

@@ -5,8 +5,10 @@ import Database.DatabaseManager;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
-import ui.HeThongUI; 
-import ui.PhongUI;
+import ui.DatPhongUI;
+import ui.KhachHangUI;
+import ui.ThanhToanUI;
+import ui.ThongKeUI;
 
 public class main {
 
@@ -55,7 +57,7 @@ public class main {
             System.out.println("2. Quan ly phong");
             System.out.println("3. Quan ly khach hang");
             System.out.println("4. Quan ly dat phong");
-            System.out.println("5. Quan ly thanh toan");
+            System.out.println("5. Quan ly he thong thanh toan va dich vu");
             System.out.println("6. Quan ly thong ke");
             System.out.println("0. Dang xuat");
             System.out.println("==============================");
@@ -69,6 +71,26 @@ public class main {
                 case 2 -> {
                     PhongUI phongUI = new PhongUI();
                     phongUI.menuPhong();
+                    break;
+                }
+                case 3 -> {
+                    KhachHangUI khachHangUI = new KhachHangUI();
+                    khachHangUI.menuKhachHang();
+                    break;
+                }
+                case 4 -> {
+                    DatPhongUI datPhongUI = new DatPhongUI();
+                    datPhongUI.menuDatPhong();
+                    break;
+                }
+                case 5 ->{
+                    ThanhToanUI thanhToanUI = new ThanhToanUI();
+                    thanhToanUI.menuThanhToan();
+                    break;
+                }
+                case 6 -> {
+                    ThongKeUI thongKeUI = new ThongKeUI();
+                    thongKeUI.menuThongKe();
                     break;
                 }
 
@@ -96,9 +118,21 @@ public class main {
             switch (chon) {
 
                 case 1:
-                    PhongUI phongUI = new PhongUI();
-                    phongUI.menuPhong();
+                    KhachHangUI khachHangUI = new KhachHangUI();
+                    khachHangUI.menuKhachHang();
                     break;
+                case 2:
+                    DatPhongUI datPhongUI = new DatPhongUI();
+                    datPhongUI.menuDatPhong();
+                    break;
+                case 3:
+                    ThanhToanUI thanhToanUI = new ThanhToanUI();
+                    thanhToanUI.menuThanhToan();
+                    break;
+                case 4:
+                    ThongKeUI thongKeUI = new ThongKeUI();
+                    thongKeUI.menuThongKe();
+                    break; 
 
                 case 0:
                     System.out.println("Dang xuat...");
