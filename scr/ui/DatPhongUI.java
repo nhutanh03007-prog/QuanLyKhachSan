@@ -21,18 +21,18 @@ public class DatPhongUI {
     public void menuDatPhong() {
         int choice = -1;
         do {
-            System.out.println("\n===== QUẢN LÝ ĐẶT PHÒNG =====");
-            System.out.println("1. Tạo phiếu đặt phòng mới");
-            System.out.println("2. Xem danh sách phiếu đặt phòng");
-            System.out.println("3. Tìm kiếm phiếu đặt phòng theo mã");
-            System.out.println("4. Hủy phiếu đặt phòng");
-            System.out.println("0. Quay lại");
-            System.out.print("Chọn chức năng: ");
+            System.out.println("\n===== QUAN LY DAT PHONG =====");
+            System.out.println("1. Tao phieu dat phong moi");
+            System.out.println("2. Xem danh sach phieu dat phong");
+            System.out.println("3. TTim kiem phieu dat phong theo ma");
+            System.out.println("4. HHuy phieu dat phong");
+            System.out.println("0. Quay lai");
+            System.out.print("Chon chuc nang: ");
 
             try {
                 choice = Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.println("Lỗi: Vui lòng nhập một số nguyên hợp lệ!");
+                System.out.println("Loi: Vui long nhap mot so nguyen hop le!");
                 continue;
             }
 
@@ -41,34 +41,34 @@ public class DatPhongUI {
                 case 2 -> hienThiDanhSach();
                 case 3 -> timKiemDatPhong();
                 case 4 -> huyDatPhong();
-                case 0 -> System.out.println("Thoát quản lý đặt phòng.");
-                default -> System.out.println("Lỗi: Lựa chọn không hợp lệ (chỉ chọn từ 0 đến 4)!");
+                case 0 -> System.out.println("Thoat quan ly dat phong.");
+                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 4)!");
             }
         } while (choice != 0);
     }
 
     private void taoDatPhongMoi() {
-        System.out.println("\n--- TẠO PHIẾU ĐẶT PHÒNG MỚI ---");
+        System.out.println("\n--- TAO PHIEU DAT PHONG MOI ---");
 
         
-        String maDatPhong = nhapChuoiKhongRong("Nhập mã đặt phòng (VD: DP01): ");
+        String maDatPhong = nhapChuoiKhongRong("Nhap ma dat phong (VD: DP01): ");
         if (qlDatPhong.timDatPhong(maDatPhong) != null) {
-            System.out.println("Lỗi: Mã đặt phòng '" + maDatPhong + "' đã tồn tại!");
+            System.out.println("Loi: Ma dat phong '" + maDatPhong + "' đa ton tai!");
             return;
         }
 
-        String maKhachHang = nhapChuoiKhongRong("Nhập mã khách hàng: ");
-        String maPhong = nhapChuoiKhongRong("Nhập mã phòng: ");
+        String maKhachHang = nhapChuoiKhongRong("Nhap ma khach hang: ");
+        String maPhong = nhapChuoiKhongRong("Nhap ma phong: ");
 
         
-        double giaPhong = nhapSoThucDuong("Nhập giá phòng/ngày: ");
+        double giaPhong = nhapSoThucDuong("Nhap gia phong/ngay: ");
 
         
         LocalDate ngayNhan;
         while (true) {
-            ngayNhan = nhapNgay("Nhập ngày nhận phòng (yyyy-MM-dd): ");
+            ngayNhan = nhapNgay("Nhap ngay nhan phong (yyyy-MM-dd): ");
             if (ngayNhan.isBefore(LocalDate.now())) {
-                System.out.println("Lỗi: Ngày nhận phòng không được trước ngày hôm nay (" + LocalDate.now() + ")!");
+                System.out.println("Loi: Ngay nhan phong khong đuoc truoc ngay hom nay (" + LocalDate.now() + ")!");
             } else {
                 break;
             }
@@ -77,9 +77,9 @@ public class DatPhongUI {
         
         LocalDate ngayTra;
         while (true) {
-            ngayTra = nhapNgay("Nhập ngày trả phòng (yyyy-MM-dd): ");
+            ngayTra = nhapNgay("Nhap ngay tra phong (yyyy-MM-dd): ");
             if (ngayTra.isBefore(ngayNhan)) {
-                System.out.println("Lỗi: Ngày trả phòng không được trước ngày nhận phòng (" + ngayNhan + ")!");
+                System.out.println("Loi: Ngay tra phong khong duoc truoc ngay nhan phong (" + ngayNhan + ")!");
             } else {
                 break;
             }
@@ -91,7 +91,7 @@ public class DatPhongUI {
     }
 
     private void hienThiDanhSach() {
-        System.out.println("\n--- DANH SÁCH PHIẾU ĐẶT PHÒNG ---");
+        System.out.println("\n--- DANH SACH PHIEU DAT PHONG ---");
         DatPhong[] danhSach = qlDatPhong.layTatCa();
         boolean coDuLieu = false;
 
@@ -105,37 +105,37 @@ public class DatPhongUI {
         }
 
         if (!coDuLieu) {
-            System.out.println("Chưa có phiếu đặt phòng nào.");
+            System.out.println("Chua co phieu dat phong nao.");
         }
     }
 
     private void timKiemDatPhong() {
-        String ma = nhapChuoiKhongRong("\nNhập mã đặt phòng cần tìm: ");
+        String ma = nhapChuoiKhongRong("\nNhap ma dat phong can tim: ");
         DatPhong dp = qlDatPhong.timDatPhong(ma);
 
         if (dp != null) {
-            System.out.println("Thông tin phiếu đặt:");
+            System.out.println("Thong tin phieu dat:");
             System.out.println(dp.toString());
         } else {
-            System.out.println("Không tìm thấy mã đặt phòng: " + ma);
+            System.out.println("Khong tim thay ma dat phong: " + ma);
         }
     }
 
     private void huyDatPhong() {
-        String ma = nhapChuoiKhongRong("\nNhập mã đặt phòng cần hủy: ");
+        String ma = nhapChuoiKhongRong("\nNhap ma dat phong can huy: ");
         DatPhong dp = qlDatPhong.timDatPhong(ma);
 
         if (dp == null) {
-            System.out.println("Lỗi: Không tìm thấy phiếu đặt phòng có mã '" + ma + "'!");
+            System.out.println("Loi: Khong tim thay phieu dat phong co ma '" + ma + "'!");
             return;
         }
 
-        System.out.print("Bạn có chắc chắn muốn hủy phiếu '" + ma + "' không? (Y/N): ");
+        System.out.print("Ban co chac chan muon huy phieu '" + ma + "' khong? (Y/N): ");
         String xacNhan = scanner.nextLine().trim();
         if (xacNhan.equalsIgnoreCase("Y")) {
             qlDatPhong.huyDatPhong(ma);
         } else {
-            System.out.println("Đã hủy thao tác.");
+            System.out.println("Da huy thao tac.");
         }
     }
 
@@ -146,7 +146,7 @@ public class DatPhongUI {
             System.out.print(thongBao);
             String input = scanner.nextLine().trim();
             if (input.isEmpty()) {
-                System.out.println("Lỗi: Dữ liệu không được để trống! Vui lòng nhập lại.");
+                System.out.println("Loi: Du lieu khong duoc de trong! Vui long nhap lai.");
             } else {
                 return input;
             }
@@ -159,12 +159,12 @@ public class DatPhongUI {
             try {
                 double so = Double.parseDouble(scanner.nextLine().trim());
                 if (so <= 0) {
-                    System.out.println("Lỗi: Giá trị phải lớn hơn 0! Vui lòng nhập lại.");
+                    System.out.println("Loi: Gia tri phai lon hon 0! Vui long nhap lai.");
                 } else {
                     return so;
                 }
             } catch (NumberFormatException e) {
-                System.out.println("Lỗi: Vui lòng nhập một số hợp lệ!");
+                System.out.println("Loi: Vui long nhap mot so hop le!");
             }
         }
     }
@@ -176,7 +176,7 @@ public class DatPhongUI {
             try {
                 return LocalDate.parse(input, dateFormatter);
             } catch (DateTimeParseException e) {
-                System.out.println("Lỗi: Sai định dạng ngày (yêu cầu yyyy-MM-dd, VD: 2026-11-20)! Vui lòng nhập lại.");
+                System.out.println("Loi: Sai dinh dang ngay (yeu cau yyyy-MM-dd, VD: 2026-11-20)! Vui long nhap lai.");
             }
         }
     }
