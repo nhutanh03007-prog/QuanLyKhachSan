@@ -1,4 +1,3 @@
-
 package model;
 
 import java.math.BigDecimal;
@@ -7,50 +6,58 @@ public abstract class Phong {
 
     private String maPhong;
     private String tenPhong;
-    private String loaiPhong;
     private BigDecimal giaPhong;
     private TinhTrangPhong tinhTrang;
 
-    public Phong(String maPhong, String tenPhong,
-                 String loaiPhong, BigDecimal giaPhong,
-                 TinhTrangPhong tinhTrang) {
-
+    protected Phong(String maPhong, String tenPhong,
+                    BigDecimal giaPhong, TinhTrangPhong tinhTrang) {
         this.maPhong = maPhong;
         this.tenPhong = tenPhong;
-        this.loaiPhong = loaiPhong;
         this.giaPhong = giaPhong;
         this.tinhTrang = tinhTrang;
     }
-    public void setMaPhong(String maPhong) {
-    this.maPhong = maPhong;
-}
+
+    // ===== Phan rieng cua tung loai phong =====
+
+    /** Ten loai phong, vi du "Thuong" hoac "VIP" (do lop con quyet dinh). */
+    public abstract String getLoaiPhong();
+
+    /** Chuoi ma dich vu, vi du "DV01,DV02". Khong bao gio null. */
+    public abstract String getDichVu();
+
+    public abstract void setDichVu(String dichVu);
+
+    /** Tao ban sao doc lap de tranh sua truc tiep du lieu trong DAO. */
+    public abstract Phong taoBanSao();
+
+    // ===== Getter / Setter =====
 
     public String getMaPhong() {
         return maPhong;
+    }
+
+    public void setMaPhong(String maPhong) {
+        this.maPhong = maPhong;
     }
 
     public String getTenPhong() {
         return tenPhong;
     }
 
-    public String getLoaiPhong() {
-        return loaiPhong;
+    public void setTenPhong(String tenPhong) {
+        this.tenPhong = tenPhong;
     }
 
     public BigDecimal getGiaPhong() {
         return giaPhong;
     }
 
-    public TinhTrangPhong getTinhTrang() {
-        return tinhTrang;
-    }
-
-    public void setTenPhong(String tenPhong) {
-        this.tenPhong = tenPhong;
-    }
-
     public void setGiaPhong(BigDecimal giaPhong) {
         this.giaPhong = giaPhong;
+    }
+
+    public TinhTrangPhong getTinhTrang() {
+        return tinhTrang;
     }
 
     public void setTinhTrang(TinhTrangPhong tinhTrang) {
@@ -59,10 +66,11 @@ public abstract class Phong {
 
     @Override
     public String toString() {
-        return "Ma phong: " + maPhong +
-                " | Ten phong: " + tenPhong +
-                " | Loai phong: " + loaiPhong +
-                " | Gia phong: " + giaPhong +
-                " | Tinh trang: " + tinhTrang;
+        return "Ma phong: " + maPhong
+                + " | Ten phong: " + tenPhong
+                + " | Loai phong: " + getLoaiPhong()
+                + " | Gia phong: " + giaPhong
+                + " | Tinh trang: " + tinhTrang
+                + " | Dich vu: " + getDichVu();
     }
 }

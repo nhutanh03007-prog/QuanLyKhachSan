@@ -15,8 +15,8 @@ import model.DatPhong;
 import model.TrangThaiDatPhong;
 
 public class DatPhongDAO {
-    private static final String FILE_PATH = "DATABASEH/DatPhong.txt";
-    private static final String FILE_PATH_DA_XOA = "DATABASEH/DatPhongDaXoa.txt";
+    private static final String FILE_PATH = "DATABASEH/DatPhong.dat";
+    private static final String FILE_PATH_DA_XOA = "DATABASEH/DatPhongDaXoa.dat";
 
     public static DatPhong[] danhSachDatPhong = new DatPhong[100];
     public static int soLuongDatPhong = 0;

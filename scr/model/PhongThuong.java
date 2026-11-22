@@ -1,21 +1,49 @@
-
 package model;
 
 import java.math.BigDecimal;
 
 public class PhongThuong extends Phong {
 
+    public static final String LOAI = "Thuong";
+    private static final BigDecimal GIA_MAC_DINH = new BigDecimal("500000");
+
     private String dichVuThuong;
 
     public PhongThuong(String maPhong, String tenPhong,
-                       String loaiPhong, BigDecimal giaPhong,
-                       TinhTrangPhong tinhTrang,
+                       BigDecimal giaPhong, TinhTrangPhong tinhTrang,
                        String dichVuThuong) {
+        super(maPhong, tenPhong, giaPhong, tinhTrang);
+        this.dichVuThuong = chuanHoa(dichVuThuong);
+    }
 
-        super(maPhong, tenPhong, loaiPhong,
-              giaPhong, tinhTrang);
+    /** Constructor cu (tham so loaiPhong bi bo qua) de code cu van bien dich duoc. */
+    public PhongThuong(String maPhong, String tenPhong, String loaiPhong,
+                       BigDecimal giaPhong, TinhTrangPhong tinhTrang,
+                       String dichVuThuong) {
+        this(maPhong, tenPhong, giaPhong, tinhTrang, dichVuThuong);
+    }
 
-        this.dichVuThuong = dichVuThuong;
+    private static String chuanHoa(String s) {
+        return s == null ? "" : s.trim();
+    }
+
+    public static BigDecimal getGiaMacDinh() {
+        return GIA_MAC_DINH;
+    }
+
+    @Override
+    public String getLoaiPhong() {
+        return LOAI;
+    }
+
+    @Override
+    public String getDichVu() {
+        return dichVuThuong;
+    }
+
+    @Override
+    public void setDichVu(String dichVu) {
+        this.dichVuThuong = chuanHoa(dichVu);
     }
 
     public String getDichVuThuong() {
@@ -23,17 +51,12 @@ public class PhongThuong extends Phong {
     }
 
     public void setDichVuThuong(String dichVuThuong) {
-        this.dichVuThuong = dichVuThuong;
+        setDichVu(dichVuThuong);
     }
-    private static final BigDecimal GIA_MAC_DINH =
-            new BigDecimal("500000");
 
-    public static BigDecimal getGiaMacDinh() {
-        return GIA_MAC_DINH;
-    }
     @Override
-    public String toString() {
-        return super.toString() +
-                " | Dich vu thuong: " + dichVuThuong;
+    public Phong taoBanSao() {
+        return new PhongThuong(getMaPhong(), getTenPhong(), getGiaPhong(),
+                getTinhTrang(), dichVuThuong);
     }
 }

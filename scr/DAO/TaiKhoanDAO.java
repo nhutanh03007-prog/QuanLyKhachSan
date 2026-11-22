@@ -11,7 +11,7 @@ import model.TaiKhoan;
 
 public final class TaiKhoanDAO {
 
-    private static final String FILE_PATH ="DATABASEH/taiKhoan.txt";
+    private static final String FILE_PATH ="DATABASEH/taiKhoan.dat";
 
     private TaiKhoan[] danhSach;
     private int soLuong;

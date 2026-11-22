@@ -17,7 +17,7 @@ public class KhachHangDAO {
     public static KhachHang[] danhSachKhachHang = new KhachHang[100];
     public static int soLuongKhachHang = 0;
 
-    private static final String FILE_PATH = "DATABASEH/KhachHang.txt";
+    private static final String FILE_PATH = "DATABASEH/KhachHang.dat";
 
     static {
         docFile();

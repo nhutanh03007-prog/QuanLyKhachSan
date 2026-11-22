@@ -8,7 +8,7 @@ import model.ThanhToan;
 import model.TrangThaiThanhToan;
 
 public class ThanhToanDAO {
-    private static final String FILE_PATH = "DATABASEH/ThanhToan.txt";
+    private static final String FILE_PATH = "DATABASEH/ThanhToan.dat";
     public static ThanhToan[] danhSachThanhToan = new ThanhToan[100];
     public static int soLuongThanhToan = 0;
 

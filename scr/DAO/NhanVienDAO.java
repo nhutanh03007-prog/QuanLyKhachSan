@@ -13,7 +13,7 @@ public class NhanVienDAO {
 
     private NhanVien[] danhSach;
     private int soLuong;
-    private static final String FILE_PATH = "DataBase/NhanVien.txt";
+    private static final String FILE_PATH = "DataBase/NhanVien.dat";
 
     public NhanVienDAO() {
         this.danhSach = new NhanVien[10];

@@ -17,8 +17,8 @@ import service.QLPhong;
 
 public class PhongUI {
 
-    private static final String DUONG_KE =
-            "------------------------------------------------------------------------------";
+    private static final int DO_RONG_DICH_VU = 30;
+    private static final String DUONG_KE = "-".repeat(106);
 
     private final Scanner sc;
     private final IPhong qlPhong;
@@ -253,8 +253,8 @@ public class PhongUI {
 
     private void inBang(Phong[] ds) {
         System.out.println(DUONG_KE);
-        System.out.printf("%-5s %-10s %-18s %-8s %-14s %-15s%n",
-                "STT", "Ma phong", "Ten phong", "Loai", "Gia phong", "Tinh trang");
+        System.out.printf("%-5s %-10s %-18s %-8s %-14s %-15s %-" + DO_RONG_DICH_VU + "s%n",
+                "STT", "Ma phong", "Ten phong", "Loai", "Gia phong", "Tinh trang", "Dich vu");
         System.out.println(DUONG_KE);
         for (int i = 0; i < ds.length; i++) {
             inThongTinPhong(i + 1, ds[i]);
@@ -263,14 +263,22 @@ public class PhongUI {
     }
 
     private void inThongTinPhong(int stt, Phong p) {
-        System.out.printf("%-5d %-10s %-18s %-8s %-14s %-15s%n",
+        System.out.printf("%-5d %-10s %-18s %-8s %-14s %-15s %-" + DO_RONG_DICH_VU + "s%n",
                 stt,
                 p.getMaPhong(),
                 p.getTenPhong(),
                 p.getLoaiPhong(),
                 p.getGiaPhong().toPlainString(),
-                p.getTinhTrang());
-        System.out.println("      Dich vu: " + tenDichVu(p.getDichVu()));
+                p.getTinhTrang(),
+                catChuoi(tenDichVu(p.getDichVu()), DO_RONG_DICH_VU));
+    }
+
+    /** Cat chuoi qua dai va them "..." de khong lam vo bang. */
+    private String catChuoi(String s, int doDaiToiDa) {
+        if (s.length() <= doDaiToiDa) {
+            return s;
+        }
+        return s.substring(0, doDaiToiDa - 3) + "...";
     }
 
     // ================= THEM PHONG =================
@@ -325,6 +333,7 @@ public class PhongUI {
             return;
         }
         inBang(new Phong[] { phong });
+        System.out.println("Dich vu day du: " + tenDichVu(phong.getDichVu()));
     }
 
     public void timPhongTheoTinhTrang() {
