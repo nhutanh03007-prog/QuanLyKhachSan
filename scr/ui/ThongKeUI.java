@@ -1,3 +1,4 @@
+
 package ui;
 
 import java.util.Scanner;
@@ -15,7 +16,6 @@ public class ThongKeUI {
     private final QLThongKe qlThongKe;
 
     public ThongKeUI() {
-        // Sua QLThanhToan() thanh QLHoaDon() cho dung thu tu tham so constructor
         this.qlThongKe = new QLThongKe(
                 new QLHoaDon(),
                 new QLPhong(),
@@ -24,7 +24,6 @@ public class ThongKeUI {
         );
     }
 
-    // Constructor mo rong neu muon truyen san doi tuong QLThongKe tu ngoai vao
     public ThongKeUI(QLThongKe qlThongKe) {
         this.qlThongKe = qlThongKe;
     }
@@ -66,32 +65,41 @@ public class ThongKeUI {
     private void thongKePhong() {
         System.out.println("\n--- THONG KE PHONG ---");
         System.out.println("Tong so phong: " + qlThongKe.tongSoPhong());
+
         for (TinhTrangPhong tt : TinhTrangPhong.values()) {
-            System.out.println("- Phong trang thai [" + tt + "]: " + qlThongKe.demPhongTheoTrangThai(tt));
+            System.out.println("- Phong trang thai [" + tt + "]: "
+                    + qlThongKe.demPhongTheoTrangThai(tt));
         }
     }
 
     private void thongKeKhachHang() {
         System.out.println("\n--- THONG KE KHACH HANG ---");
         System.out.print("Nhap loai khach hang can thong ke (VD: VIP, Thuong): ");
+
         String loaiKhach = sc.nextLine();
-        System.out.println("So luong khach hang loai [" + loaiKhach + "]: " + qlThongKe.demKhachHangTheoLoai(loaiKhach));
+
+        System.out.println("So luong khach hang loai [" + loaiKhach + "]: "
+                + qlThongKe.demKhachHangTheoLoai(loaiKhach));
     }
 
     private void thongKeDichVu() {
         System.out.println("\n--- THONG KE DICH VU ---");
-        System.out.println("Tong so dich vu dang hoat dong: " + qlThongKe.tongSoDichVuHoatDong());
+        System.out.println("Tong so dich vu dang hoat dong: "
+                + qlThongKe.tongSoDichVuHoatDong());
     }
 
     private void thongKeHoaDon() {
         System.out.println("\n--- THONG KE HOA DON ---");
+
         for (TrangThaiThanhToan tt : TrangThaiThanhToan.values()) {
-            System.out.println("- Hoa don [" + tt + "]: " + qlThongKe.demHoaDonTheoTrangThai(tt));
+            System.out.println("- Hoa don [" + tt + "]: "
+                    + qlThongKe.demHoaDonTheoTrangThai(tt));
         }
     }
 
     private void baoCaoTongHop() {
         System.out.println("\n========= BAO CAO TONG HOP =========");
+
         thongKePhong();
         thongKeDichVu();
         thongKeHoaDon();

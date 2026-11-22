@@ -1,0 +1,2 @@
+KH01|NVF|Nam|1999-08-19|1|0111111111|tan@gmail.com|VIP|
+KH02|N|Nu|1111-11-11|11|0111111111|1@gmail.com|Thuong|

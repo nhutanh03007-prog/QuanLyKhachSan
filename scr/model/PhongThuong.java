@@ -25,7 +25,12 @@ public class PhongThuong extends Phong {
     public void setDichVuThuong(String dichVuThuong) {
         this.dichVuThuong = dichVuThuong;
     }
+    private static final BigDecimal GIA_MAC_DINH =
+            new BigDecimal("500000");
 
+    public static BigDecimal getGiaMacDinh() {
+        return GIA_MAC_DINH;
+    }
     @Override
     public String toString() {
         return super.toString() +

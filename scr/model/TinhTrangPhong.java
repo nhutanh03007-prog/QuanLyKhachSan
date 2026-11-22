@@ -2,7 +2,8 @@ package model;
 public enum TinhTrangPhong{
     TRONG("Trong"),
     DANG_SU_DUNG("Dang su dung"),
-    DANG_BAO_TRI("Dang bao tri");   
+    DANG_BAO_TRI("Dang bao tri"),
+    DA_DAT("Da dat");
 
     private final String tenTinhTrang;
 

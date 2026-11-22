@@ -1,7 +1,6 @@
 
 package DAO;
 
-import Database.DatabaseManager;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -12,8 +11,7 @@ import model.TaiKhoan;
 
 public final class TaiKhoanDAO {
 
-    private static final String FILE_PATH =
-            DatabaseManager.getDuongDanFile("taiKhoan.dat");
+    private static final String FILE_PATH ="DATABASEH/taiKhoan.txt";
 
     private TaiKhoan[] danhSach;
     private int soLuong;

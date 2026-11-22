@@ -1,8 +1,9 @@
 package Main;
-import Database.DatabaseManager;
+
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+
 import ui.DatPhongUI;
 import ui.HeThongUI;
 import ui.KhachHangUI;
@@ -17,8 +18,6 @@ public class main {
     public static void main(String[] args) {
 
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
-        // 1. Khoi tao thu muc du lieu
-        DatabaseManager.khoiTaoDatabase();
 
         // 2. Khoi tao UI
         HeThongUI heThongUI = new HeThongUI();

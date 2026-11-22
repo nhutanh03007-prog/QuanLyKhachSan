@@ -8,7 +8,7 @@ import model.HoaDon;
 import model.TrangThaiThanhToan;
 
 public class HoaDonDAO {
-    private static final String FILE_PATH = "DATABASEH/HoaDon.dat";
+    private static final String FILE_PATH = "DATABASEH/HoaDon.txt";
     public static HoaDon[] danhSachHoaDon = new HoaDon[100];
     public static int soLuongHoaDon = 0;
     static {

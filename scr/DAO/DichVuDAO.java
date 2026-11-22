@@ -6,7 +6,7 @@ import java.util.*;
 import model.DichVu;
 
 public class DichVuDAO {
-    private static final String FILE_PATH = "DATABASEH/DichVu.dat";
+    private static final String FILE_PATH = "DATABASEH/DichVu.txt";
     public static DichVu[] danhSachDichVu = new DichVu[100];
     public static int soLuongDichVu = 0;
     static {

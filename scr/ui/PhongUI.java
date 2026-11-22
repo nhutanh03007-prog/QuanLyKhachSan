@@ -5,8 +5,6 @@ package ui;
 import DAO.DichVuDAO;
 import INTERFACE.IPhong;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 import model.DichVu;
@@ -102,24 +100,15 @@ public class PhongUI {
             }
         }
     }
+    // ================= LAY GIA PHONG =================
 
-    private BigDecimal nhapGiaPhong() {
-        while (true) {
-            try {
-                System.out.print("Nhap gia phong: ");
+    private BigDecimal layGiaPhong(int loaiPhong) {
 
-                BigDecimal gia = new BigDecimal(sc.nextLine().trim());
-
-                if (gia.compareTo(BigDecimal.ZERO) > 0) {
-                    return gia;
-                }
-
-                System.out.println("Gia phong phai lon hon 0!");
-
-            } catch (NumberFormatException e) {
-                System.out.println("Gia phong khong hop le!");
-            }
+        if (loaiPhong == 1) {
+            return PhongThuong.getGiaMacDinh();
         }
+
+        return PhongVIP.getGiaMacDinh();
     }
 
     // ================= NHAP LOAI PHONG =================
@@ -236,7 +225,7 @@ private String chonNhieuDichVu() {
         DichVu dv = dsDichVu[chon - 1];
 
         if (dv.getTrangThai() == null
-                || !dv.getTrangThai().equalsIgnoreCase("Hoat dong")) {
+                || !dv.getTrangThai().equalsIgnoreCase("DANG_HOAT_DONG")) {
             System.out.println("Dich vu khong hoat dong!");
             continue;
         }
@@ -279,40 +268,46 @@ private String chonNhieuDichVu() {
     // ================= THEM PHONG =================
 
     public void themPhong() {
-        System.out.println("\n========== THEM PHONG ==========");
+    System.out.println("\n========== THEM PHONG ==========");
 
-        String maPhong = nhapChuoi("Nhap ma phong: ");
+    String maPhong;
 
-        // Kiem tra ma phong da ton tai
+    do {
+        maPhong = nhapChuoi("Nhap ma phong: ");
+
         if (qlPhong.timPhongTheoMa(maPhong) != null) {
-            System.out.println("Ma phong da ton tai!");
-            return;
+            System.out.println("Ma phong da ton tai! Vui long nhap ma khac.");
         }
 
-        String tenPhong = nhapChuoi("Nhap ten phong: ");
+    } while (qlPhong.timPhongTheoMa(maPhong) != null);
 
-        int loaiPhong = nhapLoaiPhong();
+    String tenPhong = nhapChuoi("Nhap ten phong: ");
 
-        BigDecimal giaPhong = nhapGiaPhong();
+    int loaiPhong = nhapLoaiPhong();
 
-        TinhTrangPhong tinhTrang = TinhTrangPhong.TRONG; // Khi thêm phòng mới, mặc định tình trạng là TRONG
+    BigDecimal giaPhong = layGiaPhong(loaiPhong);
 
-        String dichVu = chonNhieuDichVu();
+    System.out.println("Gia phong: "
+            + giaPhong.toPlainString() + " VND");
 
-        Phong phong = taoPhong(
-                loaiPhong,
-                maPhong,
-                tenPhong,
-                giaPhong,
-                tinhTrang,
-                dichVu);
+    TinhTrangPhong tinhTrang = TinhTrangPhong.TRONG;
 
-        if (qlPhong.themPhong(phong)) {
-            System.out.println("Them phong thanh cong!");
-        } else {
-            System.out.println("Them phong that bai!");
-        }
+    String dichVu = chonNhieuDichVu();
+
+    Phong phong = taoPhong(
+            loaiPhong,
+            maPhong,
+            tenPhong,
+            giaPhong,
+            tinhTrang,
+            dichVu);
+
+    if (qlPhong.themPhong(phong)) {
+        System.out.println("Them phong thanh cong!");
+    } else {
+        System.out.println("Them phong that bai!");
     }
+}
 
     // ================= HIEN THI DANH SACH =================
 
@@ -448,12 +443,15 @@ private String chonNhieuDichVu() {
 
         String tenPhong = nhapChuoi("Nhap ten phong moi: ");
 
-        BigDecimal giaPhong = nhapGiaPhong();
+        
 
         TinhTrangPhong tinhTrang = nhapTinhTrang();
 
-        // Giu nguyen loai phong cu
+        // Giữ nguyên loại phòng
         int loaiPhong = layLoaiPhong(phongCu);
+
+        // Giữ nguyên giá phòng cũ
+        BigDecimal giaPhong = phongCu.getGiaPhong();
 
         // Giu nguyen dich vu cu
         String dichVu = layDichVu(phongCu);
@@ -546,6 +544,7 @@ private String chonNhieuDichVu() {
         System.out.println("1. " + TinhTrangPhong.TRONG);
         System.out.println("2. " + TinhTrangPhong.DANG_SU_DUNG);
         System.out.println("3. " + TinhTrangPhong.DANG_BAO_TRI);
+        System.out.println("4. " + TinhTrangPhong.DA_DAT);
 
         int chon = nhapSoNguyen("Chon tinh trang: ");
 
@@ -558,6 +557,9 @@ private String chonNhieuDichVu() {
             }
             case 3 -> {
                 return TinhTrangPhong.DANG_BAO_TRI;
+            }
+            case 4 -> {
+                return TinhTrangPhong.DA_DAT;
             }
             default -> System.out.println("Lua chon khong hop le! Vui long nhap lai.");
         }

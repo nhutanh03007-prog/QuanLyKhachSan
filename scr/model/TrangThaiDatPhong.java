@@ -1,9 +1,9 @@
 package model;
 public enum TrangThaiDatPhong {
-    DA_DAT("Đã đặt trước"),
-    DANG_SU_DUNG("Đang sử dụng"),
-    DA_TRA("Đã trả phòng"),
-    DA_HUY("Đã hủy");
+    DA_DAT("Da dat"),
+    DANG_SU_DUNG("Dang su dung"),
+    DA_TRA("Da tra phong"),
+    DA_HUY("Da huy");
 
     private final String tenTrangThai;
 
