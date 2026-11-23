@@ -51,7 +51,7 @@ public class DatPhongUI {
                 case 4 -> huyDatPhong();
                 case 5 -> nhanPhong();
                 case 0 -> System.out.println("Thoat quan ly dat phong.");
-                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 4)!");
+                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 5)!");
             }
         } while (choice != 0);
     }
@@ -166,11 +166,10 @@ public class DatPhongUI {
         String xacNhan = scanner.nextLine().trim();
         if (xacNhan.equalsIgnoreCase("Y")) {
             qlDatPhong.huyDatPhong(ma);
-            if (xacNhan.equalsIgnoreCase("Y")) {
-            qlDatPhong.huyDatPhong(ma);
+            
             qlPhong.capNhatTinhTrang(dp.getMaPhong(), TinhTrangPhong.TRONG);
         }
-        } else {
+        else {
             System.out.println("Da huy thao tac.");
         }
     }
@@ -184,6 +183,7 @@ public class DatPhongUI {
 
         dp.setNgayNhanPhong(LocalDate.now());
         dp.setTrangThai(TrangThaiDatPhong.DANG_SU_DUNG);
+        
         
 
         Phong phong = qlPhong.timPhongTheoMa(dp.getMaPhong());
