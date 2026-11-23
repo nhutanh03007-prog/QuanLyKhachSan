@@ -58,7 +58,7 @@ public class QLHoaDon implements IHoaDon {
                 || giamGia.signum() < 0) {
             return null;
         }
-        BigDecimal phong = BigDecimal.valueOf(dp.tinhTienPhong());
+        BigDecimal phong = dp.tinhTienPhong();
         BigDecimal tong = phong.add(chiTietDAO.tinhTongTienTheoDatPhong(maDP));
         if (giamGia.compareTo(tong) > 0) {
             return null;
