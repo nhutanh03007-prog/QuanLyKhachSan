@@ -1,5 +1,6 @@
 package ui;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -90,7 +91,7 @@ public class DatPhongUI {
         }
 
         
-        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, maPhong, ngayNhan, ngayTra, giaPhong);
+        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, maPhong, ngayNhan, ngayTra, BigDecimal.valueOf(giaPhong));
         qlDatPhong.taoDatPhong(dp);
         
       if (chuyenSangKhachHang) {

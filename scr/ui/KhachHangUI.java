@@ -77,8 +77,7 @@ public class KhachHangUI {
         String ghiChu = scanner.nextLine().trim();
 
         KhachHang kh = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
-        if (qlKhachHang.themKhachHang(kh)) {
-            System.out.println("Them khach hang thanh cong!");
+        
         if (qlKhachHang.themKhachHang(kh)) {
           System.out.println("Them khach hang thanh cong!");
 
@@ -91,7 +90,7 @@ public class KhachHangUI {
         else {
             System.out.println("Them khach hang that bai (Danh sach da day)!");
         }
-        }
+        
     }
 
     private void hienThiDanhSach(KhachHang[] danhSach) {
