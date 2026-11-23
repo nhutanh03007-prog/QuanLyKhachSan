@@ -6,16 +6,22 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 import model.DatPhong;
+import model.Phong;
+import model.TinhTrangPhong;
+import model.TrangThaiDatPhong;
 import service.QLDatPhong;
+import service.QLPhong;
 
 public class DatPhongUI {
     private final Scanner scanner;
     private final QLDatPhong qlDatPhong;
+    private final QLPhong qlPhong;
     private final DateTimeFormatter dateFormatter;
 
     public DatPhongUI() {
         this.scanner = new Scanner(System.in);
         this.qlDatPhong = new QLDatPhong();
+        this.qlPhong = new QLPhong();
         this.dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     }
 
@@ -26,7 +32,8 @@ public class DatPhongUI {
             System.out.println("1. Tao phieu dat phong moi");
             System.out.println("2. Xem danh sach phieu dat phong");
             System.out.println("3. TTim kiem phieu dat phong theo ma");
-            System.out.println("4. HHuy phieu dat phong");
+            System.out.println("4. Huy phieu dat phong");
+            System.out.println("5. Nhan phong");
             System.out.println("0. Quay lai");
             System.out.print("Chon chuc nang: ");
 
@@ -42,6 +49,7 @@ public class DatPhongUI {
                 case 2 -> hienThiDanhSach();
                 case 3 -> timKiemDatPhong();
                 case 4 -> huyDatPhong();
+                case 5 -> nhanPhong();
                 case 0 -> System.out.println("Thoat quan ly dat phong.");
                 default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 4)!");
             }
@@ -63,12 +71,21 @@ public class DatPhongUI {
         }
 
         String maKhachHang = nhapChuoiKhongRong("Nhap ma khach hang: ");
-        String maPhong = nhapChuoiKhongRong("Nhap ma phong: ");
+        Phong phongChon;
+        while (true) {
+            String maPhong = nhapChuoiKhongRong("Nhap ma phong: ");
+            phongChon = qlPhong.timPhongTheoMa(maPhong);
+            if (phongChon == null) {
+                System.out.println("Loi: Ma phong '" + maPhong + "' khong ton tai! Nhap lai.");
+            } else if (phongChon.getTinhTrang() != TinhTrangPhong.TRONG) {
+                System.out.println("Loi: Phong '" + maPhong + "' khong trong!");
+            } else {
+                break;
+            }
+        }
+        BigDecimal giaPhong = phongChon.getGiaPhong();
+        System.out.println("Gia phong tu dong lay: " + giaPhong + " VND/ngay");
 
-        
-        double giaPhong = nhapSoThucDuong("Nhap gia phong/ngay: ");
-
-        
         LocalDate ngayNhan;
         while (true) {
             ngayNhan = nhapNgay("Nhap ngay nhan phong (yyyy-MM-dd): ");
@@ -91,8 +108,12 @@ public class DatPhongUI {
         }
 
         
-        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, maPhong, ngayNhan, ngayTra, BigDecimal.valueOf(giaPhong));
-        qlDatPhong.taoDatPhong(dp);
+        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, phongChon.getMaPhong(), ngayNhan, ngayTra, giaPhong);
+        if (qlDatPhong.taoDatPhong(dp)) {
+            phongChon.setTinhTrang(TinhTrangPhong.DA_DAT);
+            qlPhong.suaPhong(phongChon);
+            System.out.println("Tong tien phong (" + dp.getSoNgayO() + " ngay): " + dp.tinhTienPhong() + " VND");
+        }
         
       if (chuyenSangKhachHang) {
        System.out.println("\n>>> Chuyen sang nhap thong tin khach hang...");
@@ -145,9 +166,33 @@ public class DatPhongUI {
         String xacNhan = scanner.nextLine().trim();
         if (xacNhan.equalsIgnoreCase("Y")) {
             qlDatPhong.huyDatPhong(ma);
+            if (xacNhan.equalsIgnoreCase("Y")) {
+            qlDatPhong.huyDatPhong(ma);
+            qlPhong.capNhatTinhTrang(dp.getMaPhong(), TinhTrangPhong.TRONG);
+        }
         } else {
             System.out.println("Da huy thao tac.");
         }
+    }
+    private void nhanPhong() {
+        String ma = nhapChuoiKhongRong("\nNhap ma dat phong can nhan: ");
+        DatPhong dp = qlDatPhong.timDatPhong(ma);
+        if (dp == null || dp.getTrangThai() != TrangThaiDatPhong.DA_DAT) {
+            System.out.println("Loi: Phieu dat phong khong hop le!");
+            return;
+        }
+
+        dp.setNgayNhanPhong(LocalDate.now());
+        dp.setTrangThai(TrangThaiDatPhong.DANG_SU_DUNG);
+        
+
+        Phong phong = qlPhong.timPhongTheoMa(dp.getMaPhong());
+        if (phong != null) {
+            phong.setTinhTrang(TinhTrangPhong.DANG_SU_DUNG);
+            qlPhong.suaPhong(phong);
+        }
+
+        System.out.println("Nhan phong thanh cong! Tien phong (" + dp.getSoNgayO() + " ngay): " + dp.tinhTienPhong() + " VND");
     }
 
     // --- CÁC HÀM HỖ TRỢ KIỂM TRA DỮ LIỆU ĐẦU VÀO ---
