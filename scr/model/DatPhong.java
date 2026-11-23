@@ -11,14 +11,14 @@ public class DatPhong {
     private LocalDate ngayNhanPhong;
     private LocalDate ngayTraPhong;
     private TrangThaiDatPhong trangThai;
-    private double giaPhongNgay;
+    private BigDecimal giaPhongNgay;
 
     public DatPhong() {
         
     }
 
     public DatPhong(String maDatPhong, String maKhachHang, String maPhong, 
-                    LocalDate ngayNhanPhong, LocalDate ngayTraPhong, double giaPhongNgay) {
+                    LocalDate ngayNhanPhong, LocalDate ngayTraPhong, BigDecimal giaPhongNgay) {
         this.maDatPhong = maDatPhong;
         this.maKhachHang = maKhachHang;
         this.maPhong = maPhong;
@@ -52,8 +52,8 @@ public class DatPhong {
     public TrangThaiDatPhong getTrangThai() { return trangThai; }
     public void setTrangThai(TrangThaiDatPhong trangThai) { this.trangThai = trangThai; }
 
-    public double getGiaPhongNgay() { return giaPhongNgay; }
-    public void setGiaPhongNgay(double giaPhongNgay) { this.giaPhongNgay = giaPhongNgay; }
+    public BigDecimal getGiaPhongNgay() { return giaPhongNgay; }
+    public void setGiaPhongNgay(BigDecimal giaPhongNgay) { this.giaPhongNgay = giaPhongNgay; }
 
 
 
@@ -63,8 +63,8 @@ public class DatPhong {
         return soNgay > 0 ? soNgay : 1; 
     }
 
-    public double tinhTienPhong() {
-        return getSoNgayO() * giaPhongNgay;
+    public BigDecimal tinhTienPhong() {
+        return BigDecimal.valueOf(getSoNgayO()).multiply(giaPhongNgay);
     }
 
     public boolean isNgayHopLe() {

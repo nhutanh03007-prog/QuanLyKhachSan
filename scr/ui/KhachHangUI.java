@@ -39,7 +39,7 @@ public class KhachHangUI {
             }
 
             switch (choice) {
-                case 1 -> themKhachHang();
+                case 1 -> themKhachHang(true);
                 case 2 -> hienThiDanhSach(qlKhachHang.layDanhSachKhachHang());
                 case 3 -> timTheoMa();
                 case 4 -> timTheoTen();
@@ -53,15 +53,17 @@ public class KhachHangUI {
         } while (choice != 0);
     }
 
-    private void themKhachHang() {
+    public void themKhachHang(boolean chuyenSangDatPhong) {
         System.out.println("\n--- THEM KHACH HANG MOI ---");
-        String maKH = nhapChuoi("Nhap ma KH (VD: KH01): ");
-        
-        // Kiểm tra trùng mã ngay từ đầu
-        if (qlKhachHang.timKhachHangTheoMa(maKH) != null) {
-            System.out.println("Loi: Ma khach hang '" + maKH + "' da ton tai!");
-            return;
-        }
+        String maKH;
+     while (true) {
+       maKH = nhapChuoi("Nhap ma KH (VD: KH01): ");
+       if (qlKhachHang.timKhachHangTheoMa(maKH) != null) {
+        System.out.println("Loi: Ma khach hang '" + maKH + "' da ton tai! Vui long nhap ma khac.");
+      } else {
+        break;
+    }
+    }
 
         String hoTen = nhapChuoi("Nhap ho ten: ");
         String gioiTinh = nhapGioiTinh("Nhap gioi tinh (Nam/Nu): ");
@@ -77,8 +79,18 @@ public class KhachHangUI {
         KhachHang kh = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
         if (qlKhachHang.themKhachHang(kh)) {
             System.out.println("Them khach hang thanh cong!");
-        } else {
+        if (qlKhachHang.themKhachHang(kh)) {
+          System.out.println("Them khach hang thanh cong!");
+
+         if (chuyenSangDatPhong) {
+           System.out.println("\n>>> Chuyen sang tao phieu dat phong...");
+            new DatPhongUI().taoDatPhongMoi(false);
+          }
+       } 
+    
+        else {
             System.out.println("Them khach hang that bai (Danh sach da day)!");
+        }
         }
     }
 

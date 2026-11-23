@@ -37,7 +37,7 @@ public class DatPhongUI {
             }
 
             switch (choice) {
-                case 1 -> taoDatPhongMoi();
+                case 1 -> taoDatPhongMoi(true);
                 case 2 -> hienThiDanhSach();
                 case 3 -> timKiemDatPhong();
                 case 4 -> huyDatPhong();
@@ -47,14 +47,18 @@ public class DatPhongUI {
         } while (choice != 0);
     }
 
-    private void taoDatPhongMoi() {
+    public void taoDatPhongMoi(boolean chuyenSangKhachHang) {
         System.out.println("\n--- TAO PHIEU DAT PHONG MOI ---");
 
         
-        String maDatPhong = nhapChuoiKhongRong("Nhap ma dat phong (VD: DP01): ");
-        if (qlDatPhong.timDatPhong(maDatPhong) != null) {
-            System.out.println("Loi: Ma dat phong '" + maDatPhong + "' đa ton tai!");
-            return;
+        String maDatPhong;
+   while (true) {
+      maDatPhong = nhapChuoiKhongRong("Nhap ma dat phong (VD: DP01): ");
+     if (qlDatPhong.timDatPhong(maDatPhong) != null) {
+        System.out.println("Loi: Ma dat phong '" + maDatPhong + "' da ton tai! Vui long nhap ma khac.");
+          } else {
+         break;
+       }
         }
 
         String maKhachHang = nhapChuoiKhongRong("Nhap ma khach hang: ");
@@ -88,6 +92,12 @@ public class DatPhongUI {
         
         DatPhong dp = new DatPhong(maDatPhong, maKhachHang, maPhong, ngayNhan, ngayTra, giaPhong);
         qlDatPhong.taoDatPhong(dp);
+        
+      if (chuyenSangKhachHang) {
+       System.out.println("\n>>> Chuyen sang nhap thong tin khach hang...");
+         new KhachHangUI().themKhachHang(false);
+       }
+
     }
 
     private void hienThiDanhSach() {
