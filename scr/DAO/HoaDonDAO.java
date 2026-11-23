@@ -83,11 +83,12 @@ public class HoaDonDAO {
 
     private static boolean ghiFile() {
         File f = new File(FILE_PATH);
-        if (!f.exists()) {
-            System.err.println("Khong tim thay file: " + FILE_PATH);
-            return false;
-        }
         try {
+            File thuMucCha = f.getParentFile();
+            if (thuMucCha != null && !thuMucCha.exists() && !thuMucCha.mkdirs() && !thuMucCha.exists()) {
+                System.err.println("Khong tao duoc thu muc: " + thuMucCha);
+                return false;
+            }
             try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
                 dos.writeInt(soLuongHoaDon);
                 for (int i = 0; i < soLuongHoaDon; i++) {
@@ -179,7 +180,8 @@ public class HoaDonDAO {
         String oldP = h.getPhuongThucTT();
         LocalDate oldD = h.getNgayThanhToan();
         h.setTrangThai(t);
-        h.setPhuongThucTT(p);
+        if (p != null)
+            h.setPhuongThucTT(p);
         h.setNgayThanhToan(d);
         if (!ghiFile()) {
             h.setTrangThai(oldT);
