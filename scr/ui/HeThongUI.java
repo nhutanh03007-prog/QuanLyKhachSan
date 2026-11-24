@@ -48,16 +48,15 @@ public class HeThongUI {
         TaiKhoan tk = qlTaiKhoan.kiemTraDangNhap(username, password);
 
         if (tk != null) {
-            if ("Khoa".equalsIgnoreCase(tk.getTrangThai())
-                    || "Khóa".equalsIgnoreCase(tk.getTrangThai())) {
+            if (!"HOAT_DONG".equalsIgnoreCase(tk.getTrangThai())) {
                 System.out.println("Tai khoan nay da bi khoa! Vui long lien he Admin.");
                 return false;
             }
             this.taiKhoanHienTai = tk;
-            System.out.println("Dang nhap thanh cong! Xin chao: "+ tk.getTenDangNhap() + " (" + tk.getVaiTro() + ")");
+            System.out.println("Dang nhap thanh cong! Xin chao: " + tk.getTenDangNhap() + " (" + tk.getVaiTro() + ")");
             return true;
         } else {
-            System.out.println("Sai ten dang nhap hoac mat khau.");
+            System.out.println("Sai ten dang nhap hoac mat khau (hoac tai khoan da bi khoa).");
             return false;
         }
     }
@@ -134,7 +133,7 @@ public class HeThongUI {
                 }
 
                 case 2 -> {
-                    System.out.print("Nhap ma NV (VD: NV01): ");
+                    System.out.print("Nhap ma NV (VD: NV001): ");
                     String maNV = scanner.nextLine();
 
                     if (qlNhanVien.timTheoMa(maNV) != null) {
@@ -328,16 +327,17 @@ public class HeThongUI {
 
                     System.out.print("Nhap ma nhan vien (VD: NV01): ");
                     String maNV = scanner.nextLine();
-                     if (qlNhanVien.timTheoMa(maNV) == null) {
+
+                    if (qlNhanVien.timTheoMa(maNV) == null) {
                         System.out.println("That bai: Khong tim thay nhan vien co ma " + maNV + "!");
                         break;
                     }
 
-                    System.out.print("Nhap vai tro (VD: Admin, LeTan): ");
+                    System.out.print("Nhap vai tro (VD: ADMIN, LE_TAN): ");
                     String vaiTro = scanner.nextLine();
 
                     TaiKhoan tkMoi = new TaiKhoan(
-                            tenDN, matKhau, maNV, vaiTro, "Hoat dong"
+                            tenDN, matKhau, maNV, vaiTro, "HOAT_DONG"
                     );
 
                     System.out.println(

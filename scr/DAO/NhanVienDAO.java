@@ -1,10 +1,10 @@
 package DAO;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import model.NhanVien;
@@ -13,7 +13,7 @@ public class NhanVienDAO {
 
     private NhanVien[] danhSach;
     private int soLuong;
-    private static final String FILE_PATH = "DataBase/NhanVien.dat";
+    private static final String FILE_PATH = "DATABASEH/NhanVien.dat";
 
     public NhanVienDAO() {
         this.danhSach = new NhanVien[10];
@@ -30,34 +30,28 @@ public class NhanVienDAO {
         this.danhSach = new NhanVien[10];
         this.soLuong = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                String[] parts = line.split("\\|");
-                if (parts.length == 9) {
-                    String maNV = parts[0].trim();
-                    String hoTen = parts[1].trim();
-                    String gioiTinh = parts[2].trim();
-                    String ngaySinh = parts[3].trim();
-                    String diaChi = parts[4].trim();
-                    String soDienThoai = parts[5].trim();
-                    String chucVu = parts[6].trim();
-                    double luong = Double.parseDouble(parts[7].trim());
-                    String trangThai = parts[8].trim();
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
+            int tongSo = dis.readInt();
+            for (int i = 0; i < tongSo; i++) {
+                String maNV = dis.readUTF();
+                String hoTen = dis.readUTF();
+                String gioiTinh = dis.readUTF();
+                String ngaySinh = dis.readUTF();
+                String diaChi = dis.readUTF();
+                String soDienThoai = dis.readUTF();
+                String chucVu = dis.readUTF();
+                double luong = dis.readDouble();
+                String trangThai = dis.readUTF();
 
-                    if (soLuong == danhSach.length) {
-                        moRongMang();
-                    }
-                    danhSach[soLuong++] = new NhanVien(
-                            maNV, hoTen, gioiTinh, ngaySinh,
-                            diaChi, soDienThoai, chucVu, luong, trangThai
-                    );
+                if (soLuong == danhSach.length) {
+                    moRongMang();
                 }
+                danhSach[soLuong++] = new NhanVien(
+                        maNV, hoTen, gioiTinh, ngaySinh,
+                        diaChi, soDienThoai, chucVu, luong, trangThai
+                );
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException e) {
             System.out.println("Lỗi đọc file NhanVien: " + e.getMessage());
         }
 
@@ -70,23 +64,20 @@ public class NhanVienDAO {
             file.getParentFile().mkdirs();
         }
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(file))) {
+            dos.writeInt(soLuong);
             for (int i = 0; i < soLuong; i++) {
                 NhanVien nv = danhSach[i];
                 if (nv != null) {
-                    String line = String.join("|",
-                            nv.getMaNV(),
-                            nv.getHoTen(),
-                            nv.getGioiTinh(),
-                            nv.getNgaySinh(),
-                            nv.getDiaChi(),
-                            nv.getSoDienThoai(),
-                            nv.getChucVu(),
-                            String.valueOf(nv.getLuong()),
-                            nv.getTrangThai()
-                    );
-                    bw.write(line);
-                    bw.newLine();
+                    dos.writeUTF(nv.getMaNV() != null ? nv.getMaNV() : "");
+                    dos.writeUTF(nv.getHoTen() != null ? nv.getHoTen() : "");
+                    dos.writeUTF(nv.getGioiTinh() != null ? nv.getGioiTinh() : "");
+                    dos.writeUTF(nv.getNgaySinh() != null ? nv.getNgaySinh() : "");
+                    dos.writeUTF(nv.getDiaChi() != null ? nv.getDiaChi() : "");
+                    dos.writeUTF(nv.getSoDienThoai() != null ? nv.getSoDienThoai() : "");
+                    dos.writeUTF(nv.getChucVu() != null ? nv.getChucVu() : "");
+                    dos.writeDouble(nv.getLuong());
+                    dos.writeUTF(nv.getTrangThai() != null ? nv.getTrangThai() : "");
                 }
             }
         } catch (IOException e) {
