@@ -318,11 +318,20 @@ public class HeThongUI {
                     System.out.print("Nhap ten dang nhap: ");
                     String tenDN = scanner.nextLine();
 
+                    if (qlTaiKhoan.timTheoTenDN(tenDN) != null) {
+                        System.out.println("That bai: Ten dang nhap da ton tai!");
+                        break;
+                    }
+
                     System.out.print("Nhap mat khau: ");
                     String matKhau = scanner.nextLine();
 
                     System.out.print("Nhap ma nhan vien (VD: NV01): ");
                     String maNV = scanner.nextLine();
+                     if (qlNhanVien.timTheoMa(maNV) == null) {
+                        System.out.println("That bai: Khong tim thay nhan vien co ma " + maNV + "!");
+                        break;
+                    }
 
                     System.out.print("Nhap vai tro (VD: Admin, LeTan): ");
                     String vaiTro = scanner.nextLine();
@@ -334,7 +343,7 @@ public class HeThongUI {
                     System.out.println(
                             qlTaiKhoan.them(tkMoi)
                                     ? "Them tai khoan thanh cong!"
-                                    : "That bai: Ten dang nhap da ton tai!"
+                                    : "Them tai khoan that bai!"
                     );
                 }
 
