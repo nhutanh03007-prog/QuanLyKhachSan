@@ -1,15 +1,11 @@
 package DAO;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import model.DatPhong;
@@ -144,30 +140,28 @@ public class DatPhongDAO {
             if (!f.exists()) {
                 f.createNewFile();
             }
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null && count < mang.length) {
-                    if (line.trim().isEmpty()) continue;
-                    try {
-                        String[] a = line.split("\\|", -1);
-                        if (a.length != 8) continue;
-                        DatPhong dp = new DatPhong();
-                        dp.setMaDatPhong(a[0].trim());
-                        dp.setMaKhachHang(a[1].trim());
-                        dp.setMaPhong(a[2].trim());
-                        dp.setNgayDat(a[3].trim().isEmpty() ? null : LocalDate.parse(a[3].trim()));
-                        dp.setNgayNhanPhong(a[4].trim().isEmpty() ? null : LocalDate.parse(a[4].trim()));
-                        dp.setNgayTraPhong(a[5].trim().isEmpty() ? null : LocalDate.parse(a[5].trim()));
-                        dp.setTrangThai(a[6].trim().isEmpty()
-                                ? TrangThaiDatPhong.DA_DAT
-                                : TrangThaiDatPhong.valueOf(a[6].trim()));
-                        dp.setGiaPhongNgay(new BigDecimal(a[7].trim()));
-                        mang[count++] = dp;
-                    } catch (RuntimeException e) {
-                        // Bỏ qua dòng lỗi
-                    }
-                }
+            try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
+    while (count < mang.length) {
+        String maDatPhong = dis.readUTF();
+        String maKhachHang = dis.readUTF();
+        String maPhong = dis.readUTF();
+        String ngayDatStr = dis.readUTF();
+        String ngayNhanStr = dis.readUTF();
+        String ngayTraStr = dis.readUTF();
+        String trangThaiStr = dis.readUTF();
+        String giaPhongStr = dis.readUTF();
+
+        DatPhong dp = new DatPhong();
+        dp.setMaDatPhong(maDatPhong);
+        dp.setMaKhachHang(maKhachHang);
+        dp.setMaPhong(maPhong);
+        dp.setNgayDat(ngayDatStr.isEmpty() ? null : LocalDate.parse(ngayDatStr));
+        dp.setNgayNhanPhong(ngayNhanStr.isEmpty() ? null : LocalDate.parse(ngayNhanStr));
+        dp.setNgayTraPhong(ngayTraStr.isEmpty() ? null : LocalDate.parse(ngayTraStr));
+        dp.setTrangThai(trangThaiStr.isEmpty() ? TrangThaiDatPhong.DA_DAT : TrangThaiDatPhong.valueOf(trangThaiStr));
+        dp.setGiaPhongNgay(giaPhongStr.isEmpty() ? BigDecimal.ZERO : new BigDecimal(giaPhongStr));
+        mang[count++] = dp;
+    }
             }
         } catch (IOException e) {
             System.err.println("Khong doc duoc " + path + ": " + e.getMessage());
@@ -187,30 +181,26 @@ public class DatPhongDAO {
             if (f.getParentFile() != null) {
                 f.getParentFile().mkdirs();
             }
-            try (BufferedWriter bw = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8))) {
-                for (int i = 0; i < soLuong; i++) {
-                    DatPhong dp = mang[i];
-                    if (dp != null) {
-                        bw.write(String.join("|",
-                                giaTri(dp.getMaDatPhong()),
-                                giaTri(dp.getMaKhachHang()),
-                                giaTri(dp.getMaPhong()),
-                                giaTri(dp.getNgayDat()),
-                                giaTri(dp.getNgayNhanPhong()),
-                                giaTri(dp.getNgayTraPhong()),
-                                dp.getTrangThai() == null ? TrangThaiDatPhong.DA_DAT.name() : dp.getTrangThai().name(),
-                                giaTri(dp.getGiaPhongNgay())
-                        ));
-                        bw.newLine();
-                    }
-                }
-            }
-            return true;
+            try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(f))) {
+    for (int i = 0; i < soLuong; i++) {
+        DatPhong dp = mang[i];
+        if (dp != null) {
+            dos.writeUTF(giaTri(dp.getMaDatPhong()));
+            dos.writeUTF(giaTri(dp.getMaKhachHang()));
+            dos.writeUTF(giaTri(dp.getMaPhong()));
+            dos.writeUTF(giaTri(dp.getNgayDat()));
+            dos.writeUTF(giaTri(dp.getNgayNhanPhong()));
+            dos.writeUTF(giaTri(dp.getNgayTraPhong()));
+            dos.writeUTF(dp.getTrangThai() == null ? TrangThaiDatPhong.DA_DAT.name() : dp.getTrangThai().name());
+            dos.writeUTF(giaTri(dp.getGiaPhongNgay()));
+        }
+    }
+}
         } catch (IOException e) {
             System.err.println("Khong ghi duoc " + path + ": " + e.getMessage());
             return false;
         }
+        return false;
     }
 
     private static String giaTri(Object o) {

@@ -1,14 +1,11 @@
 package DAO;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import model.KhachHang;
@@ -84,34 +81,23 @@ public class KhachHangDAO {
             if (!f.exists()) {
                 f.createNewFile();
             }
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null && soLuongKhachHang < danhSachKhachHang.length) {
-                    if (line.trim().isEmpty()) {
-                        continue;
-                    }
-                    try {
-                        String[] a = line.split("\\|", -1);
-                        if (a.length != 9) {
-                            continue;
-                        }
-                        KhachHang kh = new KhachHang(
-                                a[0].trim(),
-                                a[1].trim(),
-                                a[2].trim(),
-                                a[3].trim().isEmpty() ? null : LocalDate.parse(a[3].trim()),
-                                a[4].trim(),
-                                a[5].trim(),
-                                a[6].trim(),
-                                a[7].trim(),
-                                a[8].trim()
-                        );
-                        danhSachKhachHang[soLuongKhachHang++] = kh;
-                    } catch (RuntimeException e) {
-                        // Bo qua dong loi
-                    }
-                }
+            try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
+        while (soLuongKhachHang < danhSachKhachHang.length) {
+        String maKH = dis.readUTF();
+        String hoTen = dis.readUTF();
+        String gioiTinh = dis.readUTF();
+        String ngaySinhStr = dis.readUTF();
+        String diaChi = dis.readUTF();
+        String sdt = dis.readUTF();
+        String email = dis.readUTF();
+        String loaiKhach = dis.readUTF();
+        String ghiChu = dis.readUTF();
+
+        LocalDate ngaySinh = ngaySinhStr.isEmpty() ? null : LocalDate.parse(ngaySinhStr);
+        danhSachKhachHang[soLuongKhachHang++] = new KhachHang(
+                maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu
+        );
+    }
             }
         } catch (IOException e) {
             System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
@@ -124,26 +110,22 @@ public class KhachHangDAO {
             if (f.getParentFile() != null) {
                 f.getParentFile().mkdirs();
             }
-            try (BufferedWriter bw = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8))) {
-                for (int i = 0; i < soLuongKhachHang; i++) {
-                    KhachHang kh = danhSachKhachHang[i];
-                    if (kh != null) {
-                        bw.write(String.join("|",
-                                giaTri(kh.getMaKH()),
-                                giaTri(kh.getHoTen()),
-                                giaTri(kh.getGioiTinh()),
-                                giaTri(kh.getNgaySinh()),
-                                giaTri(kh.getDiaChi()),
-                                giaTri(kh.getSdt()),
-                                giaTri(kh.getEmail()),
-                                giaTri(kh.getLoaiKhach()),
-                                giaTri(kh.getGhiChu())
-                        ));
-                        bw.newLine();
-                    }
-                }
-            }
+            try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(f))) {
+    for (int i = 0; i < soLuongKhachHang; i++) {
+        KhachHang kh = danhSachKhachHang[i];
+        if (kh != null) {
+            dos.writeUTF(giaTri(kh.getMaKH()));
+            dos.writeUTF(giaTri(kh.getHoTen()));
+            dos.writeUTF(giaTri(kh.getGioiTinh()));
+            dos.writeUTF(giaTri(kh.getNgaySinh()));
+            dos.writeUTF(giaTri(kh.getDiaChi()));
+            dos.writeUTF(giaTri(kh.getSdt()));
+            dos.writeUTF(giaTri(kh.getEmail()));
+            dos.writeUTF(giaTri(kh.getLoaiKhach()));
+            dos.writeUTF(giaTri(kh.getGhiChu()));
+        }
+    }
+}
             return true;
         } catch (IOException e) {
             System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
