@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -161,7 +162,7 @@ public class DatPhongDAO {
                         dp.setTrangThai(a[6].trim().isEmpty()
                                 ? TrangThaiDatPhong.DA_DAT
                                 : TrangThaiDatPhong.valueOf(a[6].trim()));
-                        dp.setGiaPhongNgay(Double.parseDouble(a[7].trim()));
+                        dp.setGiaPhongNgay(new BigDecimal(a[7].trim()));
                         mang[count++] = dp;
                     } catch (RuntimeException e) {
                         // Bỏ qua dòng lỗi
