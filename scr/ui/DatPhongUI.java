@@ -30,10 +30,11 @@ public class DatPhongUI {
         do {
             System.out.println("\n===== QUAN LY DAT PHONG =====");
             System.out.println("1. Tao phieu dat phong moi");
-            System.out.println("2. Xem danh sach phieu dat phong");
-            System.out.println("3. TTim kiem phieu dat phong theo ma");
-            System.out.println("4. Huy phieu dat phong");
-            System.out.println("5. Nhan phong");
+            System.out.println("2. Sua phieu dat phong");
+            System.out.println("3. Xem danh sach phieu dat phong");
+            System.out.println("4. TTim kiem phieu dat phong theo ma");
+            System.out.println("5. Huy phieu dat phong");
+            System.out.println("6. Nhan phong");
             System.out.println("0. Quay lai");
             System.out.print("Chon chuc nang: ");
 
@@ -46,12 +47,13 @@ public class DatPhongUI {
 
             switch (choice) {
                 case 1 -> taoDatPhongMoi(true);
-                case 2 -> hienThiDanhSach();
-                case 3 -> timKiemDatPhong();
-                case 4 -> huyDatPhong();
-                case 5 -> nhanPhong();
+                case 2 -> suaDatPhong();
+                case 3 -> hienThiDanhSach();
+                case 4 -> timKiemDatPhong();
+                case 5 -> huyDatPhong();
+                case 6 -> nhanPhong();
                 case 0 -> System.out.println("Thoat quan ly dat phong.");
-                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 5)!");
+                default -> System.out.println("Loi: Lua chon khong hop le (chi chon tu 0 đen 6)!");
             }
         } while (choice != 0);
     }
@@ -209,22 +211,6 @@ public class DatPhongUI {
         }
     }
 
-    private double nhapSoThucDuong(String thongBao) {
-        while (true) {
-            System.out.print(thongBao);
-            try {
-                double so = Double.parseDouble(scanner.nextLine().trim());
-                if (so <= 0) {
-                    System.out.println("Loi: Gia tri phai lon hon 0! Vui long nhap lai.");
-                } else {
-                    return so;
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Loi: Vui long nhap mot so hop le!");
-            }
-        }
-    }
-
     private LocalDate nhapNgay(String thongBao) {
         while (true) {
             System.out.print(thongBao);
@@ -236,4 +222,79 @@ public class DatPhongUI {
             }
         }
     }
+    private void suaDatPhong() {
+    String ma = nhapChuoiKhongRong("\nNhap ma dat phong can sua: ");
+    DatPhong dp = qlDatPhong.timDatPhong(ma);
+    if (dp == null) {
+        System.out.println("Loi: Khong tim thay phieu dat phong co ma '" + ma + "'!");
+        return;
+    }
+
+    System.out.println("\n--- SUA PHIEU DAT PHONG ---");
+    boolean daSua = false;
+    int chon = -1;
+
+    do {
+        System.out.println("\nThong tin hien tai: " + dp);
+        System.out.println("1. Ma khach hang : " + dp.getMaKhachHang());
+        System.out.println("2. Ngay nhan phong: " + dp.getNgayNhanPhong());
+        System.out.println("3. Ngay tra phong : " + dp.getNgayTraPhong());
+        System.out.println("0. Thoat");
+
+        // Nhap lua chon
+        chon = -1;
+        while (chon < 0 || chon > 3) {
+            try {
+                System.out.print("Chon thong tin can sua (0-3): ");
+                chon = Integer.parseInt(scanner.nextLine().trim());
+                if (chon < 0 || chon > 3) {
+                    System.out.println("Loi: Lua chon khong hop le! Vui long chon tu 0 den 3.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Loi: Vui long nhap mot so nguyen hop le!");
+            }
+        }
+
+        switch (chon) {
+            case 1 -> {
+                String maKH = nhapChuoiKhongRong("Nhap ma khach hang moi: ");
+                dp.setMaKhachHang(maKH);
+                daSua = true;
+                System.out.println("Da cap nhat ma khach hang.");
+            }
+            case 2 -> {
+                LocalDate ngayNhan = nhapNgay("Nhap ngay nhan phong moi (yyyy-MM-dd, de trong de giu nguyen): ");
+                if (ngayNhan != null) {
+                    dp.setNgayNhanPhong(ngayNhan);
+                    daSua = true;
+                    System.out.println("Da cap nhat ngay nhan phong.");
+                }
+            }
+            case 3 -> {
+                LocalDate ngayTra = nhapNgay("Nhap ngay tra phong moi (yyyy-MM-dd, de trong de giu nguyen): ");
+                if (ngayTra != null) {
+                    dp.setNgayTraPhong(ngayTra);
+                    daSua = true;
+                    System.out.println("Da cap nhat ngay tra phong.");
+                }
+            }
+            case 0 -> { /* thoat */ }
+        }
+
+        if (chon != 0) {
+            System.out.println("\nBan con muon sua gi them khong? Neu khong thi chon 0 de thoat.");
+        }
+    } while (chon != 0);
+
+    if (!daSua) {
+        System.out.println("Khong co thay doi nao duoc thuc hien.");
+        return;
+    }
+
+    if (qlDatPhong.taoDatPhong(dp)) {
+        System.out.println("Sua phieu dat phong thanh cong!");
+    } else {
+        System.out.println("Sua phieu dat phong that bai!");
+    }
+}
 }

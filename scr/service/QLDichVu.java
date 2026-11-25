@@ -56,6 +56,7 @@ public class QLDichVu {
 
     public boolean themChiTiet(ChiTietDichVu c) {
         if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
+            System.out.println("Loi: Dat phong chua chot hoac khong hop le!");
             return false;
         }
         DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());

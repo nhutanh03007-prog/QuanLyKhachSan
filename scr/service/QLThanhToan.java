@@ -14,12 +14,14 @@ public class QLThanhToan {
     public boolean thanhToan(String maHD, String maThanhToan, String phuongThuc) {
         HoaDon h = hoaDonDAO.timTheoMa(maHD);
         if (h == null || h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN || h.getThanhTien() == null) {
+            System.out.println("Loi: Hoa don khong hop le hoac da duoc thanh toan!");
             return false;
         }
         LocalDate ngay = LocalDate.now();
         ThanhToan t = new ThanhToan(maThanhToan, maHD, h.getThanhTien(), phuongThuc, ngay,
                 TrangThaiThanhToan.DA_THANH_TOAN);
         if (!thanhToanDAO.them(t)) {
+            System.out.println("Loi: That bai khi them thanh toan!");
             return false;
         }
         return hoaDonDAO.capNhatTrangThai(maHD, TrangThaiThanhToan.DA_THANH_TOAN, phuongThuc, ngay);
