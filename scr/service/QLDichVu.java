@@ -6,8 +6,8 @@ import DAO.DichVuDAO;
 import DAO.HoaDonDAO;
 import java.math.BigDecimal;
 import model.ChiTietDichVu;
-import model.DichVu;
 import model.DatPhong;
+import model.DichVu;
 import model.TrangThaiDatPhong;
 
 public class QLDichVu {
