@@ -12,6 +12,13 @@ public class DichVu {
     private String moTa;
 
     public DichVu() {
+        maDichVu = "";
+        tenDichVu = "";
+        loaiDichVu = "";
+        donViTinh = "";
+        gia = BigDecimal.ZERO;
+        trangThai = "";
+        moTa = "";
     }
 
     public DichVu(String maDichVu, String tenDichVu, String loaiDichVu, String donViTinh, BigDecimal gia,

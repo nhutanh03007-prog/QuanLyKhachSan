@@ -16,7 +16,7 @@ import model.TinhTrangPhong;
 
 public class PhongDAO {
 
-    private static final String THU_MUC = "DATABASE";
+    private static final String THU_MUC = "DATABASEH";
     private static final String FILE_PATH = THU_MUC + "/phong.dat";
     private static final int MAX_PHONG = 100;
 
@@ -41,64 +41,78 @@ public class PhongDAO {
 
     // Moi phong ghi: loai, ma, ten, gia, tinh trang, dich vu
     private static void docFile() {
-        File file = new File(FILE_PATH);
-        if (!file.exists()) {
-            return;
-        }
-
-        Phong[] dsTam = new Phong[MAX_PHONG];
-        int dem = 0;
-
-        try (DataInputStream inStream = new DataInputStream(new FileInputStream(file))) {
-            while (dem < MAX_PHONG) {
-                String loai = inStream.readUTF();      // het file se nem EOFException
-                String ma = inStream.readUTF();
-                String ten = inStream.readUTF();
-                BigDecimal gia = new BigDecimal(inStream.readUTF());
-                TinhTrangPhong tinhTrang = TinhTrangPhong.valueOf(inStream.readUTF());
-                String dichVu = inStream.readUTF();
-
-                if (loai.equals("THUONG")) {
-                    dsTam[dem++] = new PhongThuong(ma, ten, gia, tinhTrang, dichVu);
-                } else if (loai.equals("VIP")) {
-                    dsTam[dem++] = new PhongVIP(ma, ten, gia, tinhTrang, dichVu);
-                } else {
-                    throw new IOException("Loai phong khong hop le: " + loai);
-                }
-            }
-        } catch (EOFException e) {
-            // doc het file, binh thuong
-        } catch (IOException | RuntimeException e) {
-            System.out.println("Loi doc file phong: " + e.getMessage());
-        }
-
-        danhSachPhong = dsTam;
-        soLuongPhong = dem;
+    File file = new File(FILE_PATH);
+    if (!file.exists()) {
+        return;
     }
 
-    private static boolean ghiFile() {
-        File thuMuc = new File(THU_MUC);
-        if (!thuMuc.exists() && !thuMuc.mkdirs()) {
-            System.out.println("Khong tao duoc thu muc " + THU_MUC);
-            return false;
-        }
+    Phong[] dsTam = new Phong[MAX_PHONG];
+    int dem = 0;
 
-        try (DataOutputStream outStream = new DataOutputStream(new FileOutputStream(FILE_PATH))) {
-            for (int i = 0; i < soLuongPhong; i++) {
-                Phong p = danhSachPhong[i];
-                outStream.writeUTF(p instanceof PhongVIP ? "VIP" : "THUONG");
-                outStream.writeUTF(p.getMaPhong());
-                outStream.writeUTF(p.getTenPhong());
-                outStream.writeUTF(p.getGiaPhong().toPlainString());
-                outStream.writeUTF(p.getTinhTrang().name());
-                outStream.writeUTF(p.getDichVu());
+    try (DataInputStream inStream = new DataInputStream(new FileInputStream(file))) {
+        while (dem < MAX_PHONG) {
+            String loai = inStream.readUTF();
+            String ma = inStream.readUTF();
+            String ten = inStream.readUTF();
+            BigDecimal gia = new BigDecimal(inStream.readUTF());
+            TinhTrangPhong tinhTrang = TinhTrangPhong.valueOf(inStream.readUTF());
+
+            if (loai.equals("THUONG")) {
+                int soGiuong = inStream.readInt();
+                boolean coDieuHoa = inStream.readBoolean();
+                dsTam[dem++] = new PhongThuong(ma, ten, gia, tinhTrang, soGiuong, coDieuHoa);
+            } else if (loai.equals("VIP")) {
+                int dienTich = inStream.readInt();
+                boolean coBonTam = inStream.readBoolean();
+                dsTam[dem++] = new PhongVIP(ma, ten, gia, tinhTrang, dienTich, coBonTam);
+            } else {
+                throw new IOException("Loai phong khong hop le: " + loai);
             }
-            return true;
-        } catch (IOException e) {
-            System.out.println("Loi ghi file phong: " + e.getMessage());
-            return false;
         }
+    } catch (EOFException e) {
+        // doc het file, binh thuong
+    } catch (IOException | RuntimeException e) {
+        System.out.println("Loi doc file phong: " + e.getMessage());
     }
+
+    danhSachPhong = dsTam;
+    soLuongPhong = dem;
+}
+
+private static boolean ghiFile() {
+    File thuMuc = new File(THU_MUC);
+    if (!thuMuc.exists() && !thuMuc.mkdirs()) {
+        System.out.println("Khong tao duoc thu muc " + THU_MUC);
+        return false;
+    }
+
+    try (DataOutputStream outStream = new DataOutputStream(new FileOutputStream(FILE_PATH))) {
+        for (int i = 0; i < soLuongPhong; i++) {
+            Phong p = danhSachPhong[i];
+            if (p instanceof PhongThuong t) {
+                outStream.writeUTF("THUONG");
+                outStream.writeUTF(t.getMaPhong());
+                outStream.writeUTF(t.getTenPhong());
+                outStream.writeUTF(t.getGiaPhong().toPlainString());
+                outStream.writeUTF(t.getTinhTrang().name());
+                outStream.writeInt(t.getSoGiuong());
+                outStream.writeBoolean(t.isCoDieuHoa());
+            } else if (p instanceof PhongVIP v) {
+                outStream.writeUTF("VIP");
+                outStream.writeUTF(v.getMaPhong());
+                outStream.writeUTF(v.getTenPhong());
+                outStream.writeUTF(v.getGiaPhong().toPlainString());
+                outStream.writeUTF(v.getTinhTrang().name());
+                outStream.writeInt(v.getDienTich());
+                outStream.writeBoolean(v.isCoBonTam());
+            }
+        }
+        return true;
+    } catch (IOException e) {
+        System.out.println("Loi ghi file phong: " + e.getMessage());
+        return false;
+    }
+}
     
 
     // =====================================
@@ -122,10 +136,15 @@ public class PhongDAO {
     // =====================================
     // CAC THAO TAC (tra ve ban sao, khong lo doi tuong ben trong)
     // =====================================
-
+    public boolean timPhongTheoTen(String tenPhong){
+        if (tenPhong == null || tenPhong.trim().isEmpty()){
+            return true;
+        }
+        return false;
+    }
     public Phong timPhongTheoMa(String maPhong) {
         int vt = timViTri(maPhong);
-        return vt == -1 ? null : danhSachPhong[vt].taoBanSao();
+        return vt == -1 ? null : danhSachPhong[vt];
     }
 
     public boolean themPhong(Phong phong) {
@@ -142,12 +161,11 @@ public class PhongDAO {
         }
 
         if (soLuongPhong >= danhSachPhong.length) {
-            danhSachPhong = Arrays.copyOf(danhSachPhong,
-                    Math.min(danhSachPhong.length * 2, MAX_PHONG));
+            danhSachPhong = Arrays.copyOf(danhSachPhong, danhSachPhong.length + 1);
         }
 
         int viTriMoi = soLuongPhong;
-        danhSachPhong[soLuongPhong++] = phong.taoBanSao();
+        danhSachPhong[soLuongPhong++] = phong;
 
         if (!ghiFile()) {
             soLuongPhong--;
@@ -195,7 +213,7 @@ public class PhongDAO {
         }
 
         Phong phongCu = danhSachPhong[vt];
-        danhSachPhong[vt] = phongMoi.taoBanSao();
+        danhSachPhong[vt] = phongMoi;
 
         if (!ghiFile()) {
             danhSachPhong[vt] = phongCu;
@@ -205,29 +223,25 @@ public class PhongDAO {
     }
 
     public Phong[] layDanhSachPhong() {
-        Phong[] ketQua = new Phong[soLuongPhong];
-        for (int i = 0; i < soLuongPhong; i++) {
-            ketQua[i] = danhSachPhong[i].taoBanSao();
-        }
-        return ketQua;
-    }
+    return Arrays.copyOf(danhSachPhong, soLuongPhong);
+}
 
     public int demSoLuongPhong() {
         return soLuongPhong;
     }
 
     public Phong[] layDanhSachPhongTheoTinhTrang(TinhTrangPhong tinhTrang) {
-        if (tinhTrang == null) {
-            return new Phong[0];
+    if (tinhTrang == null) {
+        return new Phong[0];
+    }
+    Phong[] ketQua = new Phong[soLuongPhong];
+    int vt = 0;
+    for (int i = 0; i < soLuongPhong; i++) {
+        if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
+            ketQua[vt++] = danhSachPhong[i];
         }
-        Phong[] ketQua = new Phong[demSoLuongPhongTheoTinhTrang(tinhTrang)];
-        int vt = 0;
-        for (int i = 0; i < soLuongPhong; i++) {
-            if (danhSachPhong[i].getTinhTrang() == tinhTrang) {
-                ketQua[vt++] = danhSachPhong[i].taoBanSao();
-            }
-        }
-        return ketQua;
+    }
+    return Arrays.copyOf(ketQua, vt); 
     }
 
     public int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang) {

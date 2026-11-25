@@ -7,56 +7,38 @@ public class PhongVIP extends Phong {
     public static final String LOAI = "VIP";
     private static final BigDecimal GIA_MAC_DINH = new BigDecimal("1000000");
 
-    private String dichVuVIP;
+    private int dienTich;          
+    private boolean coBonTam;      
 
-    public PhongVIP(String maPhong, String tenPhong,
-                    BigDecimal giaPhong, TinhTrangPhong tinhTrang,
-                    String dichVuVIP) {
+    public PhongVIP() {
+        super();
+        setGiaPhong(GIA_MAC_DINH);
+        this.dienTich = 30;
+        this.coBonTam = true;
+    }
+
+    public PhongVIP(String maPhong, String tenPhong, BigDecimal giaPhong,
+                    TinhTrangPhong tinhTrang, int dienTich, boolean coBonTam) {
         super(maPhong, tenPhong, giaPhong, tinhTrang);
-        this.dichVuVIP = chuanHoa(dichVuVIP);
+        this.dienTich = dienTich;
+        this.coBonTam = coBonTam;
     }
 
-    /** Constructor cu (tham so loaiPhong bi bo qua) de code cu van bien dich duoc. */
-    public PhongVIP(String maPhong, String tenPhong, String loaiPhong,
-                    BigDecimal giaPhong, TinhTrangPhong tinhTrang,
-                    String dichVuVIP) {
-        this(maPhong, tenPhong, giaPhong, tinhTrang, dichVuVIP);
-    }
-
-    private static String chuanHoa(String s) {
-        return s == null ? "" : s.trim();
-    }
-
-    public static BigDecimal getGiaMacDinh() {
-        return GIA_MAC_DINH;
-    }
+    public static BigDecimal getGiaMacDinh() { return GIA_MAC_DINH; }
 
     @Override
-    public String getLoaiPhong() {
-        return LOAI;
-    }
+    public String getLoaiPhong() { return LOAI; }
+
+    public int getDienTich() { return dienTich; }
+    public void setDienTich(int dienTich) { this.dienTich = dienTich; }
+
+    public boolean isCoBonTam() { return coBonTam; }
+    public void setCoBonTam(boolean coBonTam) { this.coBonTam = coBonTam; }
 
     @Override
-    public String getDichVu() {
-        return dichVuVIP;
-    }
-
-    @Override
-    public void setDichVu(String dichVu) {
-        this.dichVuVIP = chuanHoa(dichVu);
-    }
-
-    public String getDichVuVIP() {
-        return dichVuVIP;
-    }
-
-    public void setDichVuVIP(String dichVuVIP) {
-        setDichVu(dichVuVIP);
-    }
-
-    @Override
-    public Phong taoBanSao() {
-        return new PhongVIP(getMaPhong(), getTenPhong(), getGiaPhong(),
-                getTinhTrang(), dichVuVIP);
+    public String toString() {
+        return super.toString()
+                + " | Dien tich: " + dienTich + " m2"
+                + " | Bon tam: " + (coBonTam ? "Co" : "Khong");
     }
 }

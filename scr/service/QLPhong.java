@@ -77,8 +77,7 @@ public class QLPhong implements IPhong {
             return false;
         }
 
-        // Lam viec tren ban sao de khong sua doi tuong cua nguoi goi
-        Phong ban = phong.taoBanSao();
+        Phong ban = phong;
         ban.setMaPhong(chuanHoaMaPhong(phong.getMaPhong()));
         ban.setTenPhong(phong.getTenPhong().trim());
 
@@ -89,7 +88,6 @@ public class QLPhong implements IPhong {
         return phongDAO.themPhong(ban);
     }
 
-    /** Khong cho phep doi ma phong. */
     @Override
     public boolean suaPhong(Phong phong) {
         if (!kiemTraThongTinPhong(phong)) {
@@ -102,7 +100,7 @@ public class QLPhong implements IPhong {
             return false;
         }
 
-        Phong ban = phong.taoBanSao();
+        Phong ban = phong;
         ban.setMaPhong(phongCu.getMaPhong());
         ban.setTenPhong(phong.getTenPhong().trim());
 
@@ -190,6 +188,20 @@ public class QLPhong implements IPhong {
             return null;
         }
         return phongDAO.timPhongTheoMa(maPhong);
+    }
+
+    @Override 
+    public boolean timPhongTheoTen(String tenPhong) {
+        if (tenPhong == null || tenPhong.trim().isEmpty()) {
+            return true;
+        }
+        Phong[] tatCa = phongDAO.layDanhSachPhong();
+        for (Phong p : tatCa) {
+            if (p.getTenPhong() != null && p.getTenPhong().equalsIgnoreCase(tenPhong.trim())) {
+                return false; 
+            }
+        }
+        return true; 
     }
 
     @Override
