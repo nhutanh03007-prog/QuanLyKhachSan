@@ -30,9 +30,7 @@ public class main {
             return;
         }
 
-        // 4. Lay quyen (tam thoi hard-code de test)
         String role = "ADMIN";
-
         // 5. Chuyen den menu theo quyen
         switch (role) {
 
