@@ -1,4 +1,3 @@
-
 package ui;
 
 import java.util.Scanner;
@@ -133,7 +132,7 @@ public class HeThongUI {
                 }
 
                 case 2 -> {
-                    System.out.print("Nhap ma NV (VD: NV001): ");
+                    System.out.print("Nhap ma nhan vien (VD: NV001): ");
                     String maNV = scanner.nextLine();
 
                     if (qlNhanVien.timTheoMa(maNV) != null) {
@@ -176,11 +175,13 @@ public class HeThongUI {
                             diaChi, sdt, chucVu, luong, "Dang lam"
                     );
 
-                    System.out.println(
-                            qlNhanVien.them(nvMoi)
-                                    ? "Them nhan vien thanh cong!"
-                                    : "Them nhan vien that bai!"
-                    );
+                    if (qlNhanVien.them(nvMoi)) {
+                        System.out.println("Them nhan vien thanh cong!");
+                        System.out.println("\n--- TAO TAI KHOAN CHO NHAN VIEN " + maNV + " ---");
+                        taoTaiKhoanChoNhanVien(maNV);
+                    } else {
+                        System.out.println("Them nhan vien that bai!");
+                    }
                 }
 
                 case 3 -> {
@@ -314,37 +315,9 @@ public class HeThongUI {
                 }
 
                 case 2 -> {
-                    System.out.print("Nhap ten dang nhap: ");
-                    String tenDN = scanner.nextLine();
-
-                    if (qlTaiKhoan.timTheoTenDN(tenDN) != null) {
-                        System.out.println("That bai: Ten dang nhap da ton tai!");
-                        break;
-                    }
-
-                    System.out.print("Nhap mat khau: ");
-                    String matKhau = scanner.nextLine();
-
                     System.out.print("Nhap ma nhan vien (VD: NV01): ");
                     String maNV = scanner.nextLine();
-
-                    if (qlNhanVien.timTheoMa(maNV) == null) {
-                        System.out.println("That bai: Khong tim thay nhan vien co ma " + maNV + "!");
-                        break;
-                    }
-
-                    System.out.print("Nhap vai tro (VD: ADMIN, LE_TAN): ");
-                    String vaiTro = scanner.nextLine();
-
-                    TaiKhoan tkMoi = new TaiKhoan(
-                            tenDN, matKhau, maNV, vaiTro, "HOAT_DONG"
-                    );
-
-                    System.out.println(
-                            qlTaiKhoan.them(tkMoi)
-                                    ? "Them tai khoan thanh cong!"
-                                    : "Them tai khoan that bai!"
-                    );
+                    taoTaiKhoanChoNhanVien(maNV);
                 }
 
                 case 3 -> {
@@ -427,5 +400,52 @@ public class HeThongUI {
             }
 
         } while (choice != 0);
+    }
+
+    private void taoTaiKhoanChoNhanVien(String maNV) {
+        if (qlNhanVien.timTheoMa(maNV) == null) {
+            System.out.println("That bai: Khong tim thay nhan vien co ma " + maNV + "!");
+            return;
+        }
+
+        String tenDN;
+        while (true) {
+            System.out.print("Nhap ten dang nhap: ");
+            tenDN = scanner.nextLine().trim();
+
+            if (tenDN.isEmpty()) {
+                System.out.println("Ten dang nhap khong duoc de trong! Vui long nhap lai.");
+                continue;
+            }
+            if (qlTaiKhoan.timTheoTenDN(tenDN) != null) {
+                System.out.println("Ten dang nhap da ton tai! Vui long nhap ten khac.");
+                continue;
+            }
+            break;
+        }
+
+        String matKhau;
+        while (true) {
+            System.out.print("Nhap mat khau: ");
+            matKhau = scanner.nextLine();
+            if (matKhau.trim().isEmpty()) {
+                System.out.println("Mat khau khong duoc de trong! Vui long nhap lai.");
+                continue;
+            }
+            break;
+        }
+
+        System.out.print("Nhap vai tro (VD: ADMIN, LE_TAN): ");
+        String vaiTro = scanner.nextLine();
+
+        TaiKhoan tkMoi = new TaiKhoan(
+                tenDN, matKhau, maNV, vaiTro, "HOAT_DONG"
+        );
+
+        System.out.println(
+                qlTaiKhoan.them(tkMoi)
+                        ? "Them tai khoan thanh cong!"
+                        : "Them tai khoan that bai!"
+        );
     }
 }
