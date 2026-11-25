@@ -9,29 +9,30 @@ public class QLDatPhong {
 
     public boolean taoDatPhong(DatPhong dp) {
         if (dp == null || !dp.isNgayHopLe()) {
-            System.out.println("Lỗi: Ngày nhận hoặc ngày trả phòng không hợp lệ!");
+            System.out.println("Loi: Ngay nhan hoac ngay tra phong khong hop le");
+
             return false;
         }
         
         if (!datPhongDAO.kiemTraPhongTrong(dp.getMaPhong(), dp.getNgayNhanPhong(), dp.getNgayTraPhong())) {
-            System.out.println("Lỗi: Phòng " + dp.getMaPhong() + " đã có người đặt trong thời gian này!");
+            System.out.println("Loi: Phong " + dp.getMaPhong() + " da co nguoi dat trong khoang thoi gian nay!");
             return false;
         }
 
         boolean kq = datPhongDAO.them(dp);
-        if (kq) System.out.println("Đặt phòng thành công! Tổng tiền dự kiến: " + dp.tinhTienPhong());
-        else System.out.println("Đặt phòng thất bại (Trùng mã phiếu hoặc đầy danh sách)!");
+        if (kq) System.out.println("Dat phong thanh cong Tong tien du kien: " + dp.tinhTienPhong());
+        else System.out.println("Dat phong that bai (Trung ma phieu hoac day danh sach)!");
         return kq;
     }
 
     public boolean huyDatPhong(String maDatPhong) {
         DatPhong dp = datPhongDAO.timTheoMa(maDatPhong);
         if (dp == null) {
-            System.out.println("Không tìm thấy mã đặt phòng!");
+            System.out.println("Khong tim thay ma dat phong!");
             return false;
         }
         dp.setTrangThai(TrangThaiDatPhong.DA_HUY);
-        System.out.println("Đã hủy đặt phòng thành công!");
+        System.out.println("Da huy dat phong thanh cong!");
         return true;
     }
 

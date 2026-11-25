@@ -21,7 +21,6 @@ public class TaiKhoan {
         this.trangThai = trangThai;
     }
 
-    // Getter và Setter
 
     public String getTenDangNhap() {
         return tenDangNhap;

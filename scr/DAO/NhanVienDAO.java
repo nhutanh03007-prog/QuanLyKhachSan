@@ -81,7 +81,7 @@ public class NhanVienDAO {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Lỗi ghi file NhanVien: " + e.getMessage());
+            System.out.println("Loi ghi file NhanVien: " + e.getMessage());
         }
     }
 

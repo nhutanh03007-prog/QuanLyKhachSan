@@ -23,3 +23,13 @@ Một số lưu ý ôn thi lý thuyết:
 - Interface và Abtract class khác nhau.Và Interface có đa hình.
 Topic tuần 11
 Giao tiếp cơ bản, Viết email,Tổng kết rebort 6 thói quen trong tuần qua.
+
+Kịch bản cho bài đồ án giữa kì
+- chạy test terminal
+- Tạo Phòng,nhân viên,dịch vụ và xem có đc ghi vào DB ko?
+- Tạo một khách hàng xem sau khi tạo khách hàng có nhảy qua đặt phòng hay không?
+- Thêm dịch vụ cho Phòng đã đc đặt?
+- In chi tiết hóa đơn và xem tổng tiền của phòng.
+- Tạo nhân viên và đăng nhập với tư cách là một nhân viên.
+- Test các hàm thêm sửa xóa.
+- Thanh toán hóa đơn và in chi tiết hóa đơn

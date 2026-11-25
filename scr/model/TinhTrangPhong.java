@@ -15,7 +15,7 @@ public enum TinhTrangPhong{
     }
     @Override
     public String toString() {
-        return this.tenTinhTrang;
+        return tenTinhTrang;
 
     }
 }

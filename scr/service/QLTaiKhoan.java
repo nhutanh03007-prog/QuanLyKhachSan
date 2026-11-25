@@ -11,7 +11,6 @@ public class QLTaiKhoan {
     public QLTaiKhoan() {
         tkDAO = new TaiKhoanDAO();
     }
-
     public TaiKhoan kiemTraDangNhap(
             String tenDangNhap,
             String matKhau) {

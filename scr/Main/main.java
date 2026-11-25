@@ -30,7 +30,7 @@ public class main {
             return;
         }
 
-        // 4. Lay quyen (tam thoi hard-code de test)
+
         String role = "ADMIN";
 
         // 5. Chuyen den menu theo quyen
@@ -52,7 +52,7 @@ public class main {
 
         do {
             System.out.println("\n========== MENU ADMIN ==========");
-            System.out.println("1. Quan ly he thong");
+            System.out.println("1. Qwan ly he thong");
             System.out.println("2. Quan ly phong");
             System.out.println("3. Quan ly khach hang");
             System.out.println("4. Quan ly dat phong");

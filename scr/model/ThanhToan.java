@@ -12,6 +12,12 @@ public class ThanhToan {
     private TrangThaiThanhToan trangThai;
 
     public ThanhToan() {
+        maThanhToan = "";
+        maHD = "";
+        soTien = BigDecimal.ZERO;
+        phuongThuc = "";
+        ngayThanhToan = null;
+        trangThai = null;
     }
 
     public ThanhToan(String maThanhToan, String maHD, BigDecimal soTien, String phuongThuc, LocalDate ngayThanhToan,
