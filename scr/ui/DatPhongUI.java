@@ -181,14 +181,16 @@ public class DatPhongUI {
         }
 
         LocalDate ngayNhanThucTe;
-        while (true) {
-            ngayNhanThucTe = nhapNgay("Nhap ngay nhan phong thuc te (yyyy-MM-dd): ");
-            if (ngayNhanThucTe.isAfter(dp.getNgayTraPhong())) {
-                System.out.println("Loi: Ngay nhan phong khong duoc sau ngay tra phong (" + dp.getNgayTraPhong() + ")!");
-            } else {
-                break;
-            }
-        }
+while (true) {
+    ngayNhanThucTe = nhapNgay("Nhap ngay nhan phong thuc te (yyyy-MM-dd): ");
+    if (ngayNhanThucTe.isBefore(LocalDate.now())) {
+        System.out.println("Loi: Ngay nhan phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
+    } else if (ngayNhanThucTe.isAfter(dp.getNgayTraPhong())) {
+        System.out.println("Loi: Ngay nhan phong khong duoc sau ngay tra phong (" + dp.getNgayTraPhong() + ")!");
+    } else {
+        break;
+    }
+}
         dp.setNgayNhanPhong(ngayNhanThucTe);
         dp.setTrangThai(TrangThaiDatPhong.DANG_SU_DUNG);
 
