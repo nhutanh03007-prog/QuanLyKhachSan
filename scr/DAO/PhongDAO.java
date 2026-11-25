@@ -1,7 +1,6 @@
 package DAO;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.util.Arrays;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -9,10 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import model.Phong;
 import model.PhongThuong;
 import model.PhongVIP;
@@ -20,7 +15,7 @@ import model.TinhTrangPhong;
 
 public class PhongDAO {
 
-    private static final String THU_MUC = "DATABASEH";
+    private static final String THU_MUC = "DATABASE";
     private static final String FILE_PATH = THU_MUC + "/phong.dat";
     private static final String FILE_TEMP = THU_MUC + "/phong_temp.dat";
     private static final int MAX_PHONG = 100;
@@ -45,17 +40,24 @@ public class PhongDAO {
         dos.writeUTF(s == null ? "" : s);
     }
 
+    private static boolean hopLe(Phong p) {
+        return p != null
+                && p.getMaPhong() != null && !p.getMaPhong().trim().isEmpty()
+                && p.getTenPhong() != null && !p.getTenPhong().trim().isEmpty()
+                && p.getGiaPhong() != null && p.getGiaPhong().signum() > 0
+                && p.getTinhTrang() != null;
+    }
+
     private static void docFile() {
         File file = new File(FILE_PATH);
         if (!file.exists() || file.length() == 0) {
             return;
         }
 
-        Phong[] dsTam = new Phong[10];
+        Phong[] dsTam = new Phong[MAX_PHONG];
         int dem = 0;
 
-        try (DataInputStream dis = new DataInputStream(
-                new BufferedInputStream(new FileInputStream(file)))) {
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
 
             int count = dis.readInt();
             if (count < 0 || count > MAX_PHONG) {
@@ -69,7 +71,7 @@ public class PhongDAO {
                 docChuoi(dis); // loaiPhong: bo qua, loai do lop con quyet dinh
                 BigDecimal giaPhong = new BigDecimal(dis.readUTF());
                 TinhTrangPhong tinhTrang = TinhTrangPhong.valueOf(dis.readUTF());
-                String dichVu = dis.readUTF(); // giu nguyen "" khi phong khong co dich vu
+                String dichVu = dis.readUTF(); // giu nguyen "" khi khong co dich vu
 
                 Phong phong;
                 switch (loai) {
@@ -88,9 +90,6 @@ public class PhongDAO {
                     }
                 }
 
-                if (dem >= dsTam.length) {
-                    dsTam = Arrays.copyOf(dsTam, Math.min(dsTam.length * 2, MAX_PHONG));
-                }
                 dsTam[dem++] = phong;
             }
 
@@ -108,29 +107,31 @@ public class PhongDAO {
     }
 
     /**
-     * Doi ten file hong thanh phong.dat.loi_<thoi gian> de khong bi ghi de mat du lieu
-     * khi nguoi dung them phong moi.
+     * Doi ten file hong thanh phong.dat.loi_<thoi gian> de khong bi ghi de
+     * mat du lieu khi nguoi dung them phong moi.
      */
     private static void saoLuuFileLoi() {
-        try {
-            Path bak = Path.of(FILE_PATH + ".loi_" + System.currentTimeMillis());
-            Files.move(Path.of(FILE_PATH), bak);
-            System.out.println("Da giu lai file loi tai: " + bak);
-        } catch (IOException e) {
-            System.out.println("Khong sao luu duoc file loi: " + e.getMessage());
+        File goc = new File(FILE_PATH);
+        File bak = new File(FILE_PATH + ".loi_" + System.currentTimeMillis());
+        if (goc.renameTo(bak)) {
+            System.out.println("Da giu lai file loi tai: " + bak.getPath());
+        } else {
+            System.out.println("Khong sao luu duoc file loi!");
         }
     }
 
     private static boolean ghiFile() {
-        try {
-            Files.createDirectories(Path.of(THU_MUC));
-        } catch (IOException e) {
-            System.out.println("Khong tao duoc thu muc " + THU_MUC + ": " + e.getMessage());
+        File thuMuc = new File(THU_MUC);
+        if (!thuMuc.exists() && !thuMuc.mkdirs()) {
+            System.out.println("Khong tao duoc thu muc " + THU_MUC);
             return false;
         }
 
-        try (DataOutputStream dos = new DataOutputStream(
-                new BufferedOutputStream(new FileOutputStream(FILE_TEMP)))) {
+        File fileTemp = new File(FILE_TEMP);
+        File file = new File(FILE_PATH);
+
+        // Buoc 1: ghi ra file tam
+        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileTemp))) {
 
             dos.writeInt(soLuongPhong);
 
@@ -164,45 +165,49 @@ public class PhongDAO {
             return false;
         }
 
-        try {
-            try {
-                Files.move(Path.of(FILE_TEMP), Path.of(FILE_PATH),
-                        StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException e) {
-                Files.move(Path.of(FILE_TEMP), Path.of(FILE_PATH),
-                        StandardCopyOption.REPLACE_EXISTING);
+        // Buoc 2: thay file cu bang file tam (giu ban sao de khoi phuc neu loi)
+        File fileCu = new File(FILE_PATH + ".old");
+        boolean coFileCu = false;
+
+        if (file.exists()) {
+            if (fileCu.exists()) {
+                fileCu.delete();
             }
-        } catch (IOException ex) {
-            System.out.println("Loi thay file phong: " + ex.getMessage());
+            if (!file.renameTo(fileCu)) {
+                System.out.println("Khong the thay the file phong!");
+                xoaFileTam();
+                return false;
+            }
+            coFileCu = true;
+        }
+
+        if (!fileTemp.renameTo(file)) {
+            System.out.println("Loi thay file phong!");
+            if (coFileCu) {
+                fileCu.renameTo(file); // khoi phuc file cu
+            }
             xoaFileTam();
             return false;
         }
 
+        if (coFileCu) {
+            fileCu.delete();
+        }
         return true;
     }
 
     private static void xoaFileTam() {
-        try {
-            Files.deleteIfExists(Path.of(FILE_TEMP));
-        } catch (IOException ignored) {
-            // khong can xu ly them
+        File f = new File(FILE_TEMP);
+        if (f.exists()) {
+            f.delete();
         }
     }
+    
 
     // =====================================
     // HAM HO TRO
     // =====================================
 
-    private static boolean hopLe(Phong p) {
-        return p != null
-                && p.getMaPhong() != null && !p.getMaPhong().trim().isEmpty()
-                && p.getTenPhong() != null && !p.getTenPhong().trim().isEmpty()
-                && p.getGiaPhong() != null && p.getGiaPhong().signum() > 0
-                && p.getTinhTrang() != null
-                && p.getDichVu() != null
-                && (p instanceof PhongThuong || p instanceof PhongVIP);
-    }
 
     private static int timViTri(String maPhong) {
         if (maPhong == null || maPhong.trim().isEmpty()) {
