@@ -12,6 +12,7 @@ import model.TrangThaiDatPhong;
 import service.QLDatPhong;
 import service.QLPhong;
 
+
 public class DatPhongUI {
     private final Scanner scanner;
     private final QLDatPhong qlDatPhong;
@@ -88,28 +89,26 @@ public class DatPhongUI {
         BigDecimal giaPhong = phongChon.getGiaPhong();
         System.out.println("Gia phong tu dong lay: " + giaPhong + " VND/ngay");
 
-        LocalDate ngayNhan;
+        LocalDate ngayDat;
         while (true) {
-            ngayNhan = nhapNgay("Nhap ngay nhan phong (yyyy-MM-dd): ");
-            if (ngayNhan.isBefore(LocalDate.now())) {
-                System.out.println("Loi: Ngay nhan phong khong đuoc truoc ngay hom nay (" + LocalDate.now() + ")!");
+            ngayDat = nhapNgay("Nhap ngay dat phong (yyyy-MM-dd): ");
+            if (ngayDat.isBefore(LocalDate.now())) {
+                System.out.println("Loi: Ngay dat phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
             } else {
                 break;
             }
         }
 
-        
         LocalDate ngayTra;
         while (true) {
             ngayTra = nhapNgay("Nhap ngay tra phong (yyyy-MM-dd): ");
-            if (ngayTra.isBefore(ngayNhan)) {
-                System.out.println("Loi: Ngay tra phong khong duoc truoc ngay nhan phong (" + ngayNhan + ")!");
+            if (ngayTra.isBefore(ngayDat)) {
+                System.out.println("Loi: Ngay tra phong khong duoc truoc ngay dat phong (" + ngayDat + ")!");
             } else {
                 break;
             }
-        }
-
-        
+        } 
+        LocalDate ngayNhan = null;
         DatPhong dp = new DatPhong(maDatPhong, maKhachHang, phongChon.getMaPhong(), ngayNhan, ngayTra, giaPhong);
         if (qlDatPhong.taoDatPhong(dp)) {
             phongChon.setTinhTrang(TinhTrangPhong.DA_DAT);
@@ -183,10 +182,19 @@ public class DatPhongUI {
             return;
         }
 
-        dp.setNgayNhanPhong(LocalDate.now());
+        LocalDate ngayNhanThucTe;
+while (true) {
+    ngayNhanThucTe = nhapNgay("Nhap ngay nhan phong thuc te (yyyy-MM-dd): ");
+    if (ngayNhanThucTe.isBefore(LocalDate.now())) {
+        System.out.println("Loi: Ngay nhan phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
+    } else if (ngayNhanThucTe.isAfter(dp.getNgayTraPhong())) {
+        System.out.println("Loi: Ngay nhan phong khong duoc sau ngay tra phong (" + dp.getNgayTraPhong() + ")!");
+    } else {
+        break;
+    }
+}
+        dp.setNgayNhanPhong(ngayNhanThucTe);
         dp.setTrangThai(TrangThaiDatPhong.DANG_SU_DUNG);
-        
-        
 
         Phong phong = qlPhong.timPhongTheoMa(dp.getMaPhong());
         if (phong != null) {
