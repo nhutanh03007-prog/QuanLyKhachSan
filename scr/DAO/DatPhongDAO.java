@@ -141,7 +141,7 @@ public class DatPhongDAO {
                 f.createNewFile();
             }
             try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
-    while (count < mang.length) {
+    while (count < mang.length && dis.available() > 0) {
         String maDatPhong = dis.readUTF();
         String maKhachHang = dis.readUTF();
         String maPhong = dis.readUTF();
@@ -200,7 +200,7 @@ public class DatPhongDAO {
             System.err.println("Khong ghi duoc " + path + ": " + e.getMessage());
             return false;
         }
-        return false;
+        return true;
     }
 
     private static String giaTri(Object o) {

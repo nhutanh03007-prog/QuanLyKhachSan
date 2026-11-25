@@ -82,7 +82,7 @@ public class KhachHangDAO {
                 f.createNewFile();
             }
             try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
-        while (soLuongKhachHang < danhSachKhachHang.length) {
+        while (soLuongKhachHang < danhSachKhachHang.length && dis.available() > 0) {
         String maKH = dis.readUTF();
         String hoTen = dis.readUTF();
         String gioiTinh = dis.readUTF();
