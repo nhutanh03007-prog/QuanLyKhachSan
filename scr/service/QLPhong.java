@@ -123,7 +123,7 @@ public class QLPhong implements IPhong {
     @Override
     public boolean xoaPhong(String maPhong) {
         maPhong = chuanHoaMaPhong(maPhong);
-        if (maPhong == null || maPhong.isEmpty()) {
+        if (maPhong == null || maPhong.trim().isEmpty()) {
             System.out.println("Ma phong khong hop le!");
             return false;
         }

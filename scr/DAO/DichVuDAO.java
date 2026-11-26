@@ -32,7 +32,7 @@ public class DichVuDAO {
         try {
             if (!f.exists() || f.length() == 0)
                 return;
-            try (DataInputStream dis = new DataInputStream((new FileInputStream(f)))) {
+            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
                 int count = dis.readInt();
                 if (count < 0 || count > 100)
                     throw new IOException("So luong khong hop le");
@@ -62,7 +62,7 @@ public class DichVuDAO {
             return false;
         }
         try {
-            try (DataOutputStream dos = new DataOutputStream((new FileOutputStream(f)))) {
+            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
                 dos.writeInt(soLuongDichVu);
                 for (int i = 0; i < soLuongDichVu; i++) {
                     DichVu d = danhSachDichVu[i];
