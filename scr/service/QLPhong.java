@@ -200,4 +200,14 @@ public class QLPhong implements IPhong {
         }
         return phongDAO.demSoLuongPhongTheoTinhTrang(tinhTrang);
     }
+
+    @Override
+    public Phong[] layDanhSachPhongVIP() {
+        return phongDAO.layDanhSachPhongVIP();
+    }
+
+    @Override
+    public Phong[] layDanhSachPhongThuong() {
+        return phongDAO.layDanhSachPhongThuong();
+    }
 }

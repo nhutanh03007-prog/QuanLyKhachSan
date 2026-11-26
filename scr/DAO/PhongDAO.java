@@ -2,6 +2,8 @@ package DAO;
 
 import java.util.Arrays;
 import model.Phong;
+import model.PhongThuong;
+import model.PhongVIP;
 import model.TinhTrangPhong;
 
 public class PhongDAO {
@@ -187,5 +189,39 @@ public class PhongDAO {
             }
         }
         return dem;
+    }
+
+    public Phong[] layDanhSachPhongVIP() {
+        int dem = 0;
+        for (int i = 0; i < soLuongPhong; i++) {
+            if (danhSachPhong[i] instanceof PhongVIP) {
+                dem++;
+            }
+        }
+        Phong[] ketQua = new PhongVIP[dem];
+        int vt = 0;
+        for (int i = 0; i < soLuongPhong; i++) {
+            if (danhSachPhong[i] instanceof PhongVIP) {
+                ketQua[vt++] = danhSachPhong[i];
+            }
+        }
+        return ketQua;
+    }
+
+    public Phong[] layDanhSachPhongThuong() {
+        int dem = 0;
+        for (int i = 0; i < soLuongPhong; i++) {
+            if (danhSachPhong[i] instanceof PhongThuong) {
+                dem++;
+            }
+        }
+        Phong[] ketQua = new PhongThuong[dem];
+        int vt = 0;
+        for (int i = 0; i < soLuongPhong; i++) {
+            if (danhSachPhong[i] instanceof PhongThuong) {
+                ketQua[vt++] = danhSachPhong[i];
+            }
+        }
+        return ketQua;
     }
 }

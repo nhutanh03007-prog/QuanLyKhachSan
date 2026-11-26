@@ -26,6 +26,12 @@ public interface IPhong {
 
     boolean timPhongTheoTen(String tenPhong);
 
+<<<<<<< HEAD
     int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
+=======
+    Phong[] layDanhSachPhongVIP();
+
+    Phong[] layDanhSachPhongThuong();
+>>>>>>> c985e6d03220d3dd61236d9d6291fe3051cfb2ac
 
 }

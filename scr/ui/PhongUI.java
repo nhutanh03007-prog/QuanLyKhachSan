@@ -2,20 +2,19 @@
 package ui;
 
 import INTERFACE.IPhong;
-
+import java.io.BufferedReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.io.BufferedReader;
-
 import model.Phong;
 import model.PhongThuong;
 import model.PhongVIP;
 import model.TinhTrangPhong;
-
 import service.QLPhong;
 
 public class PhongUI {
+    int soLuong = 0;
+    Phong[] dsPhongMoi = new Phong[soLuong];
 
     private static final String DUONG_KE = "-".repeat(100);
 
@@ -49,6 +48,8 @@ public class PhongUI {
             System.out.println("7. Dem tong so phong");
             System.out.println("8. Thong ke phong theo tinh trang");
             System.out.println("9. Tim phong trong theo ngay");
+            System.out.println("10. Loc phong theo loai (Thuong / VIP)");
+            System.out.println("11. Them nhieu phong cung luc");
             System.out.println("0. Thoat");
             System.out.println("======================================");
 
@@ -64,6 +65,8 @@ public class PhongUI {
                 case 7 -> demTongSoPhong();
                 case 8 -> thongKePhongTheoTinhTrang();
                 case 9 -> timPhongTrong();
+                case 10 -> locPhongTheoLoai();
+                case 11 -> themNhieuPhong();
                 case 0 -> System.out.println("Thoat quan ly phong!");
                 default -> System.out.println("Lua chon khong hop le!");
             }
@@ -162,8 +165,7 @@ public class PhongUI {
 
             } catch (DateTimeParseException e) {
                 System.out.println(
-                        "Sai dinh dang ngay (yyyy-MM-dd, VD: 2026-11-30)!"
-                );
+                        "Sai dinh dang ngay (yyyy-MM-dd, VD: 2026-11-30)!");
             }
         }
     }
@@ -186,10 +188,9 @@ public class PhongUI {
 
     private TinhTrangPhong nhapTinhTrang(TinhTrangPhong... choPhep) {
 
-        TinhTrangPhong[] ds =
-                (choPhep == null || choPhep.length == 0)
-                        ? TinhTrangPhong.values()
-                        : choPhep;
+        TinhTrangPhong[] ds = (choPhep == null || choPhep.length == 0)
+                ? TinhTrangPhong.values()
+                : choPhep;
 
         while (true) {
             System.out.println("\n--- TINH TRANG PHONG ---");
@@ -234,8 +235,7 @@ public class PhongUI {
 
             int soGiuong = nhapSoNguyenDuong("Nhap so giuong: ");
 
-            boolean coDieuHoa =
-                    nhapCoKhong("Phong co dieu hoa? (Y/N): ");
+            boolean coDieuHoa = nhapCoKhong("Phong co dieu hoa? (Y/N): ");
 
             return new PhongThuong(
                     maPhong,
@@ -243,18 +243,15 @@ public class PhongUI {
                     giaPhong,
                     tinhTrang,
                     soGiuong,
-                    coDieuHoa
-            );
+                    coDieuHoa);
 
         } else {
 
             System.out.println("\n--- THONG TIN PHONG VIP ---");
 
-            int dienTich =
-                    nhapSoNguyenDuong("Nhap dien tich (m2): ");
+            int dienTich = nhapSoNguyenDuong("Nhap dien tich (m2): ");
 
-            boolean coBonTam =
-                    nhapCoKhong("Phong co bon tam? (Y/N): ");
+            boolean coBonTam = nhapCoKhong("Phong co bon tam? (Y/N): ");
 
             return new PhongVIP(
                     maPhong,
@@ -262,8 +259,7 @@ public class PhongUI {
                     giaPhong,
                     tinhTrang,
                     dienTich,
-                    coBonTam
-            );
+                    coBonTam);
         }
     }
 
@@ -271,66 +267,34 @@ public class PhongUI {
 
     private void inBang(Phong[] ds) {
 
-    System.out.println(DUONG_KE);
+        System.out.println(DUONG_KE);
 
-    System.out.printf(
-            "%-5s %-10s %-15s %-8s %-14s %-18s %-12s %-12s%n",
-            "STT",
-            "Ma phong",
-            "Ten phong",
-            "Loai",
-            "Gia phong",
-            "Tinh trang",
-            "Giuong/Dien tich",
-            "Tien ich"
-    );
+        System.out.printf(
+                "%-5s %-10s %-15s %-8s %-14s %-18s %-12s %-12s%n",
+                "STT",
+                "Ma phong",
+                "Ten phong",
+                "Loai",
+                "Gia phong",
+                "Tinh trang",
+                "Giuong/Dien tich",
+                "Tien ich");
 
-    System.out.println(DUONG_KE);
+        System.out.println(DUONG_KE);
 
-    for (int i = 0; i < ds.length; i++) {
+        for (int i = 0; i < ds.length; i++) {
 
-        if (ds[i] != null) {
-            inThongTinPhong(i + 1, ds[i]);
+            if (ds[i] != null) {
+                inThongTinPhong(i + 1, ds[i]);
+            }
         }
-    }
 
-    System.out.println(DUONG_KE);
-}
+        System.out.println(DUONG_KE);
+    }
 
     private void inThongTinPhong(int stt, Phong p) {
-
-    String thongTinRieng = "";
-    String tienIch = "";
-
-    if (p instanceof PhongThuong pt) {
-
-        thongTinRieng = pt.getSoGiuong() + " giuong";
-
-        tienIch = pt.isCoDieuHoa()
-                ? "Co dieu hoa"
-                : "Khong";
-
-    } else if (p instanceof PhongVIP pv) {
-
-        thongTinRieng = pv.getDienTich() + " m2";
-
-        tienIch = pv.isCoBonTam()
-                ? "Co bon tam"
-                : "Khong";
+        p.xuatDongBang(stt);
     }
-
-    System.out.printf(
-            "%-5d %-10s %-15s %-8s %-14s %-18s %-12s %-12s%n",
-            stt,
-            p.getMaPhong(),
-            p.getTenPhong(),
-            p.getLoaiPhong(),
-            p.getGiaPhong().toPlainString(),
-            p.getTinhTrang(),
-            thongTinRieng,
-            tienIch
-    );
-}
 
     // ================= THEM PHONG =================
 
@@ -346,7 +310,7 @@ public class PhongUI {
 
             maPhong = nhapChuoi("Nhap ma phong khac: ");
         }
-        
+
         String tenPhong = nhapChuoi("Nhap ten phong: ");
         while (qlPhong.timPhongTheoTen(tenPhong)) {
             System.out.println("Ten phong da ton tai!");
@@ -354,27 +318,44 @@ public class PhongUI {
         }
 
         int loaiPhong = nhapLoaiPhong();
-
-        BigDecimal macDinh = giaMacDinh(loaiPhong);
-
-        BigDecimal giaPhong = nhapGia(
-                "Nhap gia phong (Enter de dung gia mac dinh "
-                        + macDinh.toPlainString() + " VND): ",
-                macDinh
-        );
-
-        Phong phong = taoPhong(
-                loaiPhong,
-                maPhong,
-                tenPhong,
-                giaPhong,
-                TinhTrangPhong.TRONG
-        );
+        Phong phong = (loaiPhong == 1) ? new PhongThuong() : new PhongVIP();
+        phong.nhap(reader, maPhong, tenPhong);
 
         if (qlPhong.themPhong(phong)) {
             System.out.println("Them phong thanh cong!");
+            phong.xuat();
         } else {
             System.out.println("Them phong that bai!");
+        }
+    }
+
+    public void themNhieuPhong() {
+        System.out.println("\n========== THEM NHIEU PHONG ==========");
+
+        int soLuong = nhapSoNguyenDuong("Nhap so luong phong muon them: ");
+
+        for (int i = 0; i < soLuong; i++) {
+            System.out.println("\n--- Nhap phong thu " + (i + 1) + "/" + soLuong + " ---");
+            int loaiPhong = nhapLoaiPhong();
+
+            if (loaiPhong == 1) {
+                dsPhongMoi[i] = new PhongThuong();
+            } else {
+                dsPhongMoi[i] = new PhongVIP();
+            }
+
+            dsPhongMoi[i].nhap(reader);
+        }
+
+        System.out.println("\n--- KET QUA LUU  ---");
+        for (int i = 0; i < dsPhongMoi.length; i++) {
+            if (qlPhong.themPhong(dsPhongMoi[i])) {
+                System.out.println("Da luu phong #" + (i + 1) + ":");
+                dsPhongMoi[i].xuat();
+            } else {
+                System.out.println(
+                        "Khong the luu phong " + dsPhongMoi[i].getMaPhong() + " (trung ma/ten hoac khong hop le)!");
+            }
         }
     }
 
@@ -411,9 +392,10 @@ public class PhongUI {
             return;
         }
 
-        inBang(new Phong[]{phong});
+        inBang(new Phong[] { phong });
 
-        System.out.println("Thong tin chi tiet: " + phong);
+        System.out.println("Thong tin chi tiet:");
+        phong.xuat();
     }
 
     // ================= TIM THEO TINH TRANG =================
@@ -421,8 +403,7 @@ public class PhongUI {
     public void timPhongTheoTinhTrang() {
 
         System.out.println(
-                "\n========== TIM PHONG THEO TINH TRANG =========="
-        );
+                "\n========== TIM PHONG THEO TINH TRANG ==========");
 
         TinhTrangPhong tt = nhapTinhTrang();
 
@@ -443,16 +424,13 @@ public class PhongUI {
     public void timPhongTrong() {
 
         System.out.println(
-                "\n========== TIM PHONG TRONG THEO NGAY =========="
-        );
+                "\n========== TIM PHONG TRONG THEO NGAY ==========");
 
         LocalDate nhan = nhapNgay(
-                "Nhap ngay nhan phong (yyyy-MM-dd): "
-        );
+                "Nhap ngay nhan phong (yyyy-MM-dd): ");
 
         LocalDate tra = nhapNgay(
-                "Nhap ngay tra phong (yyyy-MM-dd): "
-        );
+                "Nhap ngay tra phong (yyyy-MM-dd): ");
 
         if (tra.isBefore(nhan)) {
             System.out.println("Ngay tra khong duoc truoc ngay nhan!");
@@ -463,8 +441,7 @@ public class PhongUI {
 
         if (ds == null || ds.length == 0) {
             System.out.println(
-                    "Khong co phong trong trong khoang thoi gian nay!"
-            );
+                    "Khong co phong trong trong khoang thoi gian nay!");
             return;
         }
 
@@ -473,34 +450,26 @@ public class PhongUI {
         System.out.println("So phong trong: " + ds.length);
     }
 
+    // ================= LOC THEO LOAI PHONG =================
+
+    public void locPhongTheoLoai() {
+        System.out.println("\n========== LOC PHONG THEO LOAI ==========");
+        int loai = nhapLoaiPhong();
+        Phong[] ds = (loai == 1)
+                ? qlPhong.layDanhSachPhongThuong()
+                : qlPhong.layDanhSachPhongVIP();
+        if (ds == null || ds.length == 0) {
+            System.out.println("Khong co phong thuoc loai nay!");
+            return;
+        }
+        inBang(ds);
+        System.out.println("So phong tim thay: " + ds.length);
+    }
+
     // ================= SAO CHEP PHONG =================
 
     private Phong saoChepPhong(Phong cu) {
-
-        if (cu instanceof PhongThuong pt) {
-
-            return new PhongThuong(
-                    pt.getMaPhong(),
-                    pt.getTenPhong(),
-                    pt.getGiaPhong(),
-                    pt.getTinhTrang(),
-                    pt.getSoGiuong(),
-                    pt.isCoDieuHoa()
-            );
-
-        } else if (cu instanceof PhongVIP pv) {
-
-            return new PhongVIP(
-                    pv.getMaPhong(),
-                    pv.getTenPhong(),
-                    pv.getGiaPhong(),
-                    pv.getTinhTrang(),
-                    pv.getDienTich(),
-                    pv.isCoBonTam()
-            );
-        }
-
-        return null;
+        return cu == null ? null : cu.saoChep();
     }
 
     // ================= SUA PHONG =================
@@ -520,10 +489,9 @@ public class PhongUI {
 
         System.out.println("\nThong tin phong hien tai:");
 
-        inBang(new Phong[]{cu});
+        inBang(new Phong[] { cu });
 
-        boolean choDoiTinhTrang =
-                cu.getTinhTrang() == TinhTrangPhong.TRONG
+        boolean choDoiTinhTrang = cu.getTinhTrang() == TinhTrangPhong.TRONG
                 || cu.getTinhTrang() == TinhTrangPhong.DANG_BAO_TRI;
 
         // Tao ban sao de tranh thay doi truc tiep phong goc
@@ -549,14 +517,12 @@ public class PhongUI {
 
                 case 1 -> {
                     moi.setTenPhong(
-                            nhapChuoi("Nhap ten phong moi: ")
-                    );
+                            nhapChuoi("Nhap ten phong moi: "));
                 }
 
                 case 2 -> {
                     moi.setGiaPhong(
-                            nhapGia("Nhap gia phong moi: ", null)
-                    );
+                            nhapGia("Nhap gia phong moi: ", null));
                 }
 
                 case 3 -> {
@@ -566,16 +532,13 @@ public class PhongUI {
                         moi.setTinhTrang(
                                 nhapTinhTrang(
                                         TinhTrangPhong.TRONG,
-                                        TinhTrangPhong.DANG_BAO_TRI
-                                )
-                        );
+                                        TinhTrangPhong.DANG_BAO_TRI));
 
                     } else {
 
                         System.out.println(
                                 "Phong dang " + cu.getTinhTrang()
-                                + ": tinh trang do nghiep vu dat phong quan ly!"
-                        );
+                                        + ": tinh trang do nghiep vu dat phong quan ly!");
                     }
                 }
 
@@ -617,7 +580,7 @@ public class PhongUI {
 
         System.out.println("\nThong tin phong can xoa:");
 
-        inBang(new Phong[]{phong});
+        inBang(new Phong[] { phong });
 
         System.out.print("\nBan co chac chan muon xoa? (Y/N): ");
 
@@ -644,29 +607,25 @@ public class PhongUI {
 
         System.out.println(
                 "Tong so phong hien co: "
-                        + qlPhong.demSoLuongPhong()
-        );
+                        + qlPhong.demSoLuongPhong());
     }
 
     public void thongKePhongTheoTinhTrang() {
 
         System.out.println(
-                "\n========== THONG KE THEO TINH TRANG =========="
-        );
+                "\n========== THONG KE THEO TINH TRANG ==========");
 
         for (TinhTrangPhong tt : TinhTrangPhong.values()) {
 
             System.out.println(
                     tt + ": "
                             + qlPhong.demSoLuongPhongTheoTinhTrang(tt)
-                            + " phong"
-            );
+                            + " phong");
         }
 
         System.out.println("--------------------------------------");
 
         System.out.println(
-                "Tong so phong: " + qlPhong.demSoLuongPhong()
-        );
+                "Tong so phong: " + qlPhong.demSoLuongPhong());
     }
 }
