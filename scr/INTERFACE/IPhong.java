@@ -6,6 +6,8 @@ import model.TinhTrangPhong;
 
 public interface IPhong {
 
+    boolean timPhongTheoTen (String tenPhong);
+
     boolean themPhong(Phong phong);
 
     Phong[] layDanhSachPhong();
