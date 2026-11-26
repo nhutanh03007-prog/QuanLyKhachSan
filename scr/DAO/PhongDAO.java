@@ -161,7 +161,7 @@ private static boolean ghiFile() {
         }
 
         if (soLuongPhong >= danhSachPhong.length) {
-            danhSachPhong = Arrays.copyOf(danhSachPhong, danhSachPhong.length + 1);
+            danhSachPhong = Arrays.copyOf(danhSachPhong, danhSachPhong.length *2);
         }
 
         int viTriMoi = soLuongPhong;
@@ -224,7 +224,7 @@ private static boolean ghiFile() {
 
     public Phong[] layDanhSachPhong() {
     return Arrays.copyOf(danhSachPhong, soLuongPhong);
-}
+    }
 
     public int demSoLuongPhong() {
         return soLuongPhong;
