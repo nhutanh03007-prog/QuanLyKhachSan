@@ -43,4 +43,8 @@ public class QLDatPhong {
     public DatPhong[] layTatCa() {
         return datPhongDAO.layDanhSach();
     }
+
+    public void suaDatPhong(DatPhong dp) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

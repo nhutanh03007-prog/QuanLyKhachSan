@@ -53,7 +53,6 @@ public class QLPhong implements IPhong {
         return true;
     }
 
-    /** Phong con phieu dat chua huy va chua tra khong? */
     private boolean phongConPhieuDat(String maPhong) {
         DatPhong[] ds = datPhongDAO.layDanhSach();
         for (DatPhong dp : ds) {
@@ -112,7 +111,7 @@ public class QLPhong implements IPhong {
         if (tinhTrang == null) {
             return false;
         }
-        Phong p = phongDAO.timPhongTheoMa(chuanHoaMaPhong(maPhong)); // ban sao
+        Phong p = phongDAO.timPhongTheoMa(chuanHoaMaPhong(maPhong));
         if (p == null) {
             System.out.println("Khong tim thay phong!");
             return false;
@@ -124,7 +123,7 @@ public class QLPhong implements IPhong {
     @Override
     public boolean xoaPhong(String maPhong) {
         maPhong = chuanHoaMaPhong(maPhong);
-        if (maPhong == null || maPhong.isEmpty()) {
+        if (maPhong == null || maPhong.trim().isEmpty()) {
             System.out.println("Ma phong khong hop le!");
             return false;
         }

@@ -24,19 +24,40 @@ public abstract class Phong {
         this.tinhTrang = tinhTrang;
     }
 
+    // Phan rieng cua tung loai phong
     public abstract String getLoaiPhong();
+    // Getter / Setter
+    public String getMaPhong() {
+        return maPhong;
+    }
 
-    public String getMaPhong() { return maPhong; }
-    public void setMaPhong(String maPhong) { this.maPhong = maPhong; }
+    public void setMaPhong(String maPhong) {
+        this.maPhong = maPhong;
+    }
 
-    public String getTenPhong() { return tenPhong; }
-    public void setTenPhong(String tenPhong) { this.tenPhong = tenPhong; }
+    public String getTenPhong() {
+        return tenPhong;
+    }
 
-    public BigDecimal getGiaPhong() { return giaPhong; }
-    public void setGiaPhong(BigDecimal giaPhong) { this.giaPhong = giaPhong; }
+    public void setTenPhong(String tenPhong) {
+        this.tenPhong = tenPhong;
+    }
 
-    public TinhTrangPhong getTinhTrang() { return tinhTrang; }
-    public void setTinhTrang(TinhTrangPhong tinhTrang) { this.tinhTrang = tinhTrang; }
+    public BigDecimal getGiaPhong() {
+        return giaPhong;
+    }
+
+    public void setGiaPhong(BigDecimal giaPhong) {
+        this.giaPhong = giaPhong;
+    }
+
+    public TinhTrangPhong getTinhTrang() {
+        return tinhTrang;
+    }
+
+    public void setTinhTrang(TinhTrangPhong tinhTrang) {
+        this.tinhTrang = tinhTrang;
+    }
 
     @Override
     public String toString() {
