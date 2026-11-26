@@ -252,4 +252,8 @@ public class QLPhong implements IPhong {
     }
         return tenPhongDaTonTai(tenPhong, null);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d34311024cbd1465fee7a3e1dc1696376d1fc3b1
