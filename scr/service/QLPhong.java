@@ -245,4 +245,11 @@ public class QLPhong implements IPhong {
         }
         return phongDAO.demSoLuongPhongTheoTinhTrang(tinhTrang);
     }
+    @Override
+    public boolean tenPhongDaTonTai(String tenPhong) {
+        if (tenPhong == null || tenPhong.trim().isEmpty()) {
+            return false;
+    }
+        return tenPhongDaTonTai(tenPhong, null);
+    }
 }
