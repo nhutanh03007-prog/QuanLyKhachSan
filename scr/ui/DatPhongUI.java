@@ -5,12 +5,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
+
 import model.DatPhong;
 import model.Phong;
 import model.TinhTrangPhong;
 import model.TrangThaiDatPhong;
 import service.QLDatPhong;
 import service.QLPhong;
+import DAO.KhachHangDAO;
 
 
 public class DatPhongUI {
@@ -18,6 +20,7 @@ public class DatPhongUI {
     private final QLDatPhong qlDatPhong;
     private final QLPhong qlPhong;
     private final DateTimeFormatter dateFormatter;
+    private final KhachHangDAO KhachHangDAO = new KhachHangDAO();
 
     public DatPhongUI() {
         this.scanner = new Scanner(System.in);
@@ -60,87 +63,153 @@ public class DatPhongUI {
     }
 
     public void taoDatPhongMoi(boolean chuyenSangKhachHang) {
-        System.out.println("\n--- TAO PHIEU DAT PHONG MOI ---");
+    System.out.println("\n--- TAO PHIEU DAT PHONG MOI ---");
 
-        
-        String maDatPhong;
-   while (true) {
-      maDatPhong = nhapChuoiKhongRong("Nhap ma dat phong (VD: DP01): ");
-     if (qlDatPhong.timDatPhong(maDatPhong) != null) {
-        System.out.println("Loi: Ma dat phong '" + maDatPhong + "' da ton tai! Vui long nhap ma khac.");
-          } else {
-         break;
-       }
+    String maGoc;
+    while (true) {
+        maGoc = nhapChuoiKhongRong("Nhap ma dat phong goc (VD: DP01): ");
+        if (qlDatPhong.timDatPhong(maGoc + "-1") != null) {
+            System.out.println("Loi: Ma '" + maGoc + "' da duoc su dung! Vui long nhap ma khac.");
+        } else {
+            break;
         }
+    }
 
-        String maKhachHang = nhapChuoiKhongRong("Nhap ma khach hang: ");
-        Phong phongChon;
-        while (true) {
-            String maPhong = nhapChuoiKhongRong("Nhap ma phong: ");
-            phongChon = qlPhong.timPhongTheoMa(maPhong);
-            if (phongChon == null) {
-                System.out.println("Loi: Ma phong '" + maPhong + "' khong ton tai! Nhap lai.");
-            } else if (phongChon.getTinhTrang() != TinhTrangPhong.TRONG) {
-                System.out.println("Loi: Phong '" + maPhong + "' khong trong!");
-            } else {
-                break;
-            }
+    // 2. Khach hang
+    String maKhachHang = nhapChuoiKhongRong("Nhap ma khach hang: ");
+    if (KhachHangDAO.timTheoMa(maKhachHang) == null) {
+        System.out.println("Ma khach hang '" + maKhachHang + "' chua ton tai.");
+        if (!chuyenSangKhachHang) {
+            System.out.println("Huy tao phieu dat phong.");
+            return;
         }
+        System.out.println(">>> Chuyen sang nhap thong tin khach hang...");
+        new KhachHangUI().themKhachHang(false);
+        if (KhachHangDAO.timTheoMa(maKhachHang) == null) {
+            System.out.println("Chua co khach hang '" + maKhachHang + "'. Huy tao phieu dat phong.");
+            return;
+        }
+    }
+
+    // 3. Ngay (nhap mot lan, ap dung cho tat ca phong)
+    LocalDate ngayDat;
+    while (true) {
+        ngayDat = nhapNgay("Nhap ngay dat phong (yyyy-MM-dd): ");
+        if (ngayDat.isBefore(LocalDate.now())) {
+            System.out.println("Loi: Ngay dat phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
+        } else {
+            break;
+        }
+    }
+
+    LocalDate ngayTra;
+    while (true) {
+        ngayTra = nhapNgay("Nhap ngay tra phong (yyyy-MM-dd): ");
+        if (!ngayTra.isAfter(ngayDat)) {
+            System.out.println("Loi: Ngay tra phong phai sau ngay dat phong (" + ngayDat + ")!");
+        } else {
+            break;
+        }
+    }
+
+    // 4. Vong lap dat nhieu phong
+    int soPhongDaDat = 0;
+    BigDecimal tongTien = BigDecimal.ZERO;
+
+    while (true) {
+        Phong phongChon = nhapPhongTrong();
         BigDecimal giaPhong = phongChon.getGiaPhong();
-        System.out.println("Gia phong tu dong lay: " + giaPhong + " VND/ngay");
 
-        LocalDate ngayDat;
-        while (true) {
-            ngayDat = nhapNgay("Nhap ngay dat phong (yyyy-MM-dd): ");
-            if (ngayDat.isBefore(LocalDate.now())) {
-                System.out.println("Loi: Ngay dat phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
-            } else {
-                break;
-            }
-        }
+        String maDatPhong = maGoc + "-" + (soPhongDaDat + 1);
+        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, phongChon.getMaPhong(),
+                                   ngayDat, ngayTra, giaPhong);
+        dp.setNgayDat(ngayDat);
 
-        LocalDate ngayTra;
-        while (true) {
-            ngayTra = nhapNgay("Nhap ngay tra phong (yyyy-MM-dd): ");
-            if (ngayTra.isBefore(ngayDat)) {
-                System.out.println("Loi: Ngay tra phong khong duoc truoc ngay dat phong (" + ngayDat + ")!");
-            } else {
-                break;
-            }
-        } 
-        LocalDate ngayNhan = null;
-        DatPhong dp = new DatPhong(maDatPhong, maKhachHang, phongChon.getMaPhong(), ngayNhan, ngayTra, giaPhong);
         if (qlDatPhong.taoDatPhong(dp)) {
             phongChon.setTinhTrang(TinhTrangPhong.DA_DAT);
             qlPhong.suaPhong(phongChon);
-            System.out.println("Tong tien phong (" + dp.getSoNgayO() + " ngay): " + dp.tinhTienPhong() + " VND");
-        }
-        
-      if (chuyenSangKhachHang) {
-       System.out.println("\n>>> Chuyen sang nhap thong tin khach hang...");
-         new KhachHangUI().themKhachHang(false);
-       }
-
-    }
-
-    private void hienThiDanhSach() {
-        System.out.println("\n--- DANH SACH PHIEU DAT PHONG ---");
-        DatPhong[] danhSach = qlDatPhong.layTatCa();
-        boolean coDuLieu = false;
-
-        if (danhSach != null) {
-            for (DatPhong dp : danhSach) {
-                if (dp != null) {
-                    System.out.println(dp.toString());
-                    coDuLieu = true;
-                }
-            }
+            soPhongDaDat++;
+            tongTien = tongTien.add(dp.tinhTienPhong());
+            System.out.println("-> Phieu " + maDatPhong + ": phong " + phongChon.getMaPhong()
+                    + " (" + dp.getSoNgayO() + " ngay) = " + dp.tinhTienPhong() + " VND");
+        } else {
+            System.out.println("Khong dat duoc phong " + phongChon.getMaPhong() + ".");
         }
 
-        if (!coDuLieu) {
-            System.out.println("Chua co phieu dat phong nao.");
+        System.out.print("Dat them phong khac? (Y/N): ");
+        if (!scanner.nextLine().trim().equalsIgnoreCase("Y")) {
+            break;
         }
     }
+
+    // 5. Tong ket
+    if (soPhongDaDat == 0) {
+        System.out.println("Chua dat duoc phong nao.");
+    } else {
+        System.out.println("\n=== Da dat " + soPhongDaDat + " phong cho khach " + maKhachHang
+                + ". TONG TIEN: " + tongTien + " VND ===");
+    }
+}
+
+private Phong nhapPhongTrong() {
+    while (true) {
+        String maPhong = nhapChuoiKhongRong("Nhap ma phong: ");
+        Phong p = qlPhong.timPhongTheoMa(maPhong);
+        if (p == null) {
+            System.out.println("Loi: Ma phong '" + maPhong + "' khong ton tai! Nhap lai.");
+        } else if (p.getTinhTrang() != TinhTrangPhong.TRONG) {
+            System.out.println("Loi: Phong '" + maPhong + "' khong trong!");
+        } else {
+            System.out.println("Gia phong tu dong lay: " + p.getGiaPhong() + " VND/ngay");
+            return p;
+        }
+    }
+}
+   private void hienThiDanhSach() {
+    System.out.println("\n--- DANH SACH PHIEU DAT PHONG ---");
+    DatPhong[] danhSach = qlDatPhong.layTatCa();
+
+    if (danhSach == null || danhSach.length == 0) {
+        System.out.println("Chua co phieu dat phong nao.");
+        return;
+    }
+
+    String dongKe = "+------------+----------+--------+------------+------------+------------+----------------+--------------+----------------+";
+    String mau    = "| %-10s | %-8s | %-6s | %-10s | %-10s | %-10s | %-14s | %12s | %14s |%n";
+
+    System.out.println(dongKe);
+    System.out.printf(mau, "Ma phieu", "Ma KH", "Phong", "Ngay dat", "Ngay nhan", "Ngay tra",
+                      "Trang thai", "Gia/ngay", "Tong tien");
+    System.out.println(dongKe);
+
+    for (DatPhong dp : danhSach) {
+        if (dp == null) continue;
+        System.out.printf(mau,
+                dp.getMaDatPhong(),
+                dp.getMaKhachHang(),
+                dp.getMaPhong(),
+                hienGiaTri(dp.getNgayDat()),
+                hienGiaTri(dp.getNgayNhanPhong()),
+                hienGiaTri(dp.getNgayTraPhong()),
+                hienGiaTri(dp.getTrangThai()),
+                hienGiaTri(dp.getGiaPhongNgay()),
+                tienPhong(dp));
+    }
+    System.out.println(dongKe);
+    System.out.println("Tong so phieu: " + danhSach.length);
+}
+
+private String hienGiaTri(Object o) {
+    return o == null ? "-" : o.toString();
+}
+
+private String tienPhong(DatPhong dp) {
+    try {
+        return String.valueOf(dp.tinhTienPhong());
+    } catch (Exception e) {      // phieu cu co ngay nhan = null
+        return "-";
+    }
+}
 
     private void timKiemDatPhong() {
         String ma = nhapChuoiKhongRong("\nNhap ma dat phong can tim: ");
@@ -183,7 +252,7 @@ public class DatPhongUI {
         }
 
         LocalDate ngayNhanThucTe;
-while (true) {
+    while (true) {
     ngayNhanThucTe = nhapNgay("Nhap ngay nhan phong thuc te (yyyy-MM-dd): ");
     if (ngayNhanThucTe.isBefore(LocalDate.now())) {
         System.out.println("Loi: Ngay nhan phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
