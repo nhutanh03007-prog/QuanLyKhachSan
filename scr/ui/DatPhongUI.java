@@ -256,7 +256,7 @@ private String tienPhong(DatPhong dp) {
     ngayNhanThucTe = nhapNgay("Nhap ngay nhan phong thuc te (yyyy-MM-dd): ");
     if (ngayNhanThucTe.isBefore(LocalDate.now())) {
         System.out.println("Loi: Ngay nhan phong khong duoc truoc ngay hom nay (" + LocalDate.now() + ")!");
-    } else if (ngayNhanThucTe.isAfter(dp.getNgayTraPhong())) {
+    } else if (dp.getNgayTraPhong() != null && ngayNhanThucTe.isAfter(dp.getNgayTraPhong())) {
         System.out.println("Loi: Ngay nhan phong khong duoc sau ngay tra phong (" + dp.getNgayTraPhong() + ")!");
     } else {
         break;
@@ -289,9 +289,20 @@ private String tienPhong(DatPhong dp) {
     }
 
     private LocalDate nhapNgay(String thongBao) {
+        return nhapNgay(thongBao, false);
+    }
+
+    private LocalDate nhapNgay(String thongBao, boolean choPhepRong) {
         while (true) {
             System.out.print(thongBao);
             String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                if (choPhepRong) {
+                    return null;
+                }
+                System.out.println("Loi: Ngay khong duoc de trong! Vui long nhap lai.");
+                continue;
+            }
             try {
                 return LocalDate.parse(input, dateFormatter);
             } catch (DateTimeParseException e) {
@@ -340,20 +351,29 @@ private String tienPhong(DatPhong dp) {
                 System.out.println("Da cap nhat ma khach hang.");
             }
             case 2 -> {
-                LocalDate ngayNhan = nhapNgay("Nhap ngay nhan phong moi (yyyy-MM-dd, de trong de giu nguyen): ");
+                LocalDate ngayNhan = nhapNgay("Nhap ngay nhan phong moi (yyyy-MM-dd, de trong de giu nguyen): ", true);
                 if (ngayNhan != null) {
-                    dp.setNgayNhanPhong(ngayNhan);
-                    daSua = true;
-                    System.out.println("Da cap nhat ngay nhan phong.");
-                }
-            }
+                  if (dp.getNgayTraPhong() != null && ngayNhan.isAfter(dp.getNgayTraPhong())) {
+                   System.out.println("Loi: Ngay nhan phong khong duoc sau ngay tra phong (" + dp.getNgayTraPhong() + ")!");
+                    } else {
+                      dp.setNgayNhanPhong(ngayNhan);
+                          daSua = true;
+                             System.out.println("Da cap nhat ngay nhan phong.");
+                            }
+                        }
+                     }
             case 3 -> {
-                LocalDate ngayTra = nhapNgay("Nhap ngay tra phong moi (yyyy-MM-dd, de trong de giu nguyen): ");
+                LocalDate ngayTra = nhapNgay("Nhap ngay tra phong moi (yyyy-MM-dd, de trong de giu nguyen): " ,true);
                 if (ngayTra != null) {
-                    dp.setNgayTraPhong(ngayTra);
-                    daSua = true;
-                    System.out.println("Da cap nhat ngay tra phong.");
-                }
+                  LocalDate moc = (dp.getNgayNhanPhong() != null) ? dp.getNgayNhanPhong() : LocalDate.now();
+                   if (ngayTra.isBefore(moc)) {
+                        System.out.println("Loi: Ngay tra phong khong duoc truoc " + moc + "!");
+                       } else {
+                          dp.setNgayTraPhong(ngayTra);
+                        daSua = true;
+                             System.out.println("Da cap nhat ngay tra phong.");
+                            }
+                    }
             }
             case 0 -> { /* thoat */ }
         }

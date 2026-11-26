@@ -206,4 +206,17 @@
         private static String giaTri(Object o) {
             return o == null ? "" : o.toString();
         }
+        public boolean kiemTraPhongTrong(String maPhong, LocalDate nhan, LocalDate tra, String boQuaMa) {
+    for (int i = 0; i < soLuongDatPhong; i++) {
+        DatPhong dp = danhSachDatPhong[i];
+        if (dp.getMaDatPhong().equals(boQuaMa)) continue;
+        if (dp.getMaPhong().equalsIgnoreCase(maPhong)
+            && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
+            && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA
+            && dp.isTrungLich(nhan, tra)) {
+            return false;
+        }
+    }
+    return true;
+}
     }
