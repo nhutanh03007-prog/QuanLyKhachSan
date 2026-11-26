@@ -1,6 +1,8 @@
 package ui;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import model.NhanVien;
 import model.TaiKhoan;
 import service.QLDichVu;
@@ -18,12 +20,8 @@ public class HeThongUI {
     private final QLThongKe qlThongKe;
     private TaiKhoan taiKhoanHienTai;
 
-    public HeThongUI() {
-        this(ConsoleInput.getReader());
-    }
-
-    public HeThongUI(BufferedReader reader) {
-        this.reader = reader;
+    public HeThongUI(BufferedReader reader1) {
+        this.reader = new BufferedReader(new InputStreamReader(System.in));
         this.qlTaiKhoan = new QLTaiKhoan();
         this.qlNhanVien = new QLNhanVien();
         this.qlThongKe = new QLThongKe(
@@ -35,26 +33,28 @@ public class HeThongUI {
     }
 
     public HeThongUI(QLTaiKhoan qlTaiKhoan, QLNhanVien qlNhanVien, QLThongKe qlThongKe) {
-        this.reader = ConsoleInput.getReader();
+        this.reader = new BufferedReader(new InputStreamReader(System.in));
         this.qlTaiKhoan = qlTaiKhoan;
         this.qlNhanVien = qlNhanVien;
         this.qlThongKe = qlThongKe;
     }
 
-    public TaiKhoan getTaiKhoanHienTai() {
-        return taiKhoanHienTai;
-    }
-
-    public String getVaiTroHienTai() {
-        return taiKhoanHienTai == null ? null : taiKhoanHienTai.getVaiTro();
+    private String nhapChuoi() {
+        try {
+            String line = reader.readLine();
+            return line != null ? line : "";
+        } catch (IOException e) {
+            System.out.println("Loi nhap du lieu: " + e.getMessage());
+            return "";
+        }
     }
 
     public boolean dangNhap() {
         System.out.println("=== DANG NHAP HE THONG KHACH SAN ===");
         System.out.print("Ten dang nhap: ");
-        String username = ConsoleInput.readLine(reader);
+        String username = nhapChuoi();
         System.out.print("Mat khau: ");
-        String password = ConsoleInput.readLine(reader);
+        String password = nhapChuoi();
 
         TaiKhoan tk = qlTaiKhoan.kiemTraDangNhap(username, password);
 
@@ -83,7 +83,7 @@ public class HeThongUI {
             System.out.print("Chon chuc nang: ");
 
             try {
-                choice = Integer.parseInt(ConsoleInput.readLine(reader).trim());
+                choice = Integer.parseInt(nhapChuoi());
             } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so hop le.");
                 continue;
@@ -100,31 +100,7 @@ public class HeThongUI {
         } while (choice != 0);
     }
 
-    private String nhapChuoiKhongRong(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String s = ConsoleInput.readLine(reader).trim();
-            if (!s.isEmpty()) {
-                return s;
-            }
-            System.out.println("Khong duoc de trong! Vui long nhap lai.");
-        }
-    }
 
-    private double nhapLuongDuong(String prompt) {
-        while (true) {
-            try {
-                System.out.print(prompt);
-                double luong = Double.parseDouble(ConsoleInput.readLine(reader).trim());
-                if (luong > 0) {
-                    return luong;
-                }
-                System.out.println("Luong phai lon hon 0!");
-            } catch (NumberFormatException e) {
-                System.out.println("Luong phai la so! Vui long nhap lai.");
-            }
-        }
-    }
 
     private void inTieuDeNhanVien() {
         System.out.printf("%-10s | %-24s | %-8s | %-12s | %-16s | %-16s | %-14s | %12s | %-12s%n",
@@ -148,7 +124,7 @@ public class HeThongUI {
             System.out.print("Chon chuc nang: ");
 
             try {
-                choice = Integer.parseInt(ConsoleInput.readLine(reader).trim());
+                choice = Integer.parseInt(nhapChuoi());
             } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so hop le.");
                 continue;
@@ -171,20 +147,43 @@ public class HeThongUI {
                 }
 
                 case 2 -> {
-                    String maNV = nhapChuoiKhongRong("Nhap ma nhan vien (VD: NV016): ").toUpperCase();
+                    System.out.print("Nhap ma nhan vien (VD: NV001): ");
+                    String maNV = nhapChuoi();
 
                     if (qlNhanVien.timTheoMa(maNV) != null) {
                         System.out.println("That bai: Ma nhan vien da ton tai!");
                         break;
                     }
 
-                    String hoTen = nhapChuoiKhongRong("Nhap ho ten: ");
-                    String gioiTinh = nhapChuoiKhongRong("Nhap gioi tinh (Nam/Nu): ");
-                    String ngaySinh = nhapChuoiKhongRong("Nhap ngay sinh (dd/MM/yyyy): ");
-                    String diaChi = nhapChuoiKhongRong("Nhap dia chi: ");
-                    String sdt = nhapChuoiKhongRong("Nhap so dien thoai: ");
-                    String chucVu = nhapChuoiKhongRong("Nhap chuc vu (Quan ly/Le tan/Phuc vu...): ");
-                    double luong = nhapLuongDuong("Nhap luong co ban: ");
+                    System.out.print("Nhap ho ten: ");
+                    String hoTen = nhapChuoi();
+
+                    System.out.print("Nhap gioi tinh (Nam/Nu): ");
+                    String gioiTinh = nhapChuoi();
+
+                    System.out.print("Nhap ngay sinh (dd/MM/yyyy): ");
+                    String ngaySinh = nhapChuoi();
+
+                    System.out.print("Nhap dia chi: ");
+                    String diaChi = nhapChuoi();
+
+                    System.out.print("Nhap so dien thoai: ");
+                    String sdt = nhapChuoi();
+
+                    System.out.print("Nhap chuc vu (Quan ly/Le tan/Phuc vu...): ");
+                    String chucVu = nhapChuoi();
+
+                    double luong;
+
+                    while (true) {
+                        try {
+                            System.out.print("Nhap luong co ban: ");
+                            luong = Double.parseDouble(nhapChuoi());
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Luong phai la so! Vui long nhap lai.");
+                        }
+                    }
 
                     NhanVien nvMoi = new NhanVien(
                             maNV, hoTen, gioiTinh, ngaySinh,
@@ -204,7 +203,8 @@ public class HeThongUI {
                 }
 
                 case 3 -> {
-                    String maNV = nhapChuoiKhongRong("Nhap ma NV can sua: ");
+                    System.out.print("Nhap ma NV can sua: ");
+                    String maNV = nhapChuoi();
 
                     NhanVien nvCu = qlNhanVien.timTheoMa(maNV);
 
@@ -216,14 +216,38 @@ public class HeThongUI {
                     inTieuDeNhanVien();
                     System.out.println(nvCu.toString());
 
-                    String hoTen = nhapChuoiKhongRong("Nhap ho ten moi: ");
-                    String gioiTinh = nhapChuoiKhongRong("Nhap gioi tinh moi (Nam/Nu): ");
-                    String ngaySinh = nhapChuoiKhongRong("Nhap ngay sinh moi (dd/MM/yyyy): ");
-                    String diaChi = nhapChuoiKhongRong("Nhap dia chi moi: ");
-                    String sdt = nhapChuoiKhongRong("Nhap SDT moi: ");
-                    String chucVu = nhapChuoiKhongRong("Nhap chuc vu moi: ");
-                    double luong = nhapLuongDuong("Nhap luong moi: ");
-                    String trangThai = nhapChuoiKhongRong("Nhap trang thai (Dang lam / Nghi viec): ");
+                    System.out.print("Nhap ho ten moi: ");
+                    String hoTen = nhapChuoi();
+
+                    System.out.print("Nhap gioi tinh moi: ");
+                    String gioiTinh = nhapChuoi();
+
+                    System.out.print("Nhap ngay sinh moi: ");
+                    String ngaySinh = nhapChuoi();
+
+                    System.out.print("Nhap dia chi moi: ");
+                    String diaChi = nhapChuoi();
+
+                    System.out.print("Nhap SDT moi: ");
+                    String sdt = nhapChuoi();
+
+                    System.out.print("Nhap chuc vu moi: ");
+                    String chucVu = nhapChuoi();
+
+                    double luong;
+
+                    while (true) {
+                        try {
+                            System.out.print("Nhap luong moi: ");
+                            luong = Double.parseDouble(nhapChuoi());
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Luong phai la so! Vui long nhap lai.");
+                        }
+                    }
+
+                    System.out.print("Nhap trang thai (Dang lam / Nghi viec): ");
+                    String trangThai = nhapChuoi();
 
                     NhanVien nvCapNhat = new NhanVien(
                             nvCu.getMaNV(), hoTen, gioiTinh, ngaySinh,
@@ -238,7 +262,8 @@ public class HeThongUI {
                 }
 
                 case 4 -> {
-                    String maNV = nhapChuoiKhongRong("Nhap ma NV can xoa: ");
+                    System.out.print("Nhap ma NV can xoa: ");
+                    String maNV = nhapChuoi();
 
                     System.out.println(
                             qlNhanVien.xoa(maNV)
@@ -248,7 +273,8 @@ public class HeThongUI {
                 }
 
                 case 5 -> {
-                    String maNV = nhapChuoiKhongRong("Nhap ma NV can tim: ");
+                    System.out.print("Nhap ma NV can tim: ");
+                    String maNV = nhapChuoi();
 
                     NhanVien kq = qlNhanVien.timTheoMa(maNV);
 
@@ -287,7 +313,7 @@ public class HeThongUI {
             System.out.print("Chon chuc nang: ");
 
             try {
-                choice = Integer.parseInt(ConsoleInput.readLine(reader).trim());
+                choice = Integer.parseInt(nhapChuoi());
             } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so hop le.");
                 continue;
@@ -307,13 +333,17 @@ public class HeThongUI {
                 }
 
                 case 2 -> {
-                    String maNV = nhapChuoiKhongRong("Nhap ma nhan vien (VD: NV001): ");
+                    System.out.print("Nhap ma nhan vien (VD: NV001): ");
+                    String maNV = nhapChuoi();
                     taoTaiKhoanChoNhanVien(maNV);
                 }
 
                 case 3 -> {
-                    String tenDN = nhapChuoiKhongRong("Nhap ten dang nhap can doi mat khau: ");
-                    String mkMoi = nhapChuoiKhongRong("Nhap mat khau moi: ");
+                    System.out.print("Nhap ten dang nhap can doi mat khau: ");
+                    String tenDN = nhapChuoi();
+
+                    System.out.print("Nhap mat khau moi: ");
+                    String mkMoi = nhapChuoi();
 
                     System.out.println(
                             qlTaiKhoan.doiMatKhau(tenDN, mkMoi)
@@ -323,7 +353,8 @@ public class HeThongUI {
                 }
 
                 case 4 -> {
-                    String tenDN = nhapChuoiKhongRong("Nhap ten dang nhap can xoa: ");
+                    System.out.print("Nhap ten dang nhap can xoa: ");
+                    String tenDN = nhapChuoi();
 
                     if (taiKhoanHienTai != null
                             && taiKhoanHienTai.getTenDangNhap().equalsIgnoreCase(tenDN)) {
@@ -340,7 +371,8 @@ public class HeThongUI {
                 }
 
                 case 5 -> {
-                    String tenDN = nhapChuoiKhongRong("Nhap ten dang nhap can tim: ");
+                    System.out.print("Nhap ten dang nhap can tim: ");
+                    String tenDN = nhapChuoi();
 
                     TaiKhoan kq = qlTaiKhoan.timTheoTenDN(tenDN);
 
@@ -358,6 +390,7 @@ public class HeThongUI {
         } while (choice != 0);
     }
 
+
     private void taoTaiKhoanChoNhanVien(String maNV) {
         NhanVien nv = qlNhanVien.timTheoMa(maNV);
         if (nv == null) {
@@ -367,7 +400,13 @@ public class HeThongUI {
 
         String tenDN;
         while (true) {
-            tenDN = nhapChuoiKhongRong("Nhap ten dang nhap: ");
+            System.out.print("Nhap ten dang nhap: ");
+            tenDN = nhapChuoi().trim();
+
+            if (tenDN.isEmpty()) {
+                System.out.println("Ten dang nhap khong duoc de trong! Vui long nhap lai.");
+                continue;
+            }
             if (qlTaiKhoan.timTheoTenDN(tenDN) != null) {
                 System.out.println("Ten dang nhap da ton tai! Vui long nhap ten khac.");
                 continue;
@@ -375,8 +414,19 @@ public class HeThongUI {
             break;
         }
 
-        String matKhau = nhapChuoiKhongRong("Nhap mat khau: ");
-        String vaiTro = nhapChuoiKhongRong("Nhap vai tro (ADMIN / NHAN_VIEN): ").toUpperCase();
+        String matKhau;
+        while (true) {
+            System.out.print("Nhap mat khau: ");
+            matKhau = nhapChuoi();
+            if (matKhau.trim().isEmpty()) {
+                System.out.println("Mat khau khong duoc de trong! Vui long nhap lai.");
+                continue;
+            }
+            break;
+        }
+
+        System.out.print("Nhap vai tro (VD: ADMIN, LE_TAN): ");
+        String vaiTro = nhapChuoi();
 
         TaiKhoan tkMoi = new TaiKhoan(
                 tenDN, matKhau, nv.getMaNV(), vaiTro, "HOAT_DONG"
@@ -387,5 +437,9 @@ public class HeThongUI {
                         ? "Them tai khoan thanh cong!"
                         : "Them tai khoan that bai!"
         );
+    }
+
+    public String getVaiTroHienTai() {
+        return taiKhoanHienTai != null ? taiKhoanHienTai.getVaiTro() : "";
     }
 }
