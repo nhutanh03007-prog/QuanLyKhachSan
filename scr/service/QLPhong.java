@@ -13,6 +13,9 @@ import model.TrangThaiDatPhong;
 
 public class QLPhong implements IPhong {
 
+    private static final int TEN_PHONG_TOI_THIEU = 2;
+    private static final int TEN_PHONG_TOI_DA = 50;
+
     private final PhongDAO phongDAO;
     private final DatPhongDAO datPhongDAO;
 
@@ -29,6 +32,40 @@ public class QLPhong implements IPhong {
         return maPhong == null ? null : maPhong.trim().toUpperCase();
     }
 
+    private boolean kiemTraTenPhong(String tenPhong) {
+        if (tenPhong == null || tenPhong.trim().isEmpty()) {
+            System.out.println("Ten phong khong duoc de trong!");
+            return false;
+        }
+
+        String ten = tenPhong.trim();
+
+        if (ten.length() < TEN_PHONG_TOI_THIEU || ten.length() > TEN_PHONG_TOI_DA) {
+            System.out.println("Ten phong phai dai tu " + TEN_PHONG_TOI_THIEU
+                    + " den " + TEN_PHONG_TOI_DA + " ky tu!");
+            return false;
+        }
+
+        if (!ten.matches("[\\p{L}\\p{N} ._-]+")) {
+            System.out.println("Ten phong chi duoc chua chu, so, khoang trang, '.', '-', '_'!");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean tenPhongDaTonTai(String tenPhong, String maBoQua) {
+        String ten = tenPhong.trim();
+        for (Phong p : phongDAO.layDanhSachPhong()) {
+            if (p == null) continue;
+            if (maBoQua != null && p.getMaPhong().equalsIgnoreCase(maBoQua)) continue;
+            if (p.getTenPhong() != null && p.getTenPhong().trim().equalsIgnoreCase(ten)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean kiemTraThongTinPhong(Phong phong) {
         if (phong == null) {
             System.out.println("Thong tin phong khong hop le!");
@@ -38,8 +75,7 @@ public class QLPhong implements IPhong {
             System.out.println("Ma phong khong duoc de trong!");
             return false;
         }
-        if (phong.getTenPhong() == null || phong.getTenPhong().trim().isEmpty()) {
-            System.out.println("Ten phong khong duoc de trong!");
+        if (!kiemTraTenPhong(phong.getTenPhong())) {
             return false;
         }
         if (phong.getGiaPhong() == null || phong.getGiaPhong().compareTo(BigDecimal.ZERO) <= 0) {
@@ -84,6 +120,10 @@ public class QLPhong implements IPhong {
             System.out.println("Ma phong da ton tai!");
             return false;
         }
+        if (tenPhongDaTonTai(ban.getTenPhong(), null)) {
+            System.out.println("Ten phong da ton tai!");
+            return false;
+        }
         return phongDAO.themPhong(ban);
     }
 
@@ -96,6 +136,10 @@ public class QLPhong implements IPhong {
         Phong phongCu = phongDAO.timPhongTheoMa(chuanHoaMaPhong(phong.getMaPhong()));
         if (phongCu == null) {
             System.out.println("Khong tim thay phong!");
+            return false;
+        }
+        if (tenPhongDaTonTai(phong.getTenPhong(), phongCu.getMaPhong())) {
+            System.out.println("Ten phong da ton tai!");
             return false;
         }
 
@@ -123,7 +167,7 @@ public class QLPhong implements IPhong {
     @Override
     public boolean xoaPhong(String maPhong) {
         maPhong = chuanHoaMaPhong(maPhong);
-        if (maPhong == null || maPhong.trim().isEmpty()) {
+        if (maPhong == null || maPhong.isEmpty()) {
             System.out.println("Ma phong khong hop le!");
             return false;
         }
@@ -187,20 +231,6 @@ public class QLPhong implements IPhong {
             return null;
         }
         return phongDAO.timPhongTheoMa(maPhong);
-    }
-
-    @Override 
-    public boolean timPhongTheoTen(String tenPhong) {
-        if (tenPhong == null || tenPhong.trim().isEmpty()) {
-            return true;
-        }
-        Phong[] tatCa = phongDAO.layDanhSachPhong();
-        for (Phong p : tatCa) {
-            if (p.getTenPhong() != null && p.getTenPhong().equalsIgnoreCase(tenPhong.trim())) {
-                return false; 
-            }
-        }
-        return true; 
     }
 
     @Override

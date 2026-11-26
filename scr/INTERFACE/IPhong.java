@@ -26,6 +26,4 @@ public interface IPhong {
 
     int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
 
-    boolean timPhongTheoTen(String tenPhong);
-
 }

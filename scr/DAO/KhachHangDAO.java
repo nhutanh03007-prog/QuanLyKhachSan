@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import model.KhachHang;
+import DAO.KhachHangDAO;
 
 public class KhachHangDAO {
     public static KhachHang[] danhSachKhachHang = new KhachHang[100];
