@@ -4,11 +4,7 @@ import DAO.QuanLyDuLieuFile;
 import java.io.BufferedReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-<<<<<<< HEAD
-import java.util.Scanner;
-=======
 import ui.ConsoleInput;
->>>>>>> 1406952588fed68ed202a5284963bbe81fd8aab6
 import ui.DatPhongUI;
 import ui.HeThongUI;
 import ui.KhachHangUI;
