@@ -1,5 +1,6 @@
 package model;
 
+import java.io.BufferedReader;
 import java.math.BigDecimal;
 
 public class PhongThuong extends Phong {
@@ -7,8 +8,8 @@ public class PhongThuong extends Phong {
     public static final String LOAI = "Thuong";
     private static final BigDecimal GIA_MAC_DINH = new BigDecimal("500000");
 
-    private int soGiuong;        
-    private boolean coDieuHoa;     
+    private int soGiuong;
+    private boolean coDieuHoa;
 
     public PhongThuong() {
         super("", "", GIA_MAC_DINH, null);
@@ -27,6 +28,45 @@ public class PhongThuong extends Phong {
 
     @Override
     public String getLoaiPhong() { return LOAI; }
+
+    @Override
+    public BigDecimal getGiaMacDinhPhong() { return GIA_MAC_DINH; }
+
+    @Override
+    public String getThongTinRieng() { return soGiuong + " giuong"; }
+
+    @Override
+    public String getTienIch() { return coDieuHoa ? "Co dieu hoa" : "Khong"; }
+
+    @Override
+    public Phong saoChep() {
+        return new PhongThuong(getMaPhong(), getTenPhong(), getGiaPhong(), getTinhTrang(), soGiuong, coDieuHoa);
+    }
+
+    @Override
+    public void nhap(BufferedReader reader) {
+        super.nhap(reader);
+        nhapThongTinRieng(reader);
+    }
+
+    @Override
+    public void nhap(BufferedReader reader, String maPhong, String tenPhong) {
+        super.nhap(reader, maPhong, tenPhong);
+        nhapThongTinRieng(reader);
+    }
+
+    private void nhapThongTinRieng(BufferedReader reader) {
+        System.out.println("\n--- THONG TIN PHONG THUONG ---");
+        this.soGiuong = nhapSoNguyenDuong(reader, "Nhap so giuong: ");
+        this.coDieuHoa = nhapCoKhong(reader, "Phong co dieu hoa? (Y/N): ");
+    }
+
+    @Override
+    public void xuat() {
+        super.xuat();
+        System.out.println("So giuong  : " + soGiuong);
+        System.out.println("Dieu hoa   : " + (coDieuHoa ? "Co" : "Khong"));
+    }
 
     public int getSoGiuong() { return soGiuong; }
     public void setSoGiuong(int soGiuong) { this.soGiuong = soGiuong; }

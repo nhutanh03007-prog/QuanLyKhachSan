@@ -28,4 +28,8 @@ public interface IPhong {
 
     boolean timPhongTheoTen(String tenPhong);
 
+    Phong[] layDanhSachPhongVIP();
+
+    Phong[] layDanhSachPhongThuong();
+
 }
