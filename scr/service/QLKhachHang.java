@@ -1,14 +1,17 @@
 package service;
 
+import DAO.DatPhongDAO;
 import DAO.KhachHangDAO;
 import INTERFACE.IKhachHang;
 import model.KhachHang;
 
 public class QLKhachHang implements IKhachHang {
     private final KhachHangDAO khachHangDAO;
+    private final DatPhongDAO datPhongDAO;
 
     public QLKhachHang() {
         this.khachHangDAO = new KhachHangDAO();
+        this.datPhongDAO = new DatPhongDAO();
     }
 
     @Override
@@ -23,17 +26,21 @@ public class QLKhachHang implements IKhachHang {
 
     @Override
     public KhachHang[] layDanhSachKhachHangTheoLoai(String loaiKhach) {
+        if (loaiKhach == null || loaiKhach.trim().isEmpty()) {
+            return new KhachHang[0];
+        }
+        String loai = loaiKhach.trim();
         KhachHang[] tatCa = khachHangDAO.layDanhSach();
         int count = 0;
         for (KhachHang kh : tatCa) {
-            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+            if (kh != null && kh.getLoaiKhach() != null && kh.getLoaiKhach().equalsIgnoreCase(loai)) {
                 count++;
             }
         }
         KhachHang[] ketQua = new KhachHang[count];
         int index = 0;
         for (KhachHang kh : tatCa) {
-            if (kh != null && kh.getLoaiKhach().equalsIgnoreCase(loaiKhach)) {
+            if (kh != null && kh.getLoaiKhach() != null && kh.getLoaiKhach().equalsIgnoreCase(loai)) {
                 ketQua[index++] = kh;
             }
         }
@@ -52,22 +59,30 @@ public class QLKhachHang implements IKhachHang {
 
     @Override
     public boolean xoaKhachHang(String maKH) {
+        if (datPhongDAO.coPhieuHoatDongChoKhachHang(maKH)) {
+            System.out.println("Loi: Khong the xoa khach hang dang co phieu dat phong hoat dong!");
+            return false;
+        }
         return khachHangDAO.xoa(maKH);
     }
 
     @Override
     public KhachHang[] timKhachHangTheoTen(String hoTen) {
+        if (hoTen == null || hoTen.trim().isEmpty()) {
+            return new KhachHang[0];
+        }
+        String key = hoTen.trim().toLowerCase();
         KhachHang[] tatCa = khachHangDAO.layDanhSach();
         int count = 0;
         for (KhachHang kh : tatCa) {
-            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+            if (kh != null && kh.getHoTen() != null && kh.getHoTen().toLowerCase().contains(key)) {
                 count++;
             }
         }
         KhachHang[] ketQua = new KhachHang[count];
         int index = 0;
         for (KhachHang kh : tatCa) {
-            if (kh != null && kh.getHoTen().toLowerCase().contains(hoTen.toLowerCase())) {
+            if (kh != null && kh.getHoTen() != null && kh.getHoTen().toLowerCase().contains(key)) {
                 ketQua[index++] = kh;
             }
         }

@@ -29,7 +29,19 @@ public class QLThongKe {
                 }
             }
         }
+        return tong;
+    }
 
+    public BigDecimal tinhTongGiamGia() {
+        BigDecimal tong = BigDecimal.ZERO;
+        HoaDon[] dsHoaDon = qlHoaDon.layDanhSachHoaDon();
+        if (dsHoaDon != null) {
+            for (HoaDon h : dsHoaDon) {
+                if (h != null && h.getTrangThai() == TrangThaiThanhToan.DA_THANH_TOAN && h.getGiamGia() != null) {
+                    tong = tong.add(h.getGiamGia());
+                }
+            }
+        }
         return tong;
     }
 
@@ -75,6 +87,11 @@ public class QLThongKe {
         return count;
     }
 
+    public int tongSoHoaDon() {
+        HoaDon[] ds = qlHoaDon.layDanhSachHoaDon();
+        return ds == null ? 0 : ds.length;
+    }
+
     public int tongSoPhong() {
         return qlPhong.demSoLuongPhong();
     }
@@ -82,7 +99,6 @@ public class QLThongKe {
     public int demPhongTheoTrangThai(TinhTrangPhong tinhTrang) {
         return qlPhong.demSoLuongPhongTheoTinhTrang(tinhTrang);
     }
-
 
     public int tongSoKhachHang() {
         return qlKhachHang.demSoLuongKhachHang();
@@ -92,13 +108,12 @@ public class QLThongKe {
         return qlKhachHang.demSoLuongKhachHangTheoLoai(loaiKhach);
     }
 
-
     public int tongSoDichVuHoatDong() {
         int count = 0;
         DichVu[] dsDichVu = qlDichVu.layDanhSachDichVu();
         if (dsDichVu != null) {
             for (DichVu dv : dsDichVu) {
-                if (dv != null && !"NGUNG_HOAT_DONG".equals(dv.getTrangThai())) {
+                if (dv != null && !"NGUNG_HOAT_DONG".equalsIgnoreCase(dv.getTrangThai())) {
                     count++;
                 }
             }

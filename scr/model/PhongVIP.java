@@ -11,8 +11,7 @@ public class PhongVIP extends Phong {
     private boolean coBonTam;      
 
     public PhongVIP() {
-        super();
-        setGiaPhong(GIA_MAC_DINH);
+        super("", "", GIA_MAC_DINH, null);
         this.dienTich = 30;
         this.coBonTam = true;
     }

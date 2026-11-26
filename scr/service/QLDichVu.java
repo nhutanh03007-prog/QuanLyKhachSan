@@ -56,11 +56,12 @@ public class QLDichVu {
 
     public boolean themChiTiet(ChiTietDichVu c) {
         if (c == null || !datPhongChuaChot(c.getMaDatPhong())) {
-            System.out.println("Loi: Dat phong chua chot hoac khong hop le!");
+            System.out.println("Loi: Phieu dat phong khong ton tai, da huy hoac da lap hoa don!");
             return false;
         }
         DichVu d = dichVuDAO.timTheoMa(c.getMaDichVu());
-        if (d == null || "NGUNG_HOAT_DONG".equals(d.getTrangThai())) {
+        if (d == null || "NGUNG_HOAT_DONG".equalsIgnoreCase(d.getTrangThai())) {
+            System.out.println("Loi: Dich vu khong ton tai hoac da ngung hoat dong!");
             return false;
         }
         c.setDonGia(d.getGia());

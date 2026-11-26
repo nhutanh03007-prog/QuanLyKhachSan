@@ -6,7 +6,7 @@ import INTERFACE.IPhong;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Scanner;
+import java.io.BufferedReader;
 
 import model.Phong;
 import model.PhongThuong;
@@ -19,16 +19,16 @@ public class PhongUI {
 
     private static final String DUONG_KE = "-".repeat(100);
 
-    private final Scanner sc;
+    private final BufferedReader reader;
     private final IPhong qlPhong;
 
-    public PhongUI(Scanner sc) {
-        this.sc = sc;
+    public PhongUI(BufferedReader reader) {
+        this.reader = reader;
         this.qlPhong = new QLPhong();
     }
 
     public PhongUI() {
-        this(new Scanner(System.in));
+        this(ConsoleInput.getReader());
     }
 
     // ================= MENU =================
@@ -77,7 +77,7 @@ public class PhongUI {
         while (true) {
             System.out.print(thongBao);
 
-            String s = sc.nextLine().trim();
+            String s = ConsoleInput.readLine(reader).trim();
 
             if (!s.isEmpty()) {
                 return s;
@@ -91,7 +91,7 @@ public class PhongUI {
         while (true) {
             try {
                 System.out.print(thongBao);
-                return Integer.parseInt(sc.nextLine().trim());
+                return Integer.parseInt(ConsoleInput.readLine(reader).trim());
 
             } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so nguyen!");
@@ -114,7 +114,7 @@ public class PhongUI {
     private boolean nhapCoKhong(String thongBao) {
         while (true) {
             System.out.print(thongBao);
-            String s = sc.nextLine().trim();
+            String s = ConsoleInput.readLine(reader).trim();
 
             if (s.equalsIgnoreCase("Y")) {
                 return true;
@@ -132,7 +132,7 @@ public class PhongUI {
         while (true) {
             System.out.print(thongBao);
 
-            String s = sc.nextLine().trim();
+            String s = ConsoleInput.readLine(reader).trim();
 
             if (s.isEmpty() && macDinh != null) {
                 return macDinh;
@@ -158,7 +158,7 @@ public class PhongUI {
             System.out.print(thongBao);
 
             try {
-                return LocalDate.parse(sc.nextLine().trim());
+                return LocalDate.parse(ConsoleInput.readLine(reader).trim());
 
             } catch (DateTimeParseException e) {
                 System.out.println(
@@ -348,7 +348,7 @@ public class PhongUI {
         }
         
         String tenPhong = nhapChuoi("Nhap ten phong: ");
-        while (qlPhong.timPhongTheoTen(tenPhong) != true) {
+        while (qlPhong.timPhongTheoTen(tenPhong)) {
             System.out.println("Ten phong da ton tai!");
             tenPhong = nhapChuoi("Nhap ten phong khac: ");
         }
@@ -454,8 +454,8 @@ public class PhongUI {
                 "Nhap ngay tra phong (yyyy-MM-dd): "
         );
 
-        if (!tra.isAfter(nhan)) {
-            System.out.println("Ngay tra phai sau ngay nhan!");
+        if (tra.isBefore(nhan)) {
+            System.out.println("Ngay tra khong duoc truoc ngay nhan!");
             return;
         }
 
@@ -621,7 +621,7 @@ public class PhongUI {
 
         System.out.print("\nBan co chac chan muon xoa? (Y/N): ");
 
-        String xacNhan = sc.nextLine().trim();
+        String xacNhan = ConsoleInput.readLine(reader).trim();
 
         if (xacNhan.equalsIgnoreCase("Y")) {
 

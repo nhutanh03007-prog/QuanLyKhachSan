@@ -1,100 +1,48 @@
 package DAO;
 
-import java.io.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
 import model.ChiTietDichVu;
 
 public class ChiTietDichVuDAO {
-    private static final String FILE_PATH = "DATABASEH/ChiTietDichVu.dat";
     public static ChiTietDichVu[] danhSachChiTiet = new ChiTietDichVu[100];
     public static int soLuongChiTiet = 0;
+
     static {
-        docFile();
+        QuanLyDuLieuFile.damBaoDaNap();
     }
 
-    private static void ghiChuoi(DataOutputStream dos, String s) throws IOException {
-        dos.writeUTF(s == null ? "" : s);
-    }
-
-    private static String docChuoi(DataInputStream dis) throws IOException {
-        String s = dis.readUTF();
-        return s.isEmpty() ? null : s;
-    }
-
-    private static void ghiNgay(DataOutputStream dos, LocalDate d) throws IOException {
-        dos.writeLong(d == null ? -1L : d.toEpochDay());
-    }
-
-    private static LocalDate docNgay(DataInputStream dis) throws IOException {
-        long v = dis.readLong();
-        return v == -1L ? null : LocalDate.ofEpochDay(v);
-    }
-
-    private static void docFile() {
+    public static void napDuLieu(ChiTietDichVu[] duLieu) {
         soLuongChiTiet = 0;
-        Arrays.fill(danhSachChiTiet, null);
-        File f = new File(FILE_PATH);
-        try {
-            if (!f.exists() || f.length() == 0)
-                return;
-            try (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)))) {
-                int count = dis.readInt();
-                if (count < 0 || count > 100)
-                    throw new IOException("So luong khong hop le");
-                for (int i = 0; i < count; i++) {
-                    ChiTietDichVu c = new ChiTietDichVu(docChuoi(dis), docChuoi(dis), docNgay(dis), docNgay(dis),
-                            dis.readInt(), new BigDecimal(dis.readUTF()));
-                    BigDecimal total = new BigDecimal(dis.readUTF());
-                    if (hopLe(c) && timNoiBo(c.getMaDatPhong(), c.getMaDichVu()) == null) {
-                        c.setThanhTien(total);
-                        danhSachChiTiet[soLuongChiTiet++] = c;
-                    }
-                }
+        danhSachChiTiet = new ChiTietDichVu[Math.max(100, duLieu == null ? 0 : duLieu.length)];
+        if (duLieu == null) {
+            return;
+        }
+        for (ChiTietDichVu c : duLieu) {
+            if (hopLe(c) && timNoiBo(c.getMaDatPhong(), c.getMaDichVu()) == null) {
+                c.setThanhTien(tinhThanhTienNoiBo(c));
+                danhSachChiTiet[soLuongChiTiet++] = c;
             }
-        } catch (Exception e) {
-            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
         }
     }
 
     private static ChiTietDichVu timNoiBo(String dp, String dv) {
-        for (int i = 0; i < soLuongChiTiet; i++)
-            if (cungKhoa(danhSachChiTiet[i], dp, dv))
+        for (int i = 0; i < soLuongChiTiet; i++) {
+            if (cungKhoa(danhSachChiTiet[i], dp, dv)) {
                 return danhSachChiTiet[i];
+            }
+        }
         return null;
     }
 
     private static boolean ghiFile() {
-        File f = new File(FILE_PATH);
-        if (!f.exists()) {
-            System.err.println("Khong tim thay file: " + FILE_PATH);
-            return false;
-        }
-        try {
-            try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)))) {
-                dos.writeInt(soLuongChiTiet);
-                for (int i = 0; i < soLuongChiTiet; i++) {
-                    ChiTietDichVu c = danhSachChiTiet[i];
-                    ghiChuoi(dos, c.getMaDatPhong());
-                    ghiChuoi(dos, c.getMaDichVu());
-                    ghiNgay(dos, c.getNgayDatDichVu());
-                    ghiNgay(dos, c.getNgayNhan());
-                    dos.writeInt(c.getSoLuong());
-                    dos.writeUTF(c.getDonGia().toString());
-                    dos.writeUTF(tinhThanhTienNoiBo(c).toString());
-                }
-            }
-            return true;
-        } catch (Exception e) {
-            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
-            return false;
-        }
+        return QuanLyDuLieuFile.ghiChiTietDichVu(danhSachChiTiet, soLuongChiTiet);
     }
 
     public boolean them(ChiTietDichVu c) {
-        if (!hopLe(c))
+        if (!hopLe(c)) {
             return false;
+        }
         ChiTietDichVu cu = timTheoMa(c.getMaDatPhong(), c.getMaDichVu());
         if (cu != null) {
             int sl = cu.getSoLuong();
@@ -110,8 +58,9 @@ public class ChiTietDichVuDAO {
             }
             return true;
         }
-        if (soLuongChiTiet >= 100)
-            return false;
+        if (soLuongChiTiet >= danhSachChiTiet.length) {
+            danhSachChiTiet = Arrays.copyOf(danhSachChiTiet, danhSachChiTiet.length * 2);
+        }
         c.setThanhTien(tinhThanhTien(c));
         int old = soLuongChiTiet;
         danhSachChiTiet[soLuongChiTiet++] = c;
@@ -124,9 +73,10 @@ public class ChiTietDichVuDAO {
     }
 
     public boolean sua(ChiTietDichVu c) {
-        if (!hopLe(c))
+        if (!hopLe(c)) {
             return false;
-        for (int i = 0; i < soLuongChiTiet; i++)
+        }
+        for (int i = 0; i < soLuongChiTiet; i++) {
             if (cungKhoa(danhSachChiTiet[i], c.getMaDatPhong(), c.getMaDichVu())) {
                 ChiTietDichVu old = danhSachChiTiet[i];
                 BigDecimal tt = c.getThanhTien();
@@ -139,6 +89,7 @@ public class ChiTietDichVuDAO {
                 }
                 return true;
             }
+        }
         return false;
     }
 
@@ -147,7 +98,7 @@ public class ChiTietDichVuDAO {
     }
 
     public boolean xoa(String dp, String dv) {
-        for (int i = 0; i < soLuongChiTiet; i++)
+        for (int i = 0; i < soLuongChiTiet; i++) {
             if (cungKhoa(danhSachChiTiet[i], dp, dv)) {
                 ChiTietDichVu[] old = Arrays.copyOf(danhSachChiTiet, soLuongChiTiet);
                 int n = soLuongChiTiet;
@@ -160,6 +111,7 @@ public class ChiTietDichVuDAO {
                 }
                 return true;
             }
+        }
         return false;
     }
 
@@ -172,24 +124,37 @@ public class ChiTietDichVuDAO {
     }
 
     public ChiTietDichVu[] layTheoMaDatPhong(String dp) {
-        ArrayList<ChiTietDichVu> a = new ArrayList<>();
-        for (int i = 0; i < soLuongChiTiet; i++)
-            if (danhSachChiTiet[i] != null && dp != null && dp.equals(danhSachChiTiet[i].getMaDatPhong()))
-                a.add(danhSachChiTiet[i]);
-        return a.toArray(new ChiTietDichVu[0]);
+        ChiTietDichVu[] tam = new ChiTietDichVu[soLuongChiTiet];
+        int dem = 0;
+        if (!rong(dp)) {
+            String target = dp.trim();
+            for (int i = 0; i < soLuongChiTiet; i++) {
+                if (danhSachChiTiet[i] != null && target.equalsIgnoreCase(danhSachChiTiet[i].getMaDatPhong())) {
+                    tam[dem++] = danhSachChiTiet[i];
+                }
+            }
+        }
+        return Arrays.copyOf(tam, dem);
     }
 
     public boolean kiemTraDichVuDangSuDung(String ma) {
-        for (int i = 0; i < soLuongChiTiet; i++)
-            if (danhSachChiTiet[i] != null && ma != null && ma.equals(danhSachChiTiet[i].getMaDichVu()))
+        if (rong(ma)) {
+            return false;
+        }
+        String target = ma.trim();
+        for (int i = 0; i < soLuongChiTiet; i++) {
+            if (danhSachChiTiet[i] != null && target.equalsIgnoreCase(danhSachChiTiet[i].getMaDichVu())) {
                 return true;
+            }
+        }
         return false;
     }
 
     public BigDecimal tinhTongTienTheoDatPhong(String dp) {
         BigDecimal sum = BigDecimal.ZERO;
-        for (ChiTietDichVu c : layTheoMaDatPhong(dp))
+        for (ChiTietDichVu c : layTheoMaDatPhong(dp)) {
             sum = sum.add(tinhThanhTien(c));
+        }
         return sum;
     }
 
@@ -204,7 +169,9 @@ public class ChiTietDichVuDAO {
     }
 
     private static boolean cungKhoa(ChiTietDichVu c, String dp, String dv) {
-        return c != null && dp != null && dv != null && dp.equals(c.getMaDatPhong()) && dv.equals(c.getMaDichVu());
+        return c != null && !rong(dp) && !rong(dv)
+                && dp.trim().equalsIgnoreCase(c.getMaDatPhong())
+                && dv.trim().equalsIgnoreCase(c.getMaDichVu());
     }
 
     private static boolean rong(String s) {

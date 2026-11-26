@@ -1,12 +1,5 @@
 package DAO;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
 import java.util.Arrays;
 import model.KhachHang;
 
@@ -14,30 +7,53 @@ public class KhachHangDAO {
     public static KhachHang[] danhSachKhachHang = new KhachHang[100];
     public static int soLuongKhachHang = 0;
 
-    private static final String FILE_PATH = "DATABASEH/KhachHang.dat";
-
     static {
-        docFile();
+        QuanLyDuLieuFile.damBaoDaNap();
+    }
+
+    public static void napDuLieu(KhachHang[] duLieu) {
+        if (duLieu == null) {
+            danhSachKhachHang = new KhachHang[100];
+            soLuongKhachHang = 0;
+            return;
+        }
+        danhSachKhachHang = Arrays.copyOf(duLieu, Math.max(100, duLieu.length));
+        soLuongKhachHang = duLieu.length;
+    }
+
+    private static boolean ghiFile() {
+        return QuanLyDuLieuFile.ghiKhachHang(danhSachKhachHang, soLuongKhachHang);
     }
 
     public boolean them(KhachHang khachHang) {
-        if (khachHang == null || khachHang.getMaKH() == null 
-            || timTheoMa(khachHang.getMaKH()) != null 
-            || soLuongKhachHang == danhSachKhachHang.length) {
+        if (khachHang == null || khachHang.getMaKH() == null || khachHang.getMaKH().trim().isEmpty()
+                || timTheoMa(khachHang.getMaKH()) != null) {
             return false;
         }
-        danhSachKhachHang[soLuongKhachHang] = khachHang;
-        soLuongKhachHang++;
-        ghiFile();
+        if (soLuongKhachHang >= danhSachKhachHang.length) {
+            danhSachKhachHang = Arrays.copyOf(danhSachKhachHang, danhSachKhachHang.length * 2);
+        }
+        danhSachKhachHang[soLuongKhachHang++] = khachHang;
+        if (!ghiFile()) {
+            danhSachKhachHang[--soLuongKhachHang] = null;
+            return false;
+        }
         return true;
     }
 
     public boolean sua(KhachHang khachHang) {
-        if (khachHang == null) return false;
+        if (khachHang == null || khachHang.getMaKH() == null) {
+            return false;
+        }
+        String ma = khachHang.getMaKH().trim();
         for (int i = 0; i < soLuongKhachHang; i++) {
-            if (danhSachKhachHang[i].getMaKH().equals(khachHang.getMaKH())) {
+            if (danhSachKhachHang[i] != null && danhSachKhachHang[i].getMaKH().equalsIgnoreCase(ma)) {
+                KhachHang cu = danhSachKhachHang[i];
                 danhSachKhachHang[i] = khachHang;
-                ghiFile();
+                if (!ghiFile()) {
+                    danhSachKhachHang[i] = cu;
+                    return false;
+                }
                 return true;
             }
         }
@@ -45,8 +61,12 @@ public class KhachHangDAO {
     }
 
     public boolean xoa(String maKhachHang) {
+        if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
+            return false;
+        }
+        String ma = maKhachHang.trim();
         for (int i = 0; i < soLuongKhachHang; i++) {
-            if (danhSachKhachHang[i].getMaKH().equals(maKhachHang)) {
+            if (danhSachKhachHang[i] != null && danhSachKhachHang[i].getMaKH().equalsIgnoreCase(ma)) {
                 System.arraycopy(danhSachKhachHang, i + 1, danhSachKhachHang, i, soLuongKhachHang - i - 1);
                 danhSachKhachHang[--soLuongKhachHang] = null;
                 ghiFile();
@@ -57,8 +77,12 @@ public class KhachHangDAO {
     }
 
     public KhachHang timTheoMa(String maKhachHang) {
+        if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
+            return null;
+        }
+        String ma = maKhachHang.trim();
         for (int i = 0; i < soLuongKhachHang; i++) {
-            if (danhSachKhachHang[i].getMaKH().equals(maKhachHang)) {
+            if (danhSachKhachHang[i] != null && danhSachKhachHang[i].getMaKH().equalsIgnoreCase(ma)) {
                 return danhSachKhachHang[i];
             }
         }
@@ -69,71 +93,5 @@ public class KhachHangDAO {
         KhachHang[] ketQua = new KhachHang[soLuongKhachHang];
         System.arraycopy(danhSachKhachHang, 0, ketQua, 0, soLuongKhachHang);
         return ketQua;
-    }
-    private static void docFile() {
-        soLuongKhachHang = 0;
-        Arrays.fill(danhSachKhachHang, null);
-        File f = new File(FILE_PATH);
-        try {
-            if (f.getParentFile() != null) {
-                f.getParentFile().mkdirs();
-            }
-            if (!f.exists()) {
-                f.createNewFile();
-            }
-            try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
-        while (soLuongKhachHang < danhSachKhachHang.length && dis.available() > 0) {
-        String maKH = dis.readUTF();
-        String hoTen = dis.readUTF();
-        String gioiTinh = dis.readUTF();
-        String ngaySinhStr = dis.readUTF();
-        String diaChi = dis.readUTF();
-        String sdt = dis.readUTF();
-        String email = dis.readUTF();
-        String loaiKhach = dis.readUTF();
-        String ghiChu = dis.readUTF();
-
-        LocalDate ngaySinh = ngaySinhStr.isEmpty() ? null : LocalDate.parse(ngaySinhStr);
-        danhSachKhachHang[soLuongKhachHang++] = new KhachHang(
-                maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu
-        );
-    }
-            }
-        } catch (IOException e) {
-            System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
-        }
-    }
-
-    private static boolean ghiFile() {
-        File f = new File(FILE_PATH);
-        try {
-            if (f.getParentFile() != null) {
-                f.getParentFile().mkdirs();
-            }
-            try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(f))) {
-    for (int i = 0; i < soLuongKhachHang; i++) {
-        KhachHang kh = danhSachKhachHang[i];
-        if (kh != null) {
-            dos.writeUTF(giaTri(kh.getMaKH()));
-            dos.writeUTF(giaTri(kh.getHoTen()));
-            dos.writeUTF(giaTri(kh.getGioiTinh()));
-            dos.writeUTF(giaTri(kh.getNgaySinh()));
-            dos.writeUTF(giaTri(kh.getDiaChi()));
-            dos.writeUTF(giaTri(kh.getSdt()));
-            dos.writeUTF(giaTri(kh.getEmail()));
-            dos.writeUTF(giaTri(kh.getLoaiKhach()));
-            dos.writeUTF(giaTri(kh.getGhiChu()));
-        }
-    }
-}
-            return true;
-        } catch (IOException e) {
-            System.err.println("Khong ghi duoc " + FILE_PATH + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    private static String giaTri(Object o) {
-        return o == null ? "" : o.toString();
     }
 }
