@@ -347,10 +347,10 @@ public class PhongUI {
             maPhong = nhapChuoi("Nhap ma phong khac: ");
         }
         
-        String tenPhong = nhapChuoi("Nhap ten phong: ");
-        while (qlPhong.timPhongTheoTen(tenPhong) != true) {
-            System.out.println("Ten phong da ton tai!");
-            tenPhong = nhapChuoi("Nhap ten phong khac: ");
+            String tenPhong = nhapChuoi("Nhap ten phong: ");
+            while (qlPhong.tenPhongDaTonTai(tenPhong)) {
+                System.out.println("Ten phong da ton tai!");
+                tenPhong = nhapChuoi("Nhap ten phong khac: ");
         }
 
         int loaiPhong = nhapLoaiPhong();
