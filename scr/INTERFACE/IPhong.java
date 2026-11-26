@@ -24,8 +24,8 @@ public interface IPhong {
 
     int demSoLuongPhong();
 
-    int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
-
     boolean timPhongTheoTen(String tenPhong);
+
+    int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
 
 }
