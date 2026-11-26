@@ -49,14 +49,19 @@ public class ThanhToanDAO {
                     danhSachThanhToan = Arrays.copyOf(danhSachThanhToan, count * 2);
                 }
                 for (int i = 0; i < count; i++) {
+                    String maTT = docChuoi(dis);
+                    String maHD = docChuoi(dis);
+                    BigDecimal soTien = new BigDecimal(dis.readUTF());
+                    String phuongThuc = docChuoi(dis);
+                    LocalDate ngay = docNgay(dis);
                     String t = docChuoi(dis);
-                    ThanhToan tToan = new ThanhToan(docChuoi(dis), docChuoi(dis), new BigDecimal(dis.readUTF()),
-                            docChuoi(dis), docNgay(dis), t == null ? null : TrangThaiThanhToan.valueOf(t));
+                    ThanhToan tToan = new ThanhToan(maTT, maHD, soTien, phuongThuc, ngay,
+                    t == null ? null : TrangThaiThanhToan.valueOf(t));
                     if (hopLe(tToan) && timNoiBo(tToan.getMaThanhToan()) == null)
                         danhSachThanhToan[soLuongThanhToan++] = tToan;
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Khong doc duoc " + FILE_PATH + ": " + e.getMessage());
         }
     }
