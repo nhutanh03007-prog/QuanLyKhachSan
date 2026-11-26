@@ -8,8 +8,6 @@ public interface IPhong {
 
     boolean themPhong(Phong phong);
 
-    boolean tenPhongDaTonTai(String tenPhong);
-
     Phong[] layDanhSachPhong();
 
     Phong[] layDanhSachPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
@@ -27,5 +25,7 @@ public interface IPhong {
     int demSoLuongPhong();
 
     int demSoLuongPhongTheoTinhTrang(TinhTrangPhong tinhTrang);
+
+    boolean timPhongTheoTen(String tenPhong);
 
 }

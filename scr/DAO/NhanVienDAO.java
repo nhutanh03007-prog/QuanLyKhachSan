@@ -1,88 +1,37 @@
 package DAO;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import model.NhanVien;
 
 public class NhanVienDAO {
 
-    private NhanVien[] danhSach;
-    private int soLuong;
-    private static final String FILE_PATH = "DATABASEH/NhanVien.dat";
+    private static NhanVien[] danhSach = new NhanVien[20];
+    private static int soLuong = 0;
+
+    static {
+        QuanLyDuLieuFile.damBaoDaNap();
+    }
 
     public NhanVienDAO() {
-        this.danhSach = new NhanVien[10];
-        this.soLuong = 0;
-        docFile();
+    }
+
+    public static void napDuLieu(NhanVien[] duLieu) {
+        if (duLieu == null) {
+            danhSach = new NhanVien[20];
+            soLuong = 0;
+            return;
+        }
+        danhSach = Arrays.copyOf(duLieu, Math.max(20, duLieu.length));
+        soLuong = duLieu.length;
     }
 
     public final NhanVien[] docFile() {
-        File file = new File(FILE_PATH);
-        if (!file.exists()) {
-            return layTatCa();
-        }
-
-        this.danhSach = new NhanVien[10];
-        this.soLuong = 0;
-
-        try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
-            int tongSo = dis.readInt();
-            for (int i = 0; i < tongSo; i++) {
-                String maNV = dis.readUTF();
-                String hoTen = dis.readUTF();
-                String gioiTinh = dis.readUTF();
-                String ngaySinh = dis.readUTF();
-                String diaChi = dis.readUTF();
-                String soDienThoai = dis.readUTF();
-                String chucVu = dis.readUTF();
-                double luong = dis.readDouble();
-                String trangThai = dis.readUTF();
-
-                if (soLuong == danhSach.length) {
-                    moRongMang();
-                }
-                danhSach[soLuong++] = new NhanVien(
-                        maNV, hoTen, gioiTinh, ngaySinh,
-                        diaChi, soDienThoai, chucVu, luong, trangThai
-                );
-            }
-        } catch (IOException e) {
-            System.out.println("Lỗi đọc file NhanVien: " + e.getMessage());
-        }
-
+        napDuLieu(QuanLyDuLieuFile.docNhanVien());
         return layTatCa();
     }
 
     public void ghiFile() {
-        File file = new File(FILE_PATH);
-        if (file.getParentFile() != null && !file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
-        }
-
-        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(file))) {
-            dos.writeInt(soLuong);
-            for (int i = 0; i < soLuong; i++) {
-                NhanVien nv = danhSach[i];
-                if (nv != null) {
-                    dos.writeUTF(nv.getMaNV() != null ? nv.getMaNV() : "");
-                    dos.writeUTF(nv.getHoTen() != null ? nv.getHoTen() : "");
-                    dos.writeUTF(nv.getGioiTinh() != null ? nv.getGioiTinh() : "");
-                    dos.writeUTF(nv.getNgaySinh() != null ? nv.getNgaySinh() : "");
-                    dos.writeUTF(nv.getDiaChi() != null ? nv.getDiaChi() : "");
-                    dos.writeUTF(nv.getSoDienThoai() != null ? nv.getSoDienThoai() : "");
-                    dos.writeUTF(nv.getChucVu() != null ? nv.getChucVu() : "");
-                    dos.writeDouble(nv.getLuong());
-                    dos.writeUTF(nv.getTrangThai() != null ? nv.getTrangThai() : "");
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Loi ghi file NhanVien: " + e.getMessage());
-        }
+        QuanLyDuLieuFile.ghiNhanVien(danhSach, soLuong);
     }
 
     public NhanVien[] layTatCa() {
@@ -96,6 +45,9 @@ public class NhanVienDAO {
         if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
             return false;
         }
+        if (nv.getLuong() <= 0) {
+            return false;
+        }
         if (timTheoMa(nv.getMaNV()) != null) {
             return false;
         }
@@ -104,9 +56,11 @@ public class NhanVienDAO {
             moRongMang();
         }
 
-        danhSach[soLuong] = nv;
-        soLuong++;
-        ghiFile();
+        danhSach[soLuong++] = nv;
+        if (!QuanLyDuLieuFile.ghiNhanVien(danhSach, soLuong)) {
+            danhSach[--soLuong] = null;
+            return false;
+        }
         return true;
     }
 
@@ -117,6 +71,9 @@ public class NhanVienDAO {
         if (nv.getHoTen() == null || nv.getHoTen().trim().isEmpty()) {
             return false;
         }
+        if (nv.getLuong() <= 0) {
+            return false;
+        }
 
         String ma = nv.getMaNV().trim();
         for (int i = 0; i < soLuong; i++) {
@@ -124,7 +81,10 @@ public class NhanVienDAO {
             if (nhanVienCu != null && nhanVienCu.getMaNV() != null
                     && nhanVienCu.getMaNV().equalsIgnoreCase(ma)) {
                 danhSach[i] = nv;
-                ghiFile();
+                if (!QuanLyDuLieuFile.ghiNhanVien(danhSach, soLuong)) {
+                    danhSach[i] = nhanVienCu;
+                    return false;
+                }
                 return true;
             }
         }
@@ -145,7 +105,7 @@ public class NhanVienDAO {
                 }
                 danhSach[soLuong - 1] = null;
                 soLuong--;
-                ghiFile();
+                QuanLyDuLieuFile.ghiNhanVien(danhSach, soLuong);
                 return true;
             }
         }
@@ -175,7 +135,7 @@ public class NhanVienDAO {
         return soLuong;
     }
 
-    private void moRongMang() {
+    private static void moRongMang() {
         danhSach = Arrays.copyOf(danhSach, danhSach.length * 2);
     }
 }

@@ -33,4 +33,3 @@ Kịch bản cho bài đồ án giữa kì
 - Tạo nhân viên và đăng nhập với tư cách là một nhân viên.
 - Test các hàm thêm sửa xóa.
 - Thanh toán hóa đơn và in chi tiết hóa đơn
-- Thêm số người tối đa

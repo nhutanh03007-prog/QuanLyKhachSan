@@ -1,18 +1,22 @@
 package ui;
 
 import INTERFACE.IKhachHang;
+import java.io.BufferedReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Scanner;
 import model.KhachHang;
 import service.QLKhachHang;
 
 public class KhachHangUI {
-    private final Scanner scanner;
+    private final BufferedReader reader;
     private final IKhachHang qlKhachHang;
 
     public KhachHangUI() {
-        this.scanner = new Scanner(System.in);
+        this(ConsoleInput.getReader());
+    }
+
+    public KhachHangUI(BufferedReader reader) {
+        this.reader = reader;
         this.qlKhachHang = new QLKhachHang();
     }
 
@@ -32,7 +36,7 @@ public class KhachHangUI {
             System.out.print("Nhap lua chon: ");
 
             try {
-                choice = Integer.parseInt(scanner.nextLine().trim());
+                choice = Integer.parseInt(ConsoleInput.readLine(reader).trim());
             } catch (NumberFormatException e) {
                 System.out.println("Loi: Vui long nhap so hop le!");
                 continue;
@@ -53,17 +57,17 @@ public class KhachHangUI {
         } while (choice != 0);
     }
 
-    public void themKhachHang(boolean chuyenSangDatPhong) {
+    public String themKhachHang(boolean hoiChuyenSangDatPhong) {
         System.out.println("\n--- THEM KHACH HANG MOI ---");
         String maKH;
-     while (true) {
-       maKH = nhapChuoi("Nhap ma KH (VD: KH01): ");
-       if (qlKhachHang.timKhachHangTheoMa(maKH) != null) {
-        System.out.println("Loi: Ma khach hang '" + maKH + "' da ton tai! Vui long nhap ma khac.");
-      } else {
-        break;
-    }
-    }
+        while (true) {
+            maKH = nhapChuoi("Nhap ma KH (VD: KH01): ").toUpperCase();
+            if (qlKhachHang.timKhachHangTheoMa(maKH) != null) {
+                System.out.println("Loi: Ma khach hang '" + maKH + "' da ton tai! Vui long nhap ma khac.");
+            } else {
+                break;
+            }
+        }
 
         String hoTen = nhapChuoi("Nhap ho ten: ");
         String gioiTinh = nhapGioiTinh("Nhap gioi tinh (Nam/Nu): ");
@@ -74,23 +78,24 @@ public class KhachHangUI {
         String loaiKhach = nhapLoaiKhach("Nhap loai khach (Thuong/VIP): ");
 
         System.out.print("Nhap ghi chu (Enter de bo qua): ");
-        String ghiChu = scanner.nextLine().trim();
+        String ghiChu = ConsoleInput.readLine(reader).trim();
 
         KhachHang kh = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
-        
-        if (qlKhachHang.themKhachHang(kh)) {
-          System.out.println("Them khach hang thanh cong!");
 
-         if (chuyenSangDatPhong) {
-           System.out.println("\n>>> Chuyen sang tao phieu dat phong...");
-            new DatPhongUI().taoDatPhongMoi(false);
-          }
-       } 
-    
-        else {
-            System.out.println("Them khach hang that bai (Danh sach da day)!");
+        if (qlKhachHang.themKhachHang(kh)) {
+            System.out.println("Them khach hang thanh cong!");
+
+            if (hoiChuyenSangDatPhong) {
+                System.out.print("Ban co muon tao phieu dat phong ngay cho khach hang nay? (Y/N): ");
+                if (ConsoleInput.readLine(reader).trim().equalsIgnoreCase("Y")) {
+                    new DatPhongUI(reader).taoDatPhongMoi(maKH);
+                }
+            }
+            return maKH;
+        } else {
+            System.out.println("Them khach hang that bai!");
+            return null;
         }
-        
     }
 
     private void hienThiDanhSach(KhachHang[] danhSach) {
@@ -108,6 +113,7 @@ public class KhachHangUI {
                         kh.getMaKH(), kh.getHoTen(), kh.getGioiTinh(), kh.getNgaySinh(), kh.getSdt(), kh.getLoaiKhach());
             }
         }
+        System.out.println("Tong so khach hang: " + danhSach.length);
     }
 
     private void timTheoMa() {
@@ -134,7 +140,8 @@ public class KhachHangUI {
 
     private void suaKhachHang() {
         String maKH = nhapChuoi("Nhap ma KH can sua: ");
-        if (qlKhachHang.timKhachHangTheoMa(maKH) == null) {
+        KhachHang cu = qlKhachHang.timKhachHangTheoMa(maKH);
+        if (cu == null) {
             System.out.println("Loi: Khong tim thay ma khach hang '" + maKH + "'!");
             return;
         }
@@ -148,9 +155,9 @@ public class KhachHangUI {
         String loaiKhach = nhapLoaiKhach("Nhap loai khach moi (Thuong/VIP): ");
 
         System.out.print("Nhap ghi chu moi (Enter de bo qua): ");
-        String ghiChu = scanner.nextLine().trim();
+        String ghiChu = ConsoleInput.readLine(reader).trim();
 
-        KhachHang khMoi = new KhachHang(maKH, hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
+        KhachHang khMoi = new KhachHang(cu.getMaKH(), hoTen, gioiTinh, ngaySinh, diaChi, sdt, email, loaiKhach, ghiChu);
         if (qlKhachHang.suaKhachHang(khMoi)) {
             System.out.println("Cap nhat thong tin khach hang thanh cong!");
         } else {
@@ -167,9 +174,9 @@ public class KhachHangUI {
         }
 
         System.out.print("Ban co chac chan muon xoa khach hang '" + kh.getHoTen() + "'? (Y/N): ");
-        String xacNhan = scanner.nextLine().trim();
+        String xacNhan = ConsoleInput.readLine(reader).trim();
         if (xacNhan.equalsIgnoreCase("Y")) {
-            if (qlKhachHang.xoaKhachHang(maKH)) {
+            if (qlKhachHang.xoaKhachHang(kh.getMaKH())) {
                 System.out.println("Xoa khach hang thanh cong!");
             } else {
                 System.out.println("Xoa khach hang that bai!");
@@ -182,16 +189,14 @@ public class KhachHangUI {
     private void thongKe() {
         System.out.println("\n--- THONG KE KHACH HANG ---");
         System.out.println("Tong so khach hang: " + qlKhachHang.demSoLuongKhachHang());
-        String loai = nhapLoaiKhach("Nhap loai khach muon dem (Thuong/VIP): ");
-        System.out.println("So luong khach loai " + loai + ": " + qlKhachHang.demSoLuongKhachHangTheoLoai(loai));
+        System.out.println("- Khach Thuong: " + qlKhachHang.demSoLuongKhachHangTheoLoai("Thuong"));
+        System.out.println("- Khach VIP: " + qlKhachHang.demSoLuongKhachHangTheoLoai("VIP"));
     }
-
-    // --- CÁC HÀM HỖ TRỢ KIỂM TRA DỮ LIỆU ĐẦU VÀO ---
 
     private String nhapChuoi(String thongBao) {
         while (true) {
             System.out.print(thongBao);
-            String input = scanner.nextLine().trim();
+            String input = ConsoleInput.readLine(reader).trim();
             if (!input.isEmpty()) {
                 return input;
             }

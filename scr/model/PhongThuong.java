@@ -11,8 +11,7 @@ public class PhongThuong extends Phong {
     private boolean coDieuHoa;     
 
     public PhongThuong() {
-        super();
-        setGiaPhong(GIA_MAC_DINH);
+        super("", "", GIA_MAC_DINH, null);
         this.soGiuong = 1;
         this.coDieuHoa = false;
     }

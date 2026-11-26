@@ -10,6 +10,7 @@ import model.TrangThaiThanhToan;
 public class QLThanhToan {
     private final HoaDonDAO hoaDonDAO = new HoaDonDAO();
     private final ThanhToanDAO thanhToanDAO = new ThanhToanDAO();
+    private final QLDatPhong qlDatPhong = new QLDatPhong();
 
     public boolean thanhToan(String maHD, String maThanhToan, String phuongThuc) {
         HoaDon h = hoaDonDAO.timTheoMa(maHD);
@@ -18,13 +19,20 @@ public class QLThanhToan {
             return false;
         }
         LocalDate ngay = LocalDate.now();
-        ThanhToan t = new ThanhToan(maThanhToan, maHD, h.getThanhTien(), phuongThuc, ngay,
+        ThanhToan t = new ThanhToan(maThanhToan, h.getMaHD(), h.getThanhTien(), phuongThuc, ngay,
                 TrangThaiThanhToan.DA_THANH_TOAN);
         if (!thanhToanDAO.them(t)) {
-            System.out.println("Loi: That bai khi them thanh toan!");
+            System.out.println("Loi: That bai khi them thanh toan (trung ma giao dich hoac du lieu khong hop le)!");
             return false;
         }
-        return hoaDonDAO.capNhatTrangThai(maHD, TrangThaiThanhToan.DA_THANH_TOAN, phuongThuc, ngay);
+        if (!hoaDonDAO.capNhatTrangThai(h.getMaHD(), TrangThaiThanhToan.DA_THANH_TOAN, phuongThuc, ngay)) {
+            thanhToanDAO.xoa(maThanhToan);
+            System.out.println("Loi: Khong the cap nhat trang thai hoa don!");
+            return false;
+        }
+        // Tu dong tra phong va giai phong phong neu phieu dat phong chua tra
+        qlDatPhong.traPhong(h.getMaDatPhong());
+        return true;
     }
 
     public ThanhToan[] layDanhSachThanhToan() {

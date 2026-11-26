@@ -1,7 +1,6 @@
-
 package ui;
 
-import java.util.Scanner;
+import java.io.BufferedReader;
 import model.TinhTrangPhong;
 import model.TrangThaiThanhToan;
 import service.QLDichVu;
@@ -12,19 +11,28 @@ import service.QLThongKe;
 
 public class ThongKeUI {
 
-    private final Scanner sc = new Scanner(System.in);
+    private final BufferedReader reader;
     private final QLThongKe qlThongKe;
 
     public ThongKeUI() {
-        this.qlThongKe = new QLThongKe(
+        this(ConsoleInput.getReader());
+    }
+
+    public ThongKeUI(BufferedReader reader) {
+        this(reader, new QLThongKe(
                 new QLHoaDon(),
                 new QLPhong(),
                 new QLKhachHang(),
                 new QLDichVu()
-        );
+        ));
     }
 
     public ThongKeUI(QLThongKe qlThongKe) {
+        this(ConsoleInput.getReader(), qlThongKe);
+    }
+
+    public ThongKeUI(BufferedReader reader, QLThongKe qlThongKe) {
+        this.reader = reader;
         this.qlThongKe = qlThongKe;
     }
 
@@ -42,7 +50,7 @@ public class ThongKeUI {
             System.out.print("Nhap lua chon: ");
 
             try {
-                chon = Integer.parseInt(sc.nextLine());
+                chon = Integer.parseInt(ConsoleInput.readLine(reader).trim());
             } catch (NumberFormatException e) {
                 System.out.println("Vui long nhap so!");
                 chon = -1;
@@ -74,12 +82,9 @@ public class ThongKeUI {
 
     private void thongKeKhachHang() {
         System.out.println("\n--- THONG KE KHACH HANG ---");
-        System.out.print("Nhap loai khach hang can thong ke (VD: VIP, Thuong): ");
-
-        String loaiKhach = sc.nextLine();
-
-        System.out.println("So luong khach hang loai [" + loaiKhach + "]: "
-                + qlThongKe.demKhachHangTheoLoai(loaiKhach));
+        System.out.println("Tong so khach hang: " + qlThongKe.tongSoKhachHang());
+        System.out.println("- Khach hang [Thuong]: " + qlThongKe.demKhachHangTheoLoai("Thuong"));
+        System.out.println("- Khach hang [VIP]   : " + qlThongKe.demKhachHangTheoLoai("VIP"));
     }
 
     private void thongKeDichVu() {
@@ -89,18 +94,22 @@ public class ThongKeUI {
     }
 
     private void thongKeHoaDon() {
-        System.out.println("\n--- THONG KE HOA DON ---");
-
+        System.out.println("\n--- THONG KE HOA DON & DOANH THU ---");
+        System.out.println("Tong so hoa don: " + qlThongKe.tongSoHoaDon());
         for (TrangThaiThanhToan tt : TrangThaiThanhToan.values()) {
             System.out.println("- Hoa don [" + tt + "]: "
                     + qlThongKe.demHoaDonTheoTrangThai(tt));
         }
+        System.out.println("- Doanh thu phong (truoc giam gia)  : " + qlThongKe.tinhTongDoanhThuPhong().toPlainString() + " VND");
+        System.out.println("- Doanh thu dich vu (truoc giam gia): " + qlThongKe.tinhTongDoanhThuDichVu().toPlainString() + " VND");
+        System.out.println("- Tong giam gia                     : " + qlThongKe.tinhTongGiamGia().toPlainString() + " VND");
+        System.out.println("- Tong doanh thu thuc thu           : " + qlThongKe.tinhTongDoanhThu().toPlainString() + " VND");
     }
 
     private void baoCaoTongHop() {
         System.out.println("\n========= BAO CAO TONG HOP =========");
-
         thongKePhong();
+        thongKeKhachHang();
         thongKeDichVu();
         thongKeHoaDon();
     }

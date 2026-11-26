@@ -1,222 +1,209 @@
-    package DAO;
-    import java.io.DataInputStream;
-    import java.io.DataOutputStream;
-    import java.io.File;
-    import java.io.FileInputStream;
-    import java.io.FileOutputStream;
-    import java.io.IOException;
-    import java.math.BigDecimal;
-    import java.time.LocalDate;
-    import java.util.Arrays;
-    import model.DatPhong;
-    import model.TrangThaiDatPhong;
+package DAO;
 
-    public class DatPhongDAO {
-        private static final String FILE_PATH = "DATABASEH/DatPhong.dat";
-        private static final String FILE_PATH_DA_XOA = "DATABASEH/DatPhongDaXoa.dat";
+import java.time.LocalDate;
+import java.util.Arrays;
+import model.DatPhong;
+import model.TrangThaiDatPhong;
 
-        public static DatPhong[] danhSachDatPhong = new DatPhong[100];
-        public static int soLuongDatPhong = 0;
+public class DatPhongDAO {
+    public static DatPhong[] danhSachDatPhong = new DatPhong[100];
+    public static int soLuongDatPhong = 0;
 
-        public static DatPhong[] danhSachDaXoa = new DatPhong[100];
-        public static int soLuongDaXoa = 0;
+    public static DatPhong[] danhSachDaXoa = new DatPhong[100];
+    public static int soLuongDaXoa = 0;
 
-        static {
-            docFile();
+    static {
+        QuanLyDuLieuFile.damBaoDaNap();
+    }
+
+    public static void napDuLieu(DatPhong[] dsChinh, DatPhong[] dsXoa) {
+        if (dsChinh == null) {
+            danhSachDatPhong = new DatPhong[100];
+            soLuongDatPhong = 0;
+        } else {
+            danhSachDatPhong = Arrays.copyOf(dsChinh, Math.max(100, dsChinh.length));
+            soLuongDatPhong = dsChinh.length;
         }
-
-        public boolean them(DatPhong datPhong) {
-            if (datPhong == null || datPhong.getMaDatPhong() == null 
-                || timTheoMa(datPhong.getMaDatPhong()) != null 
-                || soLuongDatPhong == danhSachDatPhong.length) {
-                return false;
-            }
-            danhSachDatPhong[soLuongDatPhong] = datPhong;
-            soLuongDatPhong++;
-            ghiFile();
-            return true;
+        if (dsXoa == null) {
+            danhSachDaXoa = new DatPhong[100];
+            soLuongDaXoa = 0;
+        } else {
+            danhSachDaXoa = Arrays.copyOf(dsXoa, Math.max(100, dsXoa.length));
+            soLuongDaXoa = dsXoa.length;
         }
+    }
 
-        public boolean sua(DatPhong datPhong) {
-            if (datPhong == null) return false;
-            for (int i = 0; i < soLuongDatPhong; i++) {
-                if (danhSachDatPhong[i].getMaDatPhong().equals(datPhong.getMaDatPhong())) {
-                    danhSachDatPhong[i] = datPhong;
-                    ghiFile();
-                    return true;
-                }
-            }
+    private static boolean ghiFile() {
+        boolean ok1 = QuanLyDuLieuFile.ghiDatPhong("DatPhong.dat", danhSachDatPhong, soLuongDatPhong);
+        boolean ok2 = QuanLyDuLieuFile.ghiDatPhong("DatPhongDaXoa.dat", danhSachDaXoa, soLuongDaXoa);
+        return ok1 && ok2;
+    }
+
+    public boolean them(DatPhong datPhong) {
+        if (datPhong == null || datPhong.getMaDatPhong() == null || datPhong.getMaDatPhong().trim().isEmpty()
+                || datPhong.getSoLuongPhong() == 0
+                || timTheoMa(datPhong.getMaDatPhong()) != null) {
             return false;
         }
-
-        public boolean xoa(String maDatPhong) {
-            for (int i = 0; i < soLuongDatPhong; i++) {
-                if (danhSachDatPhong[i].getMaDatPhong().equals(maDatPhong)) {
-                    if (soLuongDaXoa < danhSachDaXoa.length) {
-                        danhSachDaXoa[soLuongDaXoa] = danhSachDatPhong[i];
-                        soLuongDaXoa++;
-                    }
-                    System.arraycopy(danhSachDatPhong, i + 1, danhSachDatPhong, i, soLuongDatPhong - i - 1);
-                    danhSachDatPhong[--soLuongDatPhong] = null;
-                    ghiFile();
-                    return true;
-                }
-            }
+        if (soLuongDatPhong >= danhSachDatPhong.length) {
+            danhSachDatPhong = Arrays.copyOf(danhSachDatPhong, danhSachDatPhong.length * 2);
+        }
+        danhSachDatPhong[soLuongDatPhong++] = datPhong;
+        if (!ghiFile()) {
+            danhSachDatPhong[--soLuongDatPhong] = null;
             return false;
         }
+        return true;
+    }
 
-        public DatPhong timTheoMa(String maDatPhong) {
-            for (int i = 0; i < soLuongDatPhong; i++) {
-                if (danhSachDatPhong[i].getMaDatPhong().equals(maDatPhong)) {
-                    return danhSachDatPhong[i];
+    public boolean sua(DatPhong datPhong) {
+        if (datPhong == null || datPhong.getMaDatPhong() == null) {
+            return false;
+        }
+        String ma = datPhong.getMaDatPhong().trim();
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i] != null && danhSachDatPhong[i].getMaDatPhong().equalsIgnoreCase(ma)) {
+                DatPhong cu = danhSachDatPhong[i];
+                danhSachDatPhong[i] = datPhong;
+                if (!ghiFile()) {
+                    danhSachDatPhong[i] = cu;
+                    return false;
                 }
+                return true;
             }
+        }
+        return false;
+    }
+
+    public boolean xoa(String maDatPhong) {
+        if (maDatPhong == null || maDatPhong.trim().isEmpty()) {
+            return false;
+        }
+        String ma = maDatPhong.trim();
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i] != null && danhSachDatPhong[i].getMaDatPhong().equalsIgnoreCase(ma)) {
+                if (soLuongDaXoa >= danhSachDaXoa.length) {
+                    danhSachDaXoa = Arrays.copyOf(danhSachDaXoa, danhSachDaXoa.length * 2);
+                }
+                danhSachDaXoa[soLuongDaXoa++] = danhSachDatPhong[i];
+                System.arraycopy(danhSachDatPhong, i + 1, danhSachDatPhong, i, soLuongDatPhong - i - 1);
+                danhSachDatPhong[--soLuongDatPhong] = null;
+                ghiFile();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public DatPhong timTheoMa(String maDatPhong) {
+        if (maDatPhong == null || maDatPhong.trim().isEmpty()) {
             return null;
         }
-
-        
-        public boolean kiemTraPhongTrong(String maPhong, LocalDate ngayNhan, LocalDate ngayTra) {
-            for (int i = 0; i < soLuongDatPhong; i++) {
-                DatPhong dp = danhSachDatPhong[i];
-                
-                if (dp.getMaPhong().equalsIgnoreCase(maPhong) &&
-                    dp.getTrangThai() != TrangThaiDatPhong.DA_HUY &&
-                    dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
-                    
-                    
-                    if (dp.isTrungLich(ngayNhan, ngayTra)) {
-                        return false;
-                    }
-                }
+        String ma = maDatPhong.trim();
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            if (danhSachDatPhong[i] != null && danhSachDatPhong[i].getMaDatPhong().equalsIgnoreCase(ma)) {
+                return danhSachDatPhong[i];
             }
-            return true;
         }
+        return null;
+    }
 
-        public DatPhong[] layDanhSach() {
-            DatPhong[] ketQua = new DatPhong[soLuongDatPhong];
-            System.arraycopy(danhSachDatPhong, 0, ketQua, 0, soLuongDatPhong);
-            return ketQua;
-        }
-        
-        public boolean khoiPhuc(String maDatPhong) {
-            for (int i = 0; i < soLuongDaXoa; i++) {
-                if (danhSachDaXoa[i].getMaDatPhong().equals(maDatPhong)) {
-                    if (soLuongDatPhong >= danhSachDatPhong.length) {
-                        return false; // Danh sách chính đã đầy
-                    }
-                    
-                    danhSachDatPhong[soLuongDatPhong] = danhSachDaXoa[i];
-                    soLuongDatPhong++;
+    public boolean kiemTraPhongTrong(String maPhong, LocalDate ngayNhan, LocalDate ngayTra) {
+        return kiemTraPhongTrong(maPhong, ngayNhan, ngayTra, null);
+    }
 
-                    
-                    System.arraycopy(danhSachDaXoa, i + 1, danhSachDaXoa, i, soLuongDaXoa - i - 1);
-                    danhSachDaXoa[--soLuongDaXoa] = null;
-                    ghiFile();
-                    return true;
-                }
-            }
+    public boolean kiemTraPhongTrong(String maPhong, LocalDate ngayNhan, LocalDate ngayTra, String maDatPhongBoQua) {
+        if (maPhong == null || maPhong.trim().isEmpty()) {
             return false;
         }
-
-        
-        public DatPhong[] layDanhSachDaXoa() {
-            DatPhong[] ketQua = new DatPhong[soLuongDaXoa];
-            System.arraycopy(danhSachDaXoa, 0, ketQua, 0, soLuongDaXoa);
-            return ketQua;
-        }
-        private static void docFile() {
-            soLuongDatPhong = docDanhSachNoiBo(FILE_PATH, danhSachDatPhong);
-            soLuongDaXoa = docDanhSachNoiBo(FILE_PATH_DA_XOA, danhSachDaXoa);
-        }
-
-        private static int docDanhSachNoiBo(String path, DatPhong[] mang) {
-            int count = 0;
-            Arrays.fill(mang, null);
-            File f = new File(path);
-            try {
-                if (f.getParentFile() != null) {
-                    f.getParentFile().mkdirs();
-                }
-                if (!f.exists()) {
-                    f.createNewFile();
-                }
-                try (DataInputStream dis = new DataInputStream(new FileInputStream(f))) {
-        while (count < mang.length && dis.available() > 0) {
-            String maDatPhong = dis.readUTF();
-            String maKhachHang = dis.readUTF();
-            String maPhong = dis.readUTF();
-            String ngayDatStr = dis.readUTF();
-            String ngayNhanStr = dis.readUTF();
-            String ngayTraStr = dis.readUTF();
-            String trangThaiStr = dis.readUTF();
-            String giaPhongStr = dis.readUTF();
-
-            DatPhong dp = new DatPhong();
-            dp.setMaDatPhong(maDatPhong);
-            dp.setMaKhachHang(maKhachHang);
-            dp.setMaPhong(maPhong);
-            dp.setNgayDat(ngayDatStr.isEmpty() ? null : LocalDate.parse(ngayDatStr));
-            dp.setNgayNhanPhong(ngayNhanStr.isEmpty() ? null : LocalDate.parse(ngayNhanStr));
-            dp.setNgayTraPhong(ngayTraStr.isEmpty() ? null : LocalDate.parse(ngayTraStr));
-            dp.setTrangThai(trangThaiStr.isEmpty() ? TrangThaiDatPhong.DA_DAT : TrangThaiDatPhong.valueOf(trangThaiStr));
-            dp.setGiaPhongNgay(giaPhongStr.isEmpty() ? BigDecimal.ZERO : new BigDecimal(giaPhongStr));
-            mang[count++] = dp;
-        }
-                }
-            } catch (IOException e) {
-                System.err.println("Khong doc duoc " + path + ": " + e.getMessage());
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            DatPhong dp = danhSachDatPhong[i];
+            if (dp == null) {
+                continue;
             }
-            return count;
-        }
-
-        private static boolean ghiFile() {
-            boolean ok1 = ghiDanhSachNoiBo(FILE_PATH, danhSachDatPhong, soLuongDatPhong);
-            boolean ok2 = ghiDanhSachNoiBo(FILE_PATH_DA_XOA, danhSachDaXoa, soLuongDaXoa);
-            return ok1 && ok2;
-        }
-
-        private static boolean ghiDanhSachNoiBo(String path, DatPhong[] mang, int soLuong) {
-            File f = new File(path);
-            try {
-                if (f.getParentFile() != null) {
-                    f.getParentFile().mkdirs();
+            if (maDatPhongBoQua != null && dp.getMaDatPhong() != null
+                    && dp.getMaDatPhong().equalsIgnoreCase(maDatPhongBoQua.trim())) {
+                continue;
+            }
+            if (dp.coChuaPhong(maPhong)
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
+                if (dp.isTrungLich(ngayNhan, ngayTra)) {
+                    return false;
                 }
-                try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(f))) {
-        for (int i = 0; i < soLuong; i++) {
-            DatPhong dp = mang[i];
-            if (dp != null) {
-                dos.writeUTF(giaTri(dp.getMaDatPhong()));
-                dos.writeUTF(giaTri(dp.getMaKhachHang()));
-                dos.writeUTF(giaTri(dp.getMaPhong()));
-                dos.writeUTF(giaTri(dp.getNgayDat()));
-                dos.writeUTF(giaTri(dp.getNgayNhanPhong()));
-                dos.writeUTF(giaTri(dp.getNgayTraPhong()));
-                dos.writeUTF(dp.getTrangThai() == null ? TrangThaiDatPhong.DA_DAT.name() : dp.getTrangThai().name());
-                dos.writeUTF(giaTri(dp.getGiaPhongNgay()));
             }
         }
+        return true;
     }
-            } catch (IOException e) {
-                System.err.println("Khong ghi duoc " + path + ": " + e.getMessage());
-                return false;
-            }
-            return true;
-        }
 
-        private static String giaTri(Object o) {
-            return o == null ? "" : o.toString();
-        }
-        public boolean kiemTraPhongTrong(String maPhong, LocalDate nhan, LocalDate tra, String boQuaMa) {
-    for (int i = 0; i < soLuongDatPhong; i++) {
-        DatPhong dp = danhSachDatPhong[i];
-        if (dp.getMaDatPhong().equals(boQuaMa)) continue;
-        if (dp.getMaPhong().equalsIgnoreCase(maPhong)
-            && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
-            && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA
-            && dp.isTrungLich(nhan, tra)) {
+    public boolean coPhieuHoatDongChoPhong(String maPhong, String maDatPhongBoQua) {
+        if (maPhong == null || maPhong.trim().isEmpty()) {
             return false;
         }
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            DatPhong dp = danhSachDatPhong[i];
+            if (dp == null) {
+                continue;
+            }
+            if (maDatPhongBoQua != null && dp.getMaDatPhong() != null
+                    && dp.getMaDatPhong().equalsIgnoreCase(maDatPhongBoQua.trim())) {
+                continue;
+            }
+            if (dp.coChuaPhong(maPhong)
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
+                return true;
+            }
+        }
+        return false;
     }
-    return true;
+
+    public boolean coPhieuHoatDongChoKhachHang(String maKH) {
+        if (maKH == null || maKH.trim().isEmpty()) {
+            return false;
+        }
+        String target = maKH.trim();
+        for (int i = 0; i < soLuongDatPhong; i++) {
+            DatPhong dp = danhSachDatPhong[i];
+            if (dp != null && dp.getMaKhachHang() != null
+                    && dp.getMaKhachHang().equalsIgnoreCase(target)
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
+                    && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public DatPhong[] layDanhSach() {
+        DatPhong[] ketQua = new DatPhong[soLuongDatPhong];
+        System.arraycopy(danhSachDatPhong, 0, ketQua, 0, soLuongDatPhong);
+        return ketQua;
+    }
+
+    public boolean khoiPhuc(String maDatPhong) {
+        if (maDatPhong == null || maDatPhong.trim().isEmpty()) {
+            return false;
+        }
+        String ma = maDatPhong.trim();
+        for (int i = 0; i < soLuongDaXoa; i++) {
+            if (danhSachDaXoa[i] != null && danhSachDaXoa[i].getMaDatPhong().equalsIgnoreCase(ma)) {
+                if (soLuongDatPhong >= danhSachDatPhong.length) {
+                    danhSachDatPhong = Arrays.copyOf(danhSachDatPhong, danhSachDatPhong.length * 2);
+                }
+                danhSachDatPhong[soLuongDatPhong++] = danhSachDaXoa[i];
+                System.arraycopy(danhSachDaXoa, i + 1, danhSachDaXoa, i, soLuongDaXoa - i - 1);
+                danhSachDaXoa[--soLuongDaXoa] = null;
+                ghiFile();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public DatPhong[] layDanhSachDaXoa() {
+        DatPhong[] ketQua = new DatPhong[soLuongDaXoa];
+        System.arraycopy(danhSachDaXoa, 0, ketQua, 0, soLuongDaXoa);
+        return ketQua;
+    }
 }
-    }

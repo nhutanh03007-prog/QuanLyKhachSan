@@ -13,9 +13,6 @@ import model.TrangThaiDatPhong;
 
 public class QLPhong implements IPhong {
 
-    private static final int TEN_PHONG_TOI_THIEU = 2;
-    private static final int TEN_PHONG_TOI_DA = 50;
-
     private final PhongDAO phongDAO;
     private final DatPhongDAO datPhongDAO;
 
@@ -24,46 +21,8 @@ public class QLPhong implements IPhong {
         this.datPhongDAO = new DatPhongDAO();
     }
 
-    // =========================
-    // HAM HO TRO
-    // =========================
-
     private String chuanHoaMaPhong(String maPhong) {
         return maPhong == null ? null : maPhong.trim().toUpperCase();
-    }
-
-    private boolean kiemTraTenPhong(String tenPhong) {
-        if (tenPhong == null || tenPhong.trim().isEmpty()) {
-            System.out.println("Ten phong khong duoc de trong!");
-            return false;
-        }
-
-        String ten = tenPhong.trim();
-
-        if (ten.length() < TEN_PHONG_TOI_THIEU || ten.length() > TEN_PHONG_TOI_DA) {
-            System.out.println("Ten phong phai dai tu " + TEN_PHONG_TOI_THIEU
-                    + " den " + TEN_PHONG_TOI_DA + " ky tu!");
-            return false;
-        }
-
-        if (!ten.matches("[\\p{L}\\p{N} ._-]+")) {
-            System.out.println("Ten phong chi duoc chua chu, so, khoang trang, '.', '-', '_'!");
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean tenPhongDaTonTai(String tenPhong, String maBoQua) {
-        String ten = tenPhong.trim();
-        for (Phong p : phongDAO.layDanhSachPhong()) {
-            if (p == null) continue;
-            if (maBoQua != null && p.getMaPhong().equalsIgnoreCase(maBoQua)) continue;
-            if (p.getTenPhong() != null && p.getTenPhong().trim().equalsIgnoreCase(ten)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean kiemTraThongTinPhong(Phong phong) {
@@ -75,7 +34,8 @@ public class QLPhong implements IPhong {
             System.out.println("Ma phong khong duoc de trong!");
             return false;
         }
-        if (!kiemTraTenPhong(phong.getTenPhong())) {
+        if (phong.getTenPhong() == null || phong.getTenPhong().trim().isEmpty()) {
+            System.out.println("Ten phong khong duoc de trong!");
             return false;
         }
         if (phong.getGiaPhong() == null || phong.getGiaPhong().compareTo(BigDecimal.ZERO) <= 0) {
@@ -92,8 +52,7 @@ public class QLPhong implements IPhong {
     private boolean phongConPhieuDat(String maPhong) {
         DatPhong[] ds = datPhongDAO.layDanhSach();
         for (DatPhong dp : ds) {
-            if (dp != null && dp.getMaPhong() != null
-                    && dp.getMaPhong().equalsIgnoreCase(maPhong)
+            if (dp != null && dp.coChuaPhong(maPhong)
                     && dp.getTrangThai() != TrangThaiDatPhong.DA_HUY
                     && dp.getTrangThai() != TrangThaiDatPhong.DA_TRA) {
                 return true;
@@ -102,29 +61,24 @@ public class QLPhong implements IPhong {
         return false;
     }
 
-    // =========================
-    // THEM / SUA / XOA
-    // =========================
-
     @Override
     public boolean themPhong(Phong phong) {
         if (!kiemTraThongTinPhong(phong)) {
             return false;
         }
 
-        Phong ban = phong;
-        ban.setMaPhong(chuanHoaMaPhong(phong.getMaPhong()));
-        ban.setTenPhong(phong.getTenPhong().trim());
+        phong.setMaPhong(chuanHoaMaPhong(phong.getMaPhong()));
+        phong.setTenPhong(phong.getTenPhong().trim());
 
-        if (phongDAO.timPhongTheoMa(ban.getMaPhong()) != null) {
+        if (phongDAO.timPhongTheoMa(phong.getMaPhong()) != null) {
             System.out.println("Ma phong da ton tai!");
             return false;
         }
-        if (tenPhongDaTonTai(ban.getTenPhong(), null)) {
+        if (phongDAO.timPhongTheoTen(phong.getTenPhong())) {
             System.out.println("Ten phong da ton tai!");
             return false;
         }
-        return phongDAO.themPhong(ban);
+        return phongDAO.themPhong(phong);
     }
 
     @Override
@@ -138,16 +92,16 @@ public class QLPhong implements IPhong {
             System.out.println("Khong tim thay phong!");
             return false;
         }
-        if (tenPhongDaTonTai(phong.getTenPhong(), phongCu.getMaPhong())) {
-            System.out.println("Ten phong da ton tai!");
+
+        phong.setMaPhong(phongCu.getMaPhong());
+        phong.setTenPhong(phong.getTenPhong().trim());
+
+        if (phongDAO.timPhongTheoTenKhacMa(phong.getTenPhong(), phongCu.getMaPhong())) {
+            System.out.println("Ten phong da ton tai o phong khac!");
             return false;
         }
 
-        Phong ban = phong;
-        ban.setMaPhong(phongCu.getMaPhong());
-        ban.setTenPhong(phong.getTenPhong().trim());
-
-        return phongDAO.suaPhong(phongCu.getMaPhong(), ban);
+        return phongDAO.suaPhong(phongCu.getMaPhong(), phong);
     }
 
     @Override
@@ -167,7 +121,7 @@ public class QLPhong implements IPhong {
     @Override
     public boolean xoaPhong(String maPhong) {
         maPhong = chuanHoaMaPhong(maPhong);
-        if (maPhong == null || maPhong.isEmpty()) {
+        if (maPhong == null || maPhong.trim().isEmpty()) {
             System.out.println("Ma phong khong hop le!");
             return false;
         }
@@ -188,10 +142,6 @@ public class QLPhong implements IPhong {
         return phongDAO.xoaPhong(maPhong);
     }
 
-    // =========================
-    // TRUY VAN
-    // =========================
-
     @Override
     public Phong[] layDanhSachPhong() {
         return phongDAO.layDanhSachPhong();
@@ -208,7 +158,7 @@ public class QLPhong implements IPhong {
 
     @Override
     public Phong[] layPhongTrong(LocalDate ngayNhan, LocalDate ngayTra) {
-        if (ngayNhan == null || ngayTra == null || !ngayTra.isAfter(ngayNhan)) {
+        if (ngayNhan == null || ngayTra == null || ngayTra.isBefore(ngayNhan)) {
             return new Phong[0];
         }
         Phong[] tatCa = phongDAO.layDanhSachPhong();
@@ -234,6 +184,11 @@ public class QLPhong implements IPhong {
     }
 
     @Override
+    public boolean timPhongTheoTen(String tenPhong) {
+        return phongDAO.timPhongTheoTen(tenPhong);
+    }
+
+    @Override
     public int demSoLuongPhong() {
         return phongDAO.demSoLuongPhong();
     }
@@ -245,15 +200,4 @@ public class QLPhong implements IPhong {
         }
         return phongDAO.demSoLuongPhongTheoTinhTrang(tinhTrang);
     }
-    @Override
-    public boolean tenPhongDaTonTai(String tenPhong) {
-        if (tenPhong == null || tenPhong.trim().isEmpty()) {
-            return false;
-    }
-        return tenPhongDaTonTai(tenPhong, null);
-    }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> d34311024cbd1465fee7a3e1dc1696376d1fc3b1
