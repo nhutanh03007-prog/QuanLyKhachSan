@@ -440,6 +440,6 @@ public class HeThongUI {
     }
 
     public String getVaiTroHienTai() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return taiKhoanHienTai != null ? taiKhoanHienTai.getVaiTro() : "";
     }
 }
